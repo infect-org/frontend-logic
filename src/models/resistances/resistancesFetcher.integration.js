@@ -5,6 +5,9 @@ import Store from '../../helpers/store';
 import Bacterium from '../bacteria/bacterium';
 import { observable } from 'mobx';
 
+// Fetch-mock does not reset itself if there's no global fetch
+const originalFetch = global.fetch;
+
 function setupFetcher() {
     const antibiotics = {
         get() {
@@ -118,6 +121,7 @@ test('handles filter updates', async (t) => {
     // console.log(JSON.stringify(calls, null, 2));
 
     fetchMock.restore();
+    global.fetch = originalFetch;
     t.end();
 
 });

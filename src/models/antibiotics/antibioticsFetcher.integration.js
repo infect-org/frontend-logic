@@ -5,6 +5,9 @@ import SubstanceClassesStore from './substanceClassesStore';
 import AntibioticsFetcher from './antibioticsFetcher';
 import fetchMock from 'fetch-mock';
 
+// Fetch-mock does not reset itself if there's no global fetch
+const originalFetch = global.fetch;
+
 test('handles antibacteria data correctly', (t) => {
 	fetchMock.mock('/test', [{
 			id: 1,
@@ -61,6 +64,7 @@ test('handles special cases correctly', (t) => {
 		t.equals(abStore.get().size, 1);
 		t.equals(abStore.getById(1).substanceClass.id, -1);
 		fetchMock.restore();
+		global.fetch = originalFetch;
 		t.end();
 	});
 });

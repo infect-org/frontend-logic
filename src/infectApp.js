@@ -31,6 +31,21 @@ export default class InfectApp {
     };
 
 
+    bacteria = new BacteriaStore();
+    antibiotics = new AntibioticsStore();
+    substanceClasses = new SubstanceClassesStore();
+    resistances = new ResistancesStore([], item => `${item.bacterium.id}/${item.antibiotic.id}`);
+    filterValues = new PropertyMap();
+
+    // Filters for bacteria, antibiotics etc.
+    selectedFilters = new SelectedFilters();
+    // Filters for sampleSize and resistance, bound to a range input
+    offsetFilters = new OffsetFilters();
+    mostUsedFilters = new MostUsedFilters(this.selectedFilters, this.filterValues);
+
+    errorHandler = errorHandler;
+
+
     /**
     * @param {Object} config        e.g. {
     *                                   endpoints: {
@@ -42,45 +57,38 @@ export default class InfectApp {
     *                               }
     */
     constructor(config) {
+
         this._config = config;
 
-        this.bacteria = new BacteriaStore();
-        this.antibiotics = new AntibioticsStore();
-        this.substanceClasses = new SubstanceClassesStore();
-        this.resistances = new ResistancesStore([], item => `${item.bacterium.id}/${
-            item.antibiotic.id}`);
-
-        this.filterValues = new PropertyMap();
         this._setupFilterValues();
-        // Filters for bacteria, antibiotics etc.
-        this.selectedFilters = new SelectedFilters();
-        // Filters for sampleSize and resistance, bound to a range input
-        this.offsetFilters = new OffsetFilters();
         this._setupOffsetFilters();
-
-        this.mostUsedFilters = new MostUsedFilters(this.selectedFilters, this.filterValues);
-
-        this._setupFetchers();
 
         this.views.matrix.setSelectedFilters(this.selectedFilters);
         this.views.matrix.setOffsetFilters(this.offsetFilters);
         this.views.matrix.setupDataWatchers(this.antibiotics, this.bacteria, this.resistances);
 
+    }
+
+
+    /**
+     * Use separate init method as it uses async functions; we shall not use those in a 
+     * constructor.
+     */
+    initialize() {
+        const fetcherPromise = this._setupFetchers();
         const populationFilterFetcher = new PopulationFilterFetcher(
             this._config,
             this.filterValues,
         );
-        populationFilterFetcher.init();
-
-        this.errorHandler = errorHandler;
-
+        const populationFilterPromise = populationFilterFetcher.init();
+        return Promise.all([fetcherPromise, populationFilterPromise]);
     }
-
 
 
     /**
     * Fetches data from the server, sets up data in the correct order and puts them into the
     * corresponding stores.
+    * @returns {Promise}
     */
     _setupFetchers() {
 
@@ -89,7 +97,8 @@ export default class InfectApp {
             this._config.endpoints.apiPrefix + this._config.endpoints.substanceClasses,
             this.substanceClasses,
         );
-        substanceClassesFetcher.getData();
+        const substanceClassesPromise = substanceClassesFetcher.getData();
+
         log('Fetching data for substanceClasses.');
 
         // Antibiotics (wait for substance classes)
@@ -100,7 +109,7 @@ export default class InfectApp {
             [this.substanceClasses],
             this.substanceClasses,
         );
-        antibioticsFetcher.getData();
+        const antibioticPromise = antibioticsFetcher.getData();
         log('Fetching data for antibiotics.');
 
         // Bacteria
@@ -109,7 +118,7 @@ export default class InfectApp {
             this.bacteria,
             { headers: { select: 'shape.*' } },
         );
-        bacteriaFetcher.getData();
+        const bacteriaPromise = bacteriaFetcher.getData();
         log('Fetching data for bacteria.');
 
         // Resistances (wait for antibiotics and bacteria)
@@ -124,15 +133,18 @@ export default class InfectApp {
             },
         );
         // Gets data for default filter switzerland-all
-        resistanceFetcher.getData();
+        const resistancePromise = resistanceFetcher.getData();
 
-        const populationFilterUpdater = new PopulationFilterUpdater(
+        new PopulationFilterUpdater(
             resistanceFetcher,
             this.selectedFilters,
         );
 
         log('Fetching data for resistances.');
         log('Fetchers setup done.');
+
+        return Promise.all([substanceClassesPromise, antibioticPromise, bacteriaPromise,
+            resistancePromise]);
 
     }
 

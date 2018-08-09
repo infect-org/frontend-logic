@@ -3,6 +3,9 @@ import fetchMock from 'fetch-mock';
 import Fetcher from './standardFetcher';
 import Store from './store';
 
+// Fetch-mock does not reset itself if there's no global fetch
+const originalFetch = global.fetch;
+
 test('throws on setup if params are missing', (t) => {
 	t.throws(() => new Fetcher(), /missing/);
 	t.throws(() => new Fetcher('test'), /missing/);
@@ -84,6 +87,7 @@ test('handles default data correctly', (t) => {
 	setTimeout(() => {
 		t.equals(store.get().size, 2);
 		fetchMock.restore();
+		global.fetch = originalFetch;
 		t.end();
 	}, 0);
 });

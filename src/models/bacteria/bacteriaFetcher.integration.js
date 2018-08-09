@@ -3,6 +3,9 @@ import BacteriaFetcher from './bacteriaFetcher';
 import BacteriaStore from './bacteriaStore';
 import fetchMock from 'fetch-mock';
 
+// Fetch-mock does not reset itself if there's no global fetch
+const originalFetch = global.fetch;
+
 test('handles bacteria data correctly', (t) => {
 	fetchMock.mock('/bact', [{
 		id: 5,
@@ -23,6 +26,8 @@ test('handles bacteria data correctly', (t) => {
 		t.equals(store.getById(5).shape, 'round');
 		t.equals(store.getById(5).aerobic, true);
 		t.equals(store.getById(5).gram, true);
+		fetchMock.restore();
+		global.fetch = originalFetch;
 		t.end();
 	});
 });

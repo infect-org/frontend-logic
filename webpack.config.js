@@ -9,9 +9,10 @@ const TapWebpackPlugin = require('tap-webpack-plugin');
 
 const basePath = 'src/js';
 const entries = walk('.')
-    .filter((name) => /\.(unit|integration)\.js$/.test(name))
-    .filter((item) => console.log(item) || true)
-    .map((name) => path.join(__dirname, name));
+    .filter(name => /\.(unit|integration)\.js$/.test(name))
+    //.filter((name) => /infectApp\.integration\.js$/.test(name))
+    .filter(item => console.log(item) || true)
+    .map(name => path.join(__dirname, name));
 
 console.log('Test', entries.length, 'files');
 

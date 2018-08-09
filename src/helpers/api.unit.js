@@ -2,6 +2,8 @@ import test from 'tape';
 import fetchMock from 'fetch-mock';
 import {fetchApi} from './api';
 
+// Fetch-mock does not reset itself if there's no global fetch
+const originalFetch = global.fetch;
 
 test('throws on invalid states', (t) => {
 	fetchMock.mock('/api', { status: 404, body: 'nope' });
@@ -81,6 +83,7 @@ test('succeeds on passed status codes', (t) => {
 		.then((response) => {
 			t.equal(response.status, 409);
 			fetchMock.restore();
+			global.fetch = originalFetch;
 			t.end();
 		});
 });

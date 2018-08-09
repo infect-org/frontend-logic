@@ -93,14 +93,14 @@ export default class ResistancesFetcher extends Fetcher {
             const antibiotic = antibiotics.find(item => item.id === resistance.compoundId);
 
             if (!antibiotic) {
-                console.error(`ResistancesFetcher: Antibiotic missing in %o for 
-                    resistance %o`, antibiotics, resistance);
+                throw new Error(`ResistancesFetcher: Antibiotic missing for 
+                    ${JSON.stringify(resistance)} %o`);
                 return;
             }
 
             if (!bacterium) {
-                console.error(`ResistancesFetcher: Bacterium missing in %o for 
-                    resistance %o`, bacteria, resistance);
+                throw new Error(`ResistancesFetcher: Bacterium missing for 
+                    ${JSON.stringify(resistance)}`); 
                 return;
             }
 
