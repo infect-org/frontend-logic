@@ -41,8 +41,8 @@ export default class ResistancesFetcher extends Fetcher {
 
         this._store.clear();
 
-        const bacteria = this._stores.bacteria.get().values();
-        const antibiotics = this._stores.antibiotics.get().values();
+        const bacteria = Array.from(this._stores.bacteria.get().values());
+        const antibiotics = Array.from(this._stores.antibiotics.get().values());
 
         // On the very first round (when we're getting data for switzerland-all) remove all
         // antibiotics that don't have any resistance data.
