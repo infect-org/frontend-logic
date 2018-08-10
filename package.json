@@ -1,8 +1,8 @@
 {
   "name": "infect-frontend-logic",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "",
-  "main": "src/infectApp.js",
+  "main": "index.js",
   "scripts": {
     "test": "node node_modules/webpack/bin/webpack.js --config webpack.config.js"
   },
@@ -17,8 +17,10 @@
   },
   "homepage": "https://github.com/infect-org/frontend-logic#readme",
   "dependencies": {
+    "debug": "^3.1.0",
+    "fuse.js": "^3.2.1",
     "tinycolor2": "^1.4.1",
-    "fuse.js": "^3.2.1"
+    "whatwg-fetch": "^2.0.4"
   },
   "peerDependencies": {
     "mobx": "^3.6.2"
@@ -29,6 +31,7 @@
     "@babel/plugin-proposal-decorators": "^7.0.0-beta.55",
     "@babel/plugin-proposal-object-rest-spread": "^7.0.0-beta.55",
     "@joinbox/eslint-config-joinbox": "^1.0.5",
+    "babel-eslint": "^8.2.6",
     "babel-loader": "^8.0.0-beta.4",
     "fetch-mock": "^6.5.2",
     "mobx": "^3.6.2",
@@ -38,7 +41,6 @@
     "tape": "^4.9.1",
     "walk-sync": "^0.3.2",
     "webpack": "^4.16.4",
-    "webpack-cli": "^3.1.0",
-    "whatwg-fetch": "^2.0.4"
+    "webpack-cli": "^3.1.0"
   }
 }
