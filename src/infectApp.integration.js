@@ -17,6 +17,7 @@ function getConfig() {
             regions: 'generics.region',
             countries: 'generics.country',
             ageGroups: 'generics.ageGroup',
+            hospitalStatus: 'generics.hospitalStatus',
         },
     };
     return config;
@@ -66,7 +67,7 @@ test('throws with any invalid config', (t) => {
 
     // Only test fields that are called in intialize.
     const relevantFields = ['bacteria', 'antibiotics', 'resistances', 'substanceClasses',
-        'regions', 'countries', 'ageGroups'];
+        'regions', 'countries', 'ageGroups', 'hospitalStatus'];
 
     // Create a promise for every bad endpoint; execute one promise after another, at the end
     // restore everything and end test.

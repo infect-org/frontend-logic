@@ -1,7 +1,8 @@
+import { transaction } from 'mobx';
+import debug from 'debug';
 import Fetcher from '../../helpers/standardFetcher';
 import Resistance from './resistance';
-import { reaction, transaction } from 'mobx';
-import debug from 'debug';
+
 const log = debug('infect:ResistancesFetcher');
 
 export default class ResistancesFetcher extends Fetcher {
@@ -95,13 +96,11 @@ export default class ResistancesFetcher extends Fetcher {
             if (!antibiotic) {
                 throw new Error(`ResistancesFetcher: Antibiotic missing for 
                     ${JSON.stringify(resistance)} %o`);
-                return;
             }
 
             if (!bacterium) {
                 throw new Error(`ResistancesFetcher: Bacterium missing for 
-                    ${JSON.stringify(resistance)}`); 
-                return;
+                    ${JSON.stringify(resistance)}`);
             }
 
             const resistanceValues = [{
@@ -117,7 +116,7 @@ export default class ResistancesFetcher extends Fetcher {
 
             // Duplicate resistance
             if (this._store.hasWithId(resistanceObject)) {
-                console.warn(`ResistanceFetcher: Resistance ${ JSON.stringify(resistance) } is
+                console.warn(`ResistanceFetcher: Resistance ${JSON.stringify(resistance)} is
                     a duplicate; an entry for the same bacterium and antibiotic does exist.`);
                 return;
             }

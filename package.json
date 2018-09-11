@@ -1,6 +1,6 @@
 {
   "name": "infect-frontend-logic",
-  "version": "2.0.1",
+  "version": "2.1.0",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -24,7 +24,7 @@
     "whatwg-fetch": "^2.0.4"
   },
   "peerDependencies": {
-    "mobx": "^4.3.1"
+    "mobx": "4.3.1"
   },
   "devDependencies": {
     "@babel/core": "^7.0.0-beta.55",
@@ -35,7 +35,7 @@
     "babel-eslint": "^8.2.6",
     "babel-loader": "^8.0.0-beta.4",
     "fetch-mock": "^6.5.2",
-    "mobx": "^4.3.1",
+    "mobx": "4.3.1",
     "node-fetch": "^2.2.0",
     "tap-spec": "^5.0.0",
     "tap-webpack-plugin": "^2.0.0",

@@ -24,9 +24,11 @@ export default class PopulationFilterUpdater {
     @computed get filterHeaders() {
         const region = this.selectedFilters.getFiltersByType(filterTypes.region);
         const ageGroup = this.selectedFilters.getFiltersByType(filterTypes.ageGroup);
+        const hospitalStatus = this.selectedFilters.getFiltersByType(filterTypes.hospitalStatus);
         return {
             regionIds: region.map(filter => filter.value),
             ageGroupIds: ageGroup.map(filter => filter.value),
+            hospitalStatusIds: hospitalStatus.map(filter => filter.value),
         };
     }
 
@@ -43,7 +45,7 @@ export default class PopulationFilterUpdater {
             }
             // errorHandler.handle(new Error('shit'));
         }, {
-            // Overwrite existing compartor function as filterHeaders returns a *new* (and
+            // Overwrite existing comparator function as filterHeaders returns a *new* (and
             // therefore different) object every time it is invoked. Compare if their JSON
             // (content) stays the same.
             equals: (a, b) => JSON.stringify(a) === JSON.stringify(b),

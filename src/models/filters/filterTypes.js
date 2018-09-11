@@ -7,4 +7,5 @@ export default {
     bacterium: 'bacterium',
     antibiotic: 'antibiotic',
     substanceClass: 'substanceClass',
+    hospitalStatus: 'hospitalStatus',
 };

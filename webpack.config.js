@@ -26,7 +26,7 @@ module.exports = [
         /* pass in entry manually */
         , entry: entries
         , output: {
-            path: path.resolve(__dirname, 'www/dist/')
+            path: path.resolve(__dirname, 'testOutput')
             , filename: 'test.js'
         }
         , watch: true

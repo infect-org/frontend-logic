@@ -35,6 +35,7 @@ test('creates correct headers', (t) => {
     t.deepEqual(resistancesFetcherFilters, [{
         regionIds: [5],
         ageGroupIds: [],
+        hospitalStatusIds: [],
     }]);
 
     // Non-related filter: Should not update

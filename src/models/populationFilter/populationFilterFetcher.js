@@ -1,6 +1,7 @@
+import debug from 'debug';
 import { fetchApi } from '../../helpers/api.js';
 import filterTypes from '../filters/filterTypes';
-import debug from 'debug';
+
 const log = debug('infect:PopulationFilterFetcher');
 
 /**
@@ -20,6 +21,7 @@ export default class PopulationFilterFetcher {
     async init() {
         await this.setupRegions();
         await this.setupAgeGroups();
+        await this.setupHospitalStatus();
     }
 
 
@@ -31,7 +33,7 @@ export default class PopulationFilterFetcher {
         const regionData = await fetchApi(url);
 
         regionData.data.forEach((region) => {
-            // Don't add default filter (switzerland-all) to filters; will be add manually to 
+            // Don't add default filter (switzerland-all) to filters; will be add manually to
             // filter list as it shouldnot be visible (and it corresponds to no filter set)
             if (region.identifier === 'switzerland-all') return;
 
@@ -45,8 +47,10 @@ export default class PopulationFilterFetcher {
             this.filterValues.addEntity(filterTypes.region, regionObject);
         });
 
-        log('Region filters added, are %o', 
-            this.filterValues.getValuesForProperty(filterTypes.region, 'id'));
+        log(
+            'Region filters added, are %o',
+            this.filterValues.getValuesForProperty(filterTypes.region, 'id'),
+        );
     }
 
 
@@ -58,25 +62,33 @@ export default class PopulationFilterFetcher {
         const ageGroupData = await fetchApi(url);
 
         ageGroupData.data.forEach((ageGroup) => {
-            // Don't add default filter (switzerland-all) to filters; will be add manually to 
-            // filter list as it shouldnot be visible (and it corresponds to no filter set)
-            //if (region.identifier === 'switzerland-all') return;
-
-            const ageGroupObject = {
-                id: ageGroup.id,
-                // Needed only to get a nice name for the id
-                name: ageGroup.name,
-            };
-
             log('Add filter %o for ageGroup', ageGroup);
             this.filterValues.addEntity(filterTypes.ageGroup, ageGroup);
         });
 
-        log('Age group filters added, are %o', 
-            this.filterValues.getValuesForProperty(filterTypes.ageGroup, 'id'));
+        log(
+            'Age group filters added, are %o',
+            this.filterValues.getValuesForProperty(filterTypes.ageGroup, 'id'),
+        );
 
     }
 
+
+    async setupHospitalStatus() {
+        const url = this.config.endpoints.apiPrefix + this.config.endpoints.hospitalStatus;
+        const hospitalStatusData = await fetchApi(url);
+
+        hospitalStatusData.data.forEach((hospitalStatus) => {
+            log('Add filter %o for hospitalStatus', hospitalStatus);
+            this.filterValues.addEntity(filterTypes.hospitalStatus, hospitalStatus);
+        });
+
+        log(
+            'hospitalStatus filters added, are %o',
+            this.filterValues.getValuesForProperty(filterTypes.hospitalStatus, 'id'),
+        );
+
+    }
 
 
 }
