@@ -48,8 +48,11 @@ class MatrixView {
         max: 0,
     };
 
-    /* Key: antibioticId/bacteriumId, value: Resistance */
-    @observable _resistances = new Map();
+    /**
+     * Key: antibioticId/bacteriumId, value: Resistance.
+     * Deep watching is not required, as resistances have their own observable fields where needed.
+     */
+    @observable.shallow _resistances = [];
 
     /**
     * Height of highest substance class label
@@ -116,6 +119,7 @@ class MatrixView {
         // Make sure we're watching them.
         observe(resistances.status, (change) => {
             if (change.newValue !== 'ready') return;
+            // Use own function as we need an @action
             this._clearResistances();
             resistances.getAsArray().forEach((resistance) => {
                 this.addResistance(resistance);
@@ -297,16 +301,12 @@ class MatrixView {
 
 
     @action addResistance(resistance) {
-        const id = `${resistance.antibiotic.id}/${resistance.bacterium.id}`;
-        if (this._resistances.has(id)) {
-            throw new Error('Trying to overwrite resistance; not yet implemented. sampleSizeExtremes must be recalculated.');
-        }
-        this._resistances.set(id, new ResistanceMatrixView(resistance, this));
+        this._resistances.push(new ResistanceMatrixView(resistance, this));
         this._updateSampleSizeExtremes(resistance);
     }
 
     @computed get resistances() {
-        return Array.from(this._resistances.values());
+        return this._resistances;
     }
 
     @action _updateSampleSizeExtremes(resistance) {
