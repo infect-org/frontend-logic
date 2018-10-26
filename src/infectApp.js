@@ -2,7 +2,7 @@
 * The main application that sets everything up and brings it together
 */
 import 'whatwg-fetch';
-import { when, observable } from 'mobx';
+import { when, observable, transaction } from 'mobx';
 import debug from 'debug';
 import AntibioticsStore from './models/antibiotics/antibioticsStore';
 import AntibioticsFetcher from './models/antibiotics/antibioticsFetcher';
@@ -71,7 +71,7 @@ export default class InfectApp {
 
 
     /**
-     * Use separate init method as it uses async functions; we shall not use those in a 
+     * Use separate init method as it uses async functions; we shall not use those in a
      * constructor.
      */
     initialize() {
@@ -202,14 +202,16 @@ export default class InfectApp {
     */
     _addAllEntitiesToFilters(entityConfigs) {
         let counter = 0;
-        entityConfigs.forEach((entityConfig) => {
-            this[entityConfig.plural].getAsArray().forEach((item) => {
+        transaction(() => {
+            entityConfigs.forEach((entityConfig) => {
+                this[entityConfig.plural].getAsArray().forEach((item) => {
 
-                // Don't add substanceClasses that are not linked to antibiotics
-                if (entityConfig.singular === 'substanceClass' && !item.used) return;
+                    // Don't add substanceClasses that are not linked to antibiotics
+                    if (entityConfig.singular === 'substanceClass' && !item.used) return;
 
-                counter += 1;
-                this.filterValues.addEntity(entityConfig.singular, item);
+                    counter += 1;
+                    this.filterValues.addEntity(entityConfig.singular, item);
+                });
             });
         });
         log('All relevant entities ready, added %d entities to filters.', counter);

@@ -1,4 +1,5 @@
 import debug from 'debug';
+import { transaction } from 'mobx';
 import { fetchApi } from '../../helpers/api.js';
 import filterTypes from '../filters/filterTypes';
 
@@ -32,19 +33,21 @@ export default class PopulationFilterFetcher {
         const url = this.config.endpoints.apiPrefix + this.config.endpoints.regions;
         const regionData = await fetchApi(url);
 
-        regionData.data.forEach((region) => {
-            // Don't add default filter (switzerland-all) to filters; will be add manually to
-            // filter list as it shouldnot be visible (and it corresponds to no filter set)
-            if (region.identifier === 'switzerland-all') return;
+        transaction(() => {
+            regionData.data.forEach((region) => {
+                // Don't add default filter (switzerland-all) to filters; will be add manually to
+                // filter list as it shouldnot be visible (and it corresponds to no filter set)
+                if (region.identifier === 'switzerland-all') return;
 
-            const regionObject = {
-                id: region.id,
-                // Needed only to get a nice name for the id
-                name: region.name,
-            };
+                const regionObject = {
+                    id: region.id,
+                    // Needed only to get a nice name for the id
+                    name: region.name,
+                };
 
-            log('Add filter %o for region', regionObject);
-            this.filterValues.addEntity(filterTypes.region, regionObject);
+                log('Add filter %o for region', regionObject);
+                this.filterValues.addEntity(filterTypes.region, regionObject);
+            });
         });
 
         log(
