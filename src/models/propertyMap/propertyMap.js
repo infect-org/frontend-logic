@@ -107,15 +107,20 @@ export default class PropertyMap {
 			// Only add properties that are part of a config
 			if (!config[property]) return;
 
+			const value = entity[property];
+
+			// If value is undefined (e.g. for shape on bacterium Rickettsia sp.), don't add it
+			// to the value list – user won't filter by or search for it.
+			if (value === undefined) return;
+
 			// Get/create property
-			let existingProperties = this._properties.getBy({ entityType: entityType, name: property });
+			let existingProperties = this._properties.getBy({entityType: entityType, name: property });
 			if (!existingProperties.length) {
 				const niceName = this._getTranslation(config[property].translation, property);
 				existingProperties = this._properties.add({ entityType: entityType, name: property, niceName: niceName });
 			}
 
 			// Get/create value
-			const value = entity[property];
 			const existingValues = this._propertyValues.getBy({ property: existingProperties[0], value: value });
 			// Value exists
 			if (existingValues.length) return;
