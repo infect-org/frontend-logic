@@ -50,10 +50,14 @@ function createMap() {
         nameProperty: 'thisIsTheValue',
         property5: 3,
     }
+    // Undefined property value: Should not be added to propertyMap
+    const obj40 = {
+        property1: undefined,
+    };
     return {
-        map
-        , configs: [config1, config2, config3]
-        , objects: [obj10, obj11, obj12, obj20, obj30]
+        map,
+        configs: [config1, config2, config3],
+        objects: [obj10, obj11, obj12, obj20, obj30, obj40],
     };
 }
 
@@ -95,6 +99,15 @@ test('only adds values available', (t) => {
     map.addConfiguration('testEntity', configs[0]);
     map.addEntity('testEntity', objects[1]);
     t.deepEqual(map.getPropertiesForEntityType('testEntity'), [{ entityType: 'testEntity', name: 'property1', niceName: 'Property 1' }]);
+    // Does not contain property4
+    t.end();
+});
+
+test('does not add undefined values', (t) => {
+    const { map, configs, objects } = createMap();
+    map.addConfiguration('testEntity', configs[0]);
+    map.addEntity('testEntity', objects[5]);
+    t.deepEqual(map.getPropertiesForEntityType('testEntity'), []);
     // Does not contain property4
     t.end();
 });
