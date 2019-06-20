@@ -3,6 +3,7 @@
  * imports – this requires a web packer.
  */
 
+const webpack = require('webpack');
 const path = require('path');
 const walk = require('walk-sync');
 const TapWebpackPlugin = require('tap-webpack-plugin');
@@ -60,7 +61,10 @@ module.exports = [
             extensions: ['.js', '.jsx']
         }
         , plugins: [
-            new TapWebpackPlugin({ reporter: 'node ./node_modules/tap-spec/bin/cmd' })
+            new TapWebpackPlugin({ reporter: 'node ./node_modules/tap-spec/bin/cmd' }),
+            // node-fetch uses the «encoding» package, but doesn't have it in it's dependencies.
+            // we have to ignore it (we don't use it), so no error (module not found) will be thrown.
+            new webpack.IgnorePlugin(/^encoding$/, /node-fetch/),
         ]
 
     }

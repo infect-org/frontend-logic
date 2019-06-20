@@ -21,7 +21,8 @@ export default class SearchableMap {
 
 	@computed get values() {
 		// See https://mobx.js.org/refguide/array.html
-		return this._values.peek();
+		// no peek() method in mobx > 4, so we use slice
+		return this._values.slice();
 	}
 
 	set values(item) {

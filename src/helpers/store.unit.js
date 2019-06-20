@@ -111,13 +111,19 @@ test('setting fetchPromise updates status and promise', (t) => {
 test('sets status to error on errors', (t) => {
 	const store = new Store();
 	store.setFetchPromise(new Promise((resolve, reject) => {
-		setTimeout(() => {
-			reject();
-		}, 50);
+		setTimeout(reject, 50);
 	}));
+
 	observe(store.status, (status) => {
-		t.equals(store.status.identifier, 'error');
-		t.end();
+		// we do not want to track the status type 'add'
+		// because otherwise this method will be called twice, as an errorMessage
+		// is also added to the status property
+		// even both actions (update, add) are wrapped in the mobx runInAction-function, the observer
+		// (this function) is called twice
+		if (status.type === 'update') {
+			t.equals(status.newValue, 'error');
+			t.end();
+		}
 	});
 });
 

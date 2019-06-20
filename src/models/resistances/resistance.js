@@ -43,7 +43,18 @@ export default class Resistance {
     * Returns all resistance values, sorted by precision (see resistanceTypes)
     */
     getValuesByPrecision() {
-        return this.values.sort((a, b) => (a.type.precision > b.type.precision ? -1 : 1));
+        /**
+        * As «this.values» is an observableArray:
+        *
+        * Unlike the built-in implementation of the functions sort and reverse, observableArray.sort
+        * and reverse will not change the array in-place, but only will return a sorted/reversed copy.
+        * From MobX 5 and higher this will show a warning.
+        * It is recommended to use array.slice().sort() instead.
+        * 
+        * observableArray.replace(observableArray.slice().sort()) to sort & update in place
+        * 
+        */
+        return this.values.slice().sort((a, b) => (a.type.precision > b.type.precision ? -1 : 1));
     }
 
 }
