@@ -115,11 +115,14 @@ test('sets status to error on errors', (t) => {
 	}));
 
 	observe(store.status, (status) => {
-		// we do not want to track the status type 'add'
-		// because otherwise this method will be called twice, as an errorMessage
-		// is also added to the status property
-		// even both actions (update, add) are wrapped in the mobx runInAction-function, the observer
-		// (this function) is called twice
+		/**
+		 * We do not want to track the status type 'add'
+		 * because otherwise this method will be called twice, as an errorMessage
+		 * is also added to the status property.
+		 * Even both actions (update, add) are wrapped in the mobx runInAction-function, the observer
+		 * (this function) is called twice and because of that t.end() is called twice and
+		 * the test fails
+		 */
 		if (status.type === 'update') {
 			t.equals(status.newValue, 'error');
 			t.end();

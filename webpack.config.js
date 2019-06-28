@@ -62,8 +62,10 @@ module.exports = [
         }
         , plugins: [
             new TapWebpackPlugin({ reporter: 'node ./node_modules/tap-spec/bin/cmd' }),
-            // node-fetch uses the «encoding» package, but doesn't have it in it's dependencies.
-            // we have to ignore it (we don't use it), so no error (module not found) will be thrown.
+            /**
+             * Node-fetch uses the «encoding» package, but doesn't have it in its dependencies.
+             * We have to ignore it (we don't use it), so no error (module not found) will be thrown.
+             */
             new webpack.IgnorePlugin(/^encoding$/, /node-fetch/),
         ]
 
