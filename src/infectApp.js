@@ -20,6 +20,8 @@ import SelectedFilters from './models/filters/selectedFilters';
 import MostUsedFilters from './models/filters/mostUsedFilters';
 import PopulationFilterUpdater from './models/populationFilter/populationFilterUpdater';
 import PopulationFilterFetcher from './models/populationFilter/populationFilterFetcher';
+import GuidelineFetcher from './models/guidelines/GuidelineFetcher';
+import GuidelineStore from './models/guidelines/GuidelineStore';
 import errorHandler from './models/errorHandler/errorHandler';
 
 const log = debug('infect:App');
@@ -34,6 +36,7 @@ export default class InfectApp {
     bacteria = new BacteriaStore();
     antibiotics = new AntibioticsStore();
     substanceClasses = new SubstanceClassesStore();
+    guidelines = new GuidelineStore();
     resistances = new ResistancesStore([], item => `${item.bacterium.id}/${item.antibiotic.id}`);
     filterValues = new PropertyMap();
 
@@ -135,6 +138,20 @@ export default class InfectApp {
         // Gets data for default filter switzerland-all
         const resistancePromise = resistanceFetcher.getData();
 
+        /**
+         * Fake-get guidelines; only fetch them after bacteria and antibiotics are ready as we need
+         * to link those to our therapies.
+         * TODO: Update when API is ready.
+         */
+        const guidelinePromise = Promise.all([bacteriaPromise, antibioticPromise]).then(() => {
+            const guidelineFetcher = new GuidelineFetcher(
+                this.guidelines,
+                this.antibiotics,
+                this.bacteria,
+            );
+            guidelineFetcher.getData();
+        });
+
         new PopulationFilterUpdater(
             resistanceFetcher,
             this.selectedFilters,
@@ -144,7 +161,7 @@ export default class InfectApp {
         log('Fetchers setup done.');
 
         return Promise.all([substanceClassesPromise, antibioticPromise, bacteriaPromise,
-            resistancePromise]);
+            resistancePromise, guidelinePromise]);
 
     }
 

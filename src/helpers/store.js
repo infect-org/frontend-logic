@@ -44,7 +44,7 @@ export default class Store {
 
 	@action add(item, overwrite) {
 		const id = this._getItemId(item);
-		if (!id) throw new Error(`Store: Field id is missing on item ${ JSON.stringify(item) }.`);
+		if (id === undefined) throw new Error(`Store: Field id is missing on item ${ JSON.stringify(item) }.`);
 		if (!overwrite && this._items.has(id)) throw new Error(`Store: Tried to overwrite item with 
 			id ${ id } without using the appropriate overwrite argument.`);
 		this._items.set(id, item);
