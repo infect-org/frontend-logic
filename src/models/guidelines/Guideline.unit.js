@@ -1,5 +1,5 @@
 import test from 'tape';
-import Guideline from './Guideline';
+import Guideline from './Guideline.js';
 
 test('constructor validates arguments', (t) => {
     t.throws(() => new Guideline('NotANumber'), /number/);
@@ -14,3 +14,15 @@ test('sets properties from constructor', (t) => {
     t.deepEqual(guideline.diagnoses, ['diagnoses']);
     t.end();
 });
+
+test('can set selected diagnosis', (t) => {
+    const diagnosis = 'diagnosis';
+    const guideline = new Guideline(5, 'name', [diagnosis]);
+    guideline.selectDiagnosis(diagnosis);
+    t.is(guideline.selectedDiagnosis, diagnosis);
+    guideline.selectDiagnosis();
+    t.is(guideline.selectedDiagnosis, undefined);
+    t.throws(() => guideline.selectDiagnosis('invalid'), /part of/);
+    t.end();
+});
+

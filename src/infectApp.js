@@ -4,25 +4,27 @@
 import 'whatwg-fetch';
 import { when, observable, transaction } from 'mobx';
 import debug from 'debug';
-import AntibioticsStore from './models/antibiotics/antibioticsStore';
-import AntibioticsFetcher from './models/antibiotics/antibioticsFetcher';
-import SubstanceClassesStore from './models/antibiotics/substanceClassesStore';
-import SubstanceClassesFetcher from './models/antibiotics/substanceClassesFetcher';
-import BacteriaStore from './models/bacteria/bacteriaStore';
-import BacteriaFetcher from './models/bacteria/bacteriaFetcher';
-import ResistancesStore from './models/resistances/resistancesStore';
-import ResistancesFetcher from './models/resistances/resistancesFetcher';
-import MatrixView from './models/matrix/matrixView';
-import getFilterConfig from './models/filters/getFilterConfig';
-import PropertyMap from './models/propertyMap/propertyMap';
-import OffsetFilters from './models/filters/offsetFilters';
-import SelectedFilters from './models/filters/selectedFilters';
-import MostUsedFilters from './models/filters/mostUsedFilters';
-import PopulationFilterUpdater from './models/populationFilter/populationFilterUpdater';
-import PopulationFilterFetcher from './models/populationFilter/populationFilterFetcher';
-import GuidelineFetcher from './models/guidelines/GuidelineFetcher';
-import GuidelineStore from './models/guidelines/GuidelineStore';
-import errorHandler from './models/errorHandler/errorHandler';
+import AntibioticsStore from './models/antibiotics/antibioticsStore.js';
+import AntibioticsFetcher from './models/antibiotics/antibioticsFetcher.js';
+import SubstanceClassesStore from './models/antibiotics/substanceClassesStore.js';
+import SubstanceClassesFetcher from './models/antibiotics/substanceClassesFetcher.js';
+import BacteriaStore from './models/bacteria/bacteriaStore.js';
+import BacteriaFetcher from './models/bacteria/bacteriaFetcher.js';
+import ResistancesStore from './models/resistances/resistancesStore.js';
+import ResistancesFetcher from './models/resistances/resistancesFetcher.js';
+import MatrixView from './models/matrix/matrixView.js';
+import DrawerViewModel from './models/drawer/DrawerViewModel.js';
+import getFilterConfig from './models/filters/getFilterConfig.js';
+import PropertyMap from './models/propertyMap/propertyMap.js';
+import OffsetFilters from './models/filters/offsetFilters.js';
+import SelectedFilters from './models/filters/selectedFilters.js';
+import MostUsedFilters from './models/filters/mostUsedFilters.js';
+import PopulationFilterUpdater from './models/populationFilter/populationFilterUpdater.js';
+import PopulationFilterFetcher from './models/populationFilter/populationFilterFetcher.js';
+import GuidelineFetcher from './models/guidelines/GuidelineFetcher.js';
+import GuidelineStore from './models/guidelines/GuidelineStore.js';
+import errorHandler from './models/errorHandler/errorHandler.js';
+import updateDrawerFromGuidelines from './models/drawer/updateDrawerFromGuidelines.js';
 
 const log = debug('infect:App');
 
@@ -30,6 +32,7 @@ export default class InfectApp {
 
     @observable views = {
         matrix: new MatrixView(),
+        drawer: new DrawerViewModel(),
     };
 
 
@@ -69,6 +72,8 @@ export default class InfectApp {
         this.views.matrix.setSelectedFilters(this.selectedFilters);
         this.views.matrix.setOffsetFilters(this.offsetFilters);
         this.views.matrix.setupDataWatchers(this.antibiotics, this.bacteria, this.resistances);
+
+        updateDrawerFromGuidelines(this.guidelines, this.views.drawer, errorHandler);
 
     }
 

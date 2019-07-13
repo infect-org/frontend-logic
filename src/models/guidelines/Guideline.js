@@ -1,8 +1,19 @@
+import { observable, action } from 'mobx';
+import debug from 'debug';
+
+const log = debug('infect:Guideline');
+
 /**
  * Represents a single guideline (from a hospital, institution or society, e.g. «Schweiz.
  * Gesellschaft für Infektiologie»)
  */
 export default class Guideline {
+
+    /**
+     * Holds the diagnosis that the user selected; matrix is highlighted correspondingly, diagnosis
+     * might be displayed in drawer.
+     */
+    @observable selectedDiagnosis;
 
     /**
      * @param  {Number} id              ID of guideline (on API)
@@ -21,6 +32,19 @@ export default class Guideline {
         this.id = id;
         this.name = name;
         this.diagnoses = diagnoses;
+    }
+
+    /**
+     * Update selected diagnosis
+     * @param  {Diagnosis} [diagnosis]  Diagnosis to select
+     */
+    @action selectDiagnosis(diagnosis) {
+        // Check if diagnosis is part of this.diagnoses
+        if (diagnosis !== undefined && !this.diagnoses.includes(diagnosis)) {
+            throw new Error(`Guideline: Selected diagnosis ${JSON.stringify(diagnosis)} is not part of this guideline's diagnoses.`);
+        }
+        log('Select diagnosis %o', diagnosis);
+        this.selectedDiagnosis = diagnosis;
     }
 
 }

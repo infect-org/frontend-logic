@@ -1,7 +1,10 @@
-import Guideline from './Guideline';
-import Therapy from './Therapy';
-import Diagnosis from './Diagnosis';
-import DiagnosisClass from './DiagnosisClass';
+import debug from 'debug';
+import Guideline from './Guideline.js';
+import Therapy from './Therapy.js';
+import Diagnosis from './Diagnosis.js';
+import DiagnosisClass from './DiagnosisClass.js';
+
+const log = debug('infect:GuidelineFetcher');
 
 /**
  * Temporary solution that mocks all Guideline data (until API is done). TODO: Connect API through
@@ -40,16 +43,12 @@ export default class GuidelineFetcher {
             [
                 {
                     antibiotic: sortedAntibiotics[0],
-                    markdownText: `
-                        * TMP/SMX forte alle 12 h für 7 d
-                        * (Anpassung gemäss Urinkultur!)
-                        * **ODER**
-                    `,
+                    markdownText: `* TMP/SMX forte alle 12 h für 7 d
+* (Anpassung gemäss Urinkultur!)
+* **ODER**`,
                 }, {
                     antibiotic: sortedAntibiotics[1],
-                    markdownText: `
-                        Nitrofurantoin [100 mg](http://infect.info) alle 12 h für 7 d
-                    `,
+                    markdownText: 'Nitrofurantoin [100 mg](http://infect.info) alle 12 h für 7 d',
                 },
             ],
             1,
@@ -98,11 +97,11 @@ export default class GuidelineFetcher {
                         Nitrofurantoin 100 mg alle 12 h für 5 d
                     `,
                 }, {
-                    antibiotic: sortedAntibiotics[10],
-                    markdownText: `
-                         TMP / SMX forte alle 12h für 3d (lokale Resistenzlage E.coli beachten, 
-                         aktuell in der Ostschweiz für junge Frauen mit erstmaliger Symptomatik 
-                         weiterhin 1. Wahl)
+                    antibiotic: sortedAntibiotics[11],
+                    markdownText: `TMP / SMX forte *alle* 12h für 3d (lokale Resistenzlage E.coli beachten, 
+aktuell in der Ostschweiz für junge Frauen mit erstmaliger Symptomatik 
+weiterhin 1. Wahl)
+# Zwischentitel hier!
                     `,
                 },
             ],
@@ -115,9 +114,7 @@ export default class GuidelineFetcher {
             [
                 {
                     antibiotic: sortedAntibiotics[9],
-                    markdownText: `
-                       Ciprofloxacin 500 mg alle 12 h für 7 d
-                    `,
+                    markdownText: 'Ciprofloxacin 500 mg alle 12 h für 7 d',
                 },
             ],
             2,
@@ -142,6 +139,8 @@ export default class GuidelineFetcher {
             'Schweizerische Gesellschaft für Infektiologie',
             [komplizierteZystitis, unkomplizierteZystitis],
         );
+
+        log('Guideline is %o', sgiGuideline);
 
         this.guidelineStore.add(sgiGuideline);
 

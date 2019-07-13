@@ -1,5 +1,5 @@
 import test from 'tape';
-import GuidelineStore from './GuidelineStore';
+import GuidelineStore from './GuidelineStore.js';
 
 /* test('initializes selectedGuideline', (t) => {
     const guidelineStore = new GuidelineStore();
@@ -17,3 +17,15 @@ test('sets selectedGuideline to first guideline added', (t) => {
     t.end();
 });
 
+test('updates selected guideline', (t) => {
+    const guidelineStore = new GuidelineStore();
+    const first = { id: 0, name: 'firstGuideline' };
+    const second = { id: 1, name: 'secondGuideline' };
+    guidelineStore.add(first);
+    guidelineStore.add(second);
+    guidelineStore.selectGuideline(second);
+    t.is(guidelineStore.selectedGuideline.name, 'secondGuideline');
+    guidelineStore.selectGuideline();
+    t.is(guidelineStore.selectedGuideline, undefined);
+    t.end();
+});
