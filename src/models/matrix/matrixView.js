@@ -13,27 +13,16 @@ const log = debug('infect:MatrixView');
 
 class MatrixView {
 
-
-    /**
-    * Default radius for resistances (with a standard sample size); effective radius
-    * depends on sample size.
-    */
-    @observable defaultRadius = undefined;
-
-    /**
-    * Widest bacterium label
-    */
-    @observable bacteriumLabelColumnWidth = undefined;
-
-    /**
-    * Highest/widest antibiotic label. As label is rotated by 45°, height equals width
-    */
-    @observable antibioticLabelRowHeight = undefined;
-
     /**
     * Space between resistances and between (resistances and antibiotic group dividers)
     */
     @observable space = 3;
+
+    /**
+     * Space between substance class groups
+     * @type {Number}
+     */
+    @observable spaceBetweenGroups = 20;
 
     /**
     * Resistance that was hovered by the user
@@ -51,40 +40,164 @@ class MatrixView {
     /**
      * Key: antibioticId/bacteriumId, value: Resistance.
      * Deep watching is not required, as resistances have their own observable fields where needed.
+     * @private
      */
     @observable.shallow _resistances = [];
+
+    /**
+     * Holds all antibiotic matrix views. Key: Antibiotic ID (for inverse resolution of matrixView
+     * – mobx only allows numbers & shit), value: AntibioticMatrixView.
+     * @private
+     */
+    @observable antibioticsMap = new Map();
+
+    /**
+     * Holds all substance class matrix views
+     * @private
+     */
+    @observable substanceClassesMap = new Map();
+
+    /**
+     * Holds all bacteria matrix views
+     */
+    @observable bacteria = new Map();
 
     /**
     * Height of highest substance class label
     */
     @observable greatestSubstanceClassLabelHeight = undefined;
 
-    constructor() {
 
-        // #todo: Why do decorators not work for Maps? Maybe it's a cross-compiling issue?
-        /* Key: Antibiotic ID (for inverse resolution of matrixView – mobx only allows numbers &
-        shit), value: AntibioticMatrixView. Problem: Updates to map (original data) is not reflected
-        here */
-        this._antibiotics = observable.map();
-        // Substance classes are added whenever an antibiotic is added.
-        this._substanceClasses = observable.map();
-        /* Key: Bacterium ID (for inverse resolution of matrixView – mobx only allows promitives
-           as keys),
-           value: BacteriumMatrixView */
-        this._bacteria = observable.map();
-        /* Key: antibioticId/bacteriumId, value: Resistance */
-        // this._resistances = observable.map();
+    _substanceClassLabelHeights = new Map();
 
-        // Space between labels (bact/ab) and body
-        this.spaceBetweenGroups = 20;
 
-        // Needed to calculate space that's available for the matrices content
-        // Key: antibiotic, value: height in px
-        this._antibioticLabelDimensions = new Map();
-        this._bacteriaLabelWidths = new Map();
-        this._substanceClassLabelHeights = new Map();
+
+
+
+    /**
+     * Every bacterium label is only measured after it has been rendered into the DOM. To minimize
+     * calculations and re-renders, we only calculate bacteria label column width after all
+     * bacteria were rendered and measured.
+     * @return {Bool}   True if all bacteria were rendered and measured
+     */
+    @computed get allBacteriaWereMeasured() {
+        return Array.from(this.bacteria.values).every(bacterium => (
+            bacterium.dimensions.width > -1 && bacterium.dimensions.height > -1
+        ));
+    }
+
+
+    /**
+     * Width of the bacterium column in matrix corresponds to the widest bacterium label's width
+     * Calculate it here.
+     * return {Number}     Width of column for bacterium labels. Is -1 if bacteria were not yet
+     *                     measured
+     */
+    @computed get bacteriumLabelColumnWidth() {
+        if (!this.allBacteriaWereMeasured) return -1;
+        return Array.from(this.bacteria.values()).reduce((prev, bacterium) => (
+            Math.max(bacterium.dimensions.width, prev)
+        ), -1);
+    }
+
+
+    /**
+     * Every antibiotic label is only measured after it has been rendered into the DOM. To minimize
+     * calculations and re-renders, we only calculate antibiotic label row height after all
+     * antibiotics were rendered and measured.
+     * @return {Bool}   True if all antibiotics were rendered and measured
+     */
+    @computed get allAntibioticsWereMeasured() {
+        return this.antibiotics.every(antibiotic => (
+            antibiotic.dimensions.width > -1 && antibiotic.dimensions.height > -1
+        ));
+    }
+
+
+    /**
+     * Height of the label row above matrix corresponds to the highest antibiotic label
+     * @return {Number}     Height of highest antibiotic label. Is -1 if antibiotics were not yet
+     *                      measured
+     */
+    @computed get antibioticLabelRowHeight() {
+        if (!this.allAntibioticsWereMeasured) return -1;
+        const maxHeight = this.antibiotics.reduce((prev, antibiotic) => (
+            Math.max(antibiotic.dimensions.width, prev)
+        ), -1);
+        log('Max height for antibiotic labels is %d', maxHeight, this.antibiotics);
+        return maxHeight;
+    }
+
+
+    /**
+     * Returns the «default» radius for our resistances; default radius is a resistances radius
+     * that has not been adjusted by the resistance's sample size (which may reduce it if it is low)
+     * @return {Number}     Default radius for resistances in matrix
+     */
+    @computed get defaultRadius() {
+
+        // Only calculate radius when all data is available
+        if (this.antibioticLabelRowHeight === -1) return 0;
+        if (this.bacteriumLabelColumnWidth === -1) return 0;
+        if (!this.dimensions) return 0;
+
+        log('Calculate default radius');
+
+        const numberOfAntibiotics = this.antibioticsMap.size;
+        // Every time at least one substance class changes (from antibiotic to antibiotic), we have
+        // to add an additional space.
+        // Calculate how many times this happens.
+        const numberOfSubstanceClassChanges = this.sortedAntibiotics.reduce((prev, item) => {
+            if (!prev.item) {
+                return {
+                    count: 0,
+                    item,
+                };
+            }
+            const diffs = getArrayDiff(
+                prev.item.antibiotic.getSubstanceClasses(),
+                item.antibiotic.getSubstanceClasses(),
+            );
+            return {
+                count: diffs.removed.length || diffs.added.length ? prev.count + 1 : prev.count,
+                item,
+            };
+        }, { count: 0, item: undefined }).count;
+
+        log(
+            'Calculate defaultRadius; bacteriumLabelColumnWidth is %d, numberOfAntibiotics %d, numberOfSubstanceClassChanges %d, width %d',
+            this.bacteriumLabelColumnWidth,
+            numberOfAntibiotics,
+            numberOfSubstanceClassChanges,
+            this.dimensions.width,
+        );
+
+        // Available space: Width - widest label - first space (right of label) - space taken up
+        // by right-most antibiotic
+        const availableSpace = this.dimensions.width - this.space -
+            this.bacteriumLabelColumnWidth - this.antibioticLabelRowHeight;
+
+        const whitespace = (numberOfAntibiotics + numberOfSubstanceClassChanges) * this.space;
+
+        log(
+            'Available space: %d. Whitespace: %d',
+            availableSpace,
+            whitespace,
+        );
+
+        // Radius: Don't go below 0, always be an int.
+        return Math.max(Math.floor((availableSpace - whitespace) / numberOfAntibiotics / 2), 1);
 
     }
+
+
+
+
+
+
+
+
+
 
 
     /**
@@ -157,33 +270,33 @@ class MatrixView {
     */
     @action addAntibiotic(antibiotic) {
         // Add antibiotics
-        if (this._antibiotics.has(antibiotic.id)) {
+        if (this.antibioticsMap.has(antibiotic.id)) {
             throw new Error(`MatrixView: Trying to add antibiotic with duplicate key ${antibiotic.id}.`);
         }
-        this._antibiotics.set(antibiotic.id, new AntibioticMatrixView(antibiotic, this));
-        log('Added antibiotic %o, number is %d', antibiotic, this._antibiotics.size);
+        this.antibioticsMap.set(antibiotic.id, new AntibioticMatrixView(antibiotic, this));
+        log('Added antibiotic %o, number is %d', antibiotic, this.antibioticsMap.size);
         // console.log('MatrixView: added ab, size is', antibiotic, this._antibiotics.size);
         // Add *all* substanceClasses of matrix (the whole hierarchy)
         const scs = antibiotic.getSubstanceClasses();
         scs.forEach((item) => {
-            if (this._substanceClasses.has(item.id)) return;
-            this._substanceClasses.set(item.id, new SubstanceClassMatrixView(item, this));
+            if (this.substanceClassesMap.has(item.id)) return;
+            this.substanceClassesMap.set(item.id, new SubstanceClassMatrixView(item, this));
         });
     }
 
     @computed get antibiotics() {
-        return Array.from(this._antibiotics.values());
+        return Array.from(this.antibioticsMap.values());
     }
 
     /**
     * Returns AntibioticView for the antibiotic passed in.
     */
     getAntibioticView(antibiotic) {
-        return this._antibiotics.get(antibiotic.id);
+        return this.antibioticsMap.get(antibiotic.id);
     }
 
     @computed get substanceClasses() {
-        return Array.from(this._substanceClasses.values());
+        return Array.from(this.substanceClassesMap.values());
     }
 
 
@@ -195,38 +308,7 @@ class MatrixView {
         // Convert to Antibiotics and then back to AntibioticMatrixViews. Why? Because it makes
         // the sortFunction simpler
         const sorted = sortAntibiotics(this.antibiotics.map(item => item.antibiotic));
-        return sorted.map(antibiotic => this._antibiotics.get(antibiotic.id));
-    }
-
-    /**
-    * Set height and width of ab labels. Width is needed because labels are at a 45° angle;
-    * the right-most label takes up additional space. Both width and height are based on the
-    * 45° angle.
-    */
-    @action setAntibioticLabelDimensions(antibiotic, width, height) {
-        // log('Set dimensions of antibiotic label for %o to %d/%d', antibiotic, width, height);
-        if (width % 1 !== 0 || height % 1 !== 0) {
-            throw new Error('MatrixView: Width and height for antibiotic labels must be integers.');
-        }
-        const existing = this._antibioticLabelDimensions.get(antibiotic);
-        // No changes to previous value: Return to prevent unnecessary re-renderings
-        if (existing && existing.height === height && existing.width === width) return;
-        this._antibioticLabelDimensions.set(antibiotic, {
-            width,
-            height,
-        });
-        this._calculateAntibioticLabelRowHeight();
-        // Default radius depends on antibiotic label as it they are slightly rotated and take up
-        // some space on the very right
-        this._calculateDefaultRadius();
-    }
-
-    @action _calculateAntibioticLabelRowHeight() {
-        if (this._antibioticLabelDimensions.size !== this.sortedAntibiotics.length) return;
-        this.antibioticLabelRowHeight = Array
-            .from(this._antibioticLabelDimensions.values())
-            .reduce((previous, item) => Math.max(previous, item.height), 0);
-        log('antibioticLabelRowHeight is %d', this.antibioticLabelRowHeight);
+        return sorted.map(antibiotic => this.antibioticsMap.get(antibiotic.id));
     }
 
     /**
@@ -245,7 +327,8 @@ class MatrixView {
         // Map raw ab/scs to corresponding martrixViews
         const result = new Map();
         xPositions.forEach((value, key) => {
-            const newKey = key instanceof SubstanceClass ? this._substanceClasses.get(key.id) : key;
+            const newKey = key instanceof SubstanceClass ? this.substanceClassesMap.get(key.id) :
+                key;
             result.set(newKey, value);
         });
         return result;
@@ -356,73 +439,11 @@ class MatrixView {
     */
     @action setDimensions(boundingBox) {
         log('Set dimensions to %o', boundingBox);
-        if (!boundingBox) return;
-        if (
-            this._dimensions && this._dimensions.height === boundingBox.height &&
-            this._dimensions.width === boundingBox.width) return;
-        this._dimensions = {
+        this.dimensions = {
             height: boundingBox.height,
             width: boundingBox.width,
         };
-        this._calculateDefaultRadius();
     }
-
-
-    /**
-    * Set defaultRadius for resistances as soon as all necessary measurements are available.
-    * Radius must be calculated independent of visible antibiotics; it should not change when
-    * something becomes visible or not.
-    */
-    @action _calculateDefaultRadius() {
-        // Bacteria not ready or labels not fully measured
-        if (!this._bacteria.size || this._bacteriaLabelWidths.size !== this._bacteria.size) return;
-        if (!this._dimensions) return;
-        if (this.antibioticLabelRowHeight === undefined) return;
-        log('Calculate default radius');
-        const numberOfAntibiotics = this._antibiotics.size;
-        // Every time at least one substance class changes (from antibiotic to antibiotic), we have
-        // to add an additional space.
-        // Calculate how many times this happens.
-        const numberOfSubstanceClassChanges = this.sortedAntibiotics.reduce((prev, item) => {
-            if (!prev.item) {
-                return {
-                    count: 0,
-                    item,
-                };
-            }
-            const diffs = getArrayDiff(
-                prev.item.antibiotic.getSubstanceClasses(),
-                item.antibiotic.getSubstanceClasses(),
-            );
-            return {
-                count: diffs.removed.length || diffs.added.length ? prev.count + 1 : prev.count,
-                item,
-            };
-        }, { count: 0, item: undefined }).count;
-
-        log(
-            'Calculate defaultRadius; bacteriumLabelColumnWidth is %d, numberOfAntibiotics %d, numberOfSubstanceClassChanges %d, width %d',
-            this.bacteriumLabelColumnWidth,
-            numberOfAntibiotics,
-            numberOfSubstanceClassChanges,
-            this._dimensions.width,
-        );
-        // Available space: Width - widest label - first space (right of label) - space taken up
-        // by right-most antibiotic
-        const availableSpace = this._dimensions.width - this.space -
-            this.bacteriumLabelColumnWidth - this.antibioticLabelRowHeight;
-        const whitespace = (numberOfAntibiotics + numberOfSubstanceClassChanges) * this.space;
-        // Radius: Don't go below 0, always be an int.
-        this.defaultRadius = Math.max(Math.floor((availableSpace - whitespace) /
-            numberOfAntibiotics / 2), 1);
-        log(
-            'Available space: %d. Whitespace: %d. Default radius %d.',
-            availableSpace,
-            whitespace,
-            this.defaultRadius,
-        );
-    }
-
 
 
 
@@ -430,11 +451,11 @@ class MatrixView {
 
 
     @action addBacterium(bacterium) {
-        this._bacteria.set(bacterium.id, new BacteriumMatrixView(bacterium, this));
+        this.bacteria.set(bacterium.id, new BacteriumMatrixView(bacterium, this));
     }
 
     @action removeBacterium(bacterium) {
-        this._bacteria.delete(bacterium.id);
+        this.bacteria.delete(bacterium.id);
     }
 
     /**
@@ -442,7 +463,7 @@ class MatrixView {
     * @param {Array}        Array of bacteria, sorted
     */
     @computed get sortedBacteria() {
-        return Array.from(this._bacteria.values()).sort((a, b) => (
+        return Array.from(this.bacteria.values()).sort((a, b) => (
             a.bacterium.name < b.bacterium.name ? -1 : 1
         ));
     }
@@ -454,27 +475,11 @@ class MatrixView {
 
 
     getBacteriumView(bacterium) {
-        return this._bacteria.get(bacterium.id);
+        return this.bacteria.get(bacterium.id);
     }
 
-    @action setBacteriumLabelWidth(bacterium, width) {
-        log('Set width of bacteriumLabel %o to %d', bacterium, width);
-        // Unchanged
-        if (
-            this._bacteriaLabelWidths.has(bacterium) &&
-            this._bacteriaLabelWidths.get(bacterium) === width) return;
-        this._bacteriaLabelWidths.set(bacterium, width);
-        log('Set width of %o to %o', bacterium, width);
-        this._calculateBacteriumLabelColumnWidth();
-        this._calculateDefaultRadius();
-    }
 
-    @action _calculateBacteriumLabelColumnWidth() {
-        if (this._bacteriaLabelWidths.size !== this.sortedBacteria.length) return;
-        this.bacteriumLabelColumnWidth = Math.ceil(Array.from(this._bacteriaLabelWidths.values())
-            .reduce((prev, item) => Math.max(prev, item), 0));
-        log('bacteriumLabelColumnWidth is %d', this.bacteriumLabelColumnWidth);
-    }
+
 
     /**
     * Return y positions for bacteria (not including the column labels on top of the matrix). See
@@ -483,6 +488,8 @@ class MatrixView {
     * @ returns {Map}       Key: bacterium, value: Object with top
     */
     @computed get yPositions() {
+        if (!this.defaultRadius) return new Map();
+
         log('calculate yPositions');
         const yPositions = new Map();
         this.sortedBacteria
@@ -506,10 +513,6 @@ class MatrixView {
             ), 0) + (this.defaultRadius || 0);
     }
 
-
-
-
 }
 
 export default MatrixView;
-

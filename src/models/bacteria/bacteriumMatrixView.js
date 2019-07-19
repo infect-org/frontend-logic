@@ -1,22 +1,28 @@
-import {computed} from 'mobx';
+import { computed, observable, action } from 'mobx';
 import doFiltersMatch from '../filters/doFiltersMatch';
 
 export default class BacteriumMatrixView {
 
-	constructor(bacterium, matrix) {
-		this.bacterium = bacterium;
-		this._matrix = matrix;
-	}
-	
-	setWidth(width) {
-		if (!width) return;
-		this._matrix.setBacteriumLabelWidth(this, width);
-	}
+    @observable dimensions = {
+        width: -1,
+        height: -1,
+    }
 
-	@computed get visible() {
-		const bacteriaFilters = this._matrix.selectedFilters.getFiltersByType('bacterium');
-		const visible = doFiltersMatch(this.bacterium, bacteriaFilters);
-		return visible;
-	}
+    constructor(bacterium, matrix) {
+        this.bacterium = bacterium;
+        this.matrix = matrix;
+    }
+
+    @action setWidth(width) {
+        this.dimensions.width = width;
+        // Fake-Update height so that all bacteria seem to have been measured (for matrixView)
+        // TODO: Update correctly
+        this.dimensions.height = 1;
+    }
+
+    @computed get visible() {
+        const bacteriaFilters = this.matrix.selectedFilters.getFiltersByType('bacterium');
+        return doFiltersMatch(this.bacterium, bacteriaFilters);
+    }
 
 }
