@@ -64,6 +64,12 @@ export default class GuidelineFetcher {
                        Ciprofloxacin 500 mg alle 12 h für 7 d
                     `,
                 },
+                {
+                    antibiotic: sortedAntibiotics[0],
+                    markdownText: `
+                       Ich komm doppelt vor in dieser Therapie.
+                    `,
+                },
             ],
             2,
             'Zweite Wahl',

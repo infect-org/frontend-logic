@@ -30,4 +30,16 @@ export default class Therapy {
         };
     }
 
+    /**
+     * Returns true if this therapy contains a recommended antibiotic that equals antibiotic passed
+     * as param.
+     * @param  {Antibiotic} antibiotic
+     * @return {Boolean}
+     */
+    containsAntibiotic(antibiotic) {
+        return this.recommendedAntibiotics
+            .filter(recommendation => recommendation.antibiotic === antibiotic)
+            .length > 0;
+    }
+
 }

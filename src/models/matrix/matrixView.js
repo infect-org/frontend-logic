@@ -251,6 +251,21 @@ class MatrixView {
         return result;
     }
 
+    /**
+     * Returns with of all visible antibiotics (corresponds to position.right of the right-most
+     * antibiotic or substance class)
+     * @return {Number}
+     */
+    @computed get visibleAntibioticsWidth() {
+        let rightMostPosition = 0;
+        this.xPositions.forEach((position) => {
+            // right property is not set if antibiotic is invisble
+            if (position.right === undefined) return;
+            rightMostPosition = Math.max(rightMostPosition, position.right);
+        });
+        return rightMostPosition;
+    }
+
 
 
 
@@ -478,6 +493,17 @@ class MatrixView {
                 });
             });
         return yPositions;
+    }
+
+    /**
+     * Returns the height (in px) for all bacteria that are currently visible.
+     * @return {Number}
+     */
+    @computed get visibleBacteriaHeight() {
+        return Array.from(this.yPositions.values())
+            .reduce((prev, yPosition) => (
+                yPosition && yPosition.top > prev ? yPosition.top : prev
+            ), 0) + (this.defaultRadius || 0);
     }
 
 

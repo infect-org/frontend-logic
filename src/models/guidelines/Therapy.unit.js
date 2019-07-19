@@ -16,3 +16,15 @@ test('sets properties from constructor', (t) => {
     t.is(therapy.priority.name, 'prioName');
     t.end();
 });
+
+test('containsAntibiotic returns expected result', (t) => {
+    const antibiotics = [{
+        antibiotic: 'ab1', markdownText: '',
+    }, {
+        antibiotic: 'ab2', markdownText: '',
+    }];
+    const therapy = new Therapy(5, antibiotics, 2, 'prioName');
+    t.is(therapy.containsAntibiotic('ab1'), true);
+    t.is(therapy.containsAntibiotic('ab0'), false);
+    t.end();
+});
