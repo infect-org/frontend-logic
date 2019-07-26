@@ -7,6 +7,11 @@ const log = debug('infect:ResistancesFetcher');
 
 export default class ResistancesFetcher extends Fetcher {
 
+    /**
+     * Counts up every time handleData is called. Needed as we remove all antibiotics and bacteria
+     * that do not contain resistance data on the *first* call.
+     * @type {Number}
+     */
     dataHandled = 0;
 
     /**
@@ -19,14 +24,24 @@ export default class ResistancesFetcher extends Fetcher {
     */
     constructor(url, store, options, dependentStores, stores) {
         super(url, store, options, dependentStores);
-        this._stores = stores;
+        this.stores = stores;
     }
 
 
+    async getData(...params) {
+        /**
+         *  Set URL of latest call; in this.handleData(), drop all data that does not belong to
+         *  latest call (as earlier calls might be answered later and data for the wrong filters
+         *  would be displayed
+         */
+        this.lastestCallURL = this.url;
+        await super.getData(...params);
+    }
+
     async getDataForFilters(filters) {
         // Store original URL
-        if (!this._baseUrl) this._baseUrl = this._url;
-        this._url = `${this._baseUrl}?filter=${JSON.stringify(filters)}`;
+        if (!this.baseUrl) this.baseUrl = this.url;
+        this.url = `${this.baseUrl}?filter=${JSON.stringify(filters)}`;
         await this.getData();
     }
 
@@ -35,20 +50,25 @@ export default class ResistancesFetcher extends Fetcher {
     * Sets up ResistancesStore with data fetched from server.
     * @param {Array} data       Data as gotten from server
     */
-    _handleData(data) {
+    handleData(data, url) {
 
         log('Handle data %o', data);
         this.dataHandled += 1;
 
-        this._store.clear();
+        if (url !== this.lastestCallURL) {
+            log('Data belongs to URL %s, latest URL is %s; drop data.', url, this.lastestCallURL);
+            return;
+        }
 
-        const bacteria = Array.from(this._stores.bacteria.get().values());
-        const antibiotics = Array.from(this._stores.antibiotics.get().values());
+        this.store.clear();
+
+        const bacteria = Array.from(this.stores.bacteria.get().values());
+        const antibiotics = Array.from(this.stores.antibiotics.get().values());
 
         // On the very first round (when we're getting data for switzerland-all) remove all
         // antibiotics that don't have any resistance data.
         // TODO: We need a good endpoint which only returns ab/bact with data available. This
-        // is bullshit.
+        // is a quick-fix.
         if (this.dataHandled === 1) {
 
             const emptyBacteria = bacteria
@@ -64,7 +84,7 @@ export default class ResistancesFetcher extends Fetcher {
             // for unused bacteria data
             transaction(() => {
                 emptyBacteria.forEach((emptyBacterium) => {
-                    this._stores.bacteria.remove(emptyBacterium);
+                    this.stores.bacteria.remove(emptyBacterium);
                 });
             });
         }
@@ -115,13 +135,13 @@ export default class ResistancesFetcher extends Fetcher {
             const resistanceObject = new Resistance(resistanceValues, antibiotic, bacterium);
 
             // Duplicate resistance
-            if (this._store.hasWithId(resistanceObject)) {
+            if (this.store.hasWithId(resistanceObject)) {
                 console.warn(`ResistanceFetcher: Resistance ${JSON.stringify(resistance)} is
                     a duplicate; an entry for the same bacterium and antibiotic does exist.`);
                 return;
             }
 
-            this._store.add(resistanceObject);
+            this.store.add(resistanceObject);
             counter += 1;
 
         });

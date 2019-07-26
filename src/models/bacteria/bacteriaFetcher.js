@@ -3,7 +3,7 @@ import Bacterium from './bacterium';
 
 export default class BacteriaFetcher extends Fetcher {
 
-    _handleData(data) {
+    handleData(data) {
         data.forEach((item) => {
             const options = {
                 // Use two properties for aerobic/anaerobic, as selecting both
@@ -16,7 +16,7 @@ export default class BacteriaFetcher extends Fetcher {
                 shortName: item.shortName,
             };
             const bact = new Bacterium(item.id, item.name, options);
-            this._store.add(bact);
+            this.store.add(bact);
         });
     }
 

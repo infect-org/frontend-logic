@@ -8,7 +8,7 @@ export default class AntibioticsFetcher extends Fetcher {
 		this._substanceClasses = args[4];
 	}
 
-	_handleData(data) {
+	handleData(data) {
 
 		// Remove penicillin v and Cefuroxime Axetil (they contain no data)
 		let i = data.length;
@@ -55,7 +55,7 @@ export default class AntibioticsFetcher extends Fetcher {
 				po: item.perOs,
 				identifier: item.identifier,
 			});
-			this._store.add(antibiotic);
+			this.store.add(antibiotic);
 		});
 	}
 
