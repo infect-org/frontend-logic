@@ -117,3 +117,24 @@ test('calls handleData with data and url', async(t) => {
     t.end();
 });
 
+test('whole fetch promise fails if handleData on one instance fails', async(t) => {
+    fetchMock.mock('/test', { status: 200, body: [{ number: 1, id: 1 }] });
+    const store = new Store();
+    class ExtendedFetcher extends Fetcher {
+        handleData() {
+            throw new Error('Fetcher failed');
+        }
+    }
+    const fetcher = new ExtendedFetcher('/test', store);
+    try {
+        await fetcher.getData();
+        t.fails('Fetcher should throw');
+    } catch (err) {
+        t.is(err.message, 'Fetcher failed');
+    }
+    t.is(store.status.identifier, 'error');
+    fetchMock.restore();
+    global.fetch = originalFetch;
+    t.end();
+});
+

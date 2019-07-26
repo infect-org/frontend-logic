@@ -12,7 +12,13 @@ export default class Therapy {
      * @param {String} priorityName                Name of the priority, e.g. «First Choice»,
      *                                             «Alternative Choice»
      */
-    constructor(id, recommendedAntibiotics = [], priorityOrder = 1, priorityName = '') {
+    constructor(
+        id,
+        recommendedAntibiotics = [],
+        priorityOrder = 1,
+        priorityName = '',
+        markdownText = '',
+    ) {
         if (typeof id !== 'number') {
             throw new Error(`Therapy: First constructor argument (id) must be a number, is ${id}.`);
         }
@@ -28,6 +34,7 @@ export default class Therapy {
             order: priorityOrder,
             name: priorityName,
         };
+        this.markdownText = markdownText;
     }
 
     /**
@@ -40,6 +47,23 @@ export default class Therapy {
         return this.recommendedAntibiotics
             .filter(recommendation => recommendation.antibiotic === antibiotic)
             .length > 0;
+    }
+
+    /**
+     * Temporarily set diagnosisId, as on the API, diagnosis is a property of therapy, but in our
+     * models, we want therapies to belong to a diagnosis. See DiagnosisFetcher.
+     * @param {Number} id       ID of diagnosis this therapy belongs to
+     */
+    setDiagnosisId(id) {
+        this.diagnosisId = id;
+    }
+
+    /**
+     * As this.diagnosisId is only a temporary thing, we want it to be removed when it's not needed
+     * any more.
+     */
+    removeDiagnosisId() {
+        delete this.diagnosisId;
     }
 
 }

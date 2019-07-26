@@ -8,10 +8,11 @@ test('constructor validates arguments', (t) => {
 });
 
 test('sets properties from constructor', (t) => {
-    const guideline = new Guideline(5, 'name', ['diagnoses']);
+    const guideline = new Guideline(5, 'name', ['diagnoses'], 'Careful!');
     t.is(guideline.id, 5);
     t.is(guideline.name, 'name');
     t.deepEqual(guideline.diagnoses, ['diagnoses']);
+    t.is(guideline.markdownDisclaimer, 'Careful!');
     t.end();
 });
 

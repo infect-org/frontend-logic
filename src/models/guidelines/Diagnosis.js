@@ -39,4 +39,22 @@ export default class Diagnosis {
         this.therapies = therapies;
     }
 
+    /**
+     * On the API, id_guideline is part of diagnosis data; we want it the opposite way (diagnoses
+     * belong to guideline) and have therefore to store the relation temporarily (see
+     * GuidelineFetcher and DiagnosisFetcher).
+     * @param {Number} id   Guideline's ID on API
+     */
+    setGuidelineId(id) {
+        this.guidelineId = id;
+    }
+
+    /**
+     * Removes the guidelineId property completely when not needed any more (i.e. after setting up
+     * the guidelines)
+     */
+    removeGuidelineId() {
+        delete this.guidelineId;
+    }
+
 }

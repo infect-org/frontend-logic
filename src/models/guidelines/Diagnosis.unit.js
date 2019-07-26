@@ -18,3 +18,12 @@ test('sets properties from constructor', (t) => {
     t.deepEqual(diagnosis.therapies, ['therapies']);
     t.end();
 });
+
+test('sets and removes guidelineId', (t) => {
+    const diagnosis = new Diagnosis(5, 'name', 'fakeClass', ['inducing'], 'markdownText', ['therapies']);
+    diagnosis.setGuidelineId(5);
+    t.is(diagnosis.guidelineId, 5);
+    diagnosis.removeGuidelineId();
+    t.is(Object.prototype.hasOwnProperty.call(diagnosis, 'guidelineId'), false);
+    t.end();
+});

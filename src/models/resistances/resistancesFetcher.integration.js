@@ -1,6 +1,5 @@
 import test from 'tape';
 import fetchMock from 'fetch-mock';
-import { observe } from 'mobx';
 import ResistancesFetcher from './resistancesFetcher';
 import Store from '../../helpers/store';
 import Bacterium from '../bacteria/bacterium';

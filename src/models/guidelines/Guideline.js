@@ -21,7 +21,7 @@ export default class Guideline {
      *                                  (e.g. «Schweiz. Ges. für Infektiologie»)
      * @param  {Diagnosis[]} diagnoses  Array of all diagnoses that this guideline consists of
      */
-    constructor(id, name = '', diagnoses = []) {
+    constructor(id, name = '', diagnoses = [], markdownDisclaimer = '') {
 
         if (typeof id !== 'number') {
             throw new Error(`Guideline: First constructor argument (id) must be a number, is ${id}.`);
@@ -32,6 +32,7 @@ export default class Guideline {
         this.id = id;
         this.name = name;
         this.diagnoses = diagnoses;
+        this.markdownDisclaimer = markdownDisclaimer;
     }
 
     /**

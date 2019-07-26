@@ -1,6 +1,7 @@
-import { fetchApi } from './api';
 import { observe } from 'mobx';
 import debug from 'debug';
+import { fetchApi } from './api';
+
 const log = debug('infect:StandardFetcher');
 
 export default class StandardFetcher {
@@ -13,6 +14,11 @@ export default class StandardFetcher {
     *                                       store is handled. Example: Antibiotics must wait for
     *                                       substanceClasses, resistances for antibiotics and
     *                                       bacteria.
+    *                                       Pass a Store (and not the Fetcher) here as we might
+    *                                       want to access the store's data when it's ready – e.g.
+    *                                       to create links from a resistance to the corresponding
+    *                                       bacterium and antibiotic. As the store is a property of
+    *                                       this class, we can access it in this.handleData().
     */
     constructor(url, store, options = {}, dependentStores = []) {
         if (!url || !store) {
@@ -35,6 +41,8 @@ export default class StandardFetcher {
          * and needed in handleData to see what call (i.e. url) the data belongs to. This helps us
          * prevent race conditions (we can check if data belongs to the latest call that was made
          * and ignore it otherwise)
+         * We could use AbortController to cancel old/earlier requests; but it is not compatible
+         * with IE11 (https://developer.mozilla.org/en-US/docs/Web/API/AbortController/abort)
          */
         const { url } = this;
         const dataPromise = this.getAndParseData(url);
@@ -95,6 +103,7 @@ export default class StandardFetcher {
             .filter(store => (
                 store.status.identifier === 'loading' || store.status.identifier === 'initialized'
             ));
+        log('Waiting for %d stores', loadingStores.length);
 
         // Convert observers to promises; this method resolves when all promises are done
         await Promise.all(loadingStores.map(store => (

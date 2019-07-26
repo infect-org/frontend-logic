@@ -18,6 +18,15 @@ function getConfig() {
             countries: 'generics.country',
             ageGroups: 'generics.ageGroup',
             hospitalStatus: 'generics.hospitalStatus',
+            guidelineBaseUrl: 'http://guidelines.infect.info/v1/',
+            diagnosisClass: 'diagnosisClass',
+            therapyPriorities: 'therapyPriority',
+            therapyCompounds: 'therapy_compound',
+            diagnosisBacteria: 'diagnosis_bacterium',
+            dataSources: 'dataSource',
+            diagnoses: 'diagnosis',
+            guidelines: 'guideline',
+            therapies: 'therapy',
         },
     };
     return config;
@@ -34,6 +43,18 @@ function resetFetch() {
     global.fetch = originalFetch;
 }
 
+function testInvalidApiCall(config, t) {
+    const app = new InfectApp(config);
+    return app.initialize().then(() => {
+        console.log('Call succeeded; this should not happen!');
+    }, (err) => {
+        // If first arg of then is called, all's fine (did not throw)
+        t.is(err.message.includes('HTTP status 404'), true);
+        return err.message;
+    });
+}
+
+
 test('doesn\'t throw with valid config', (t) => {
     mockFetch();
     const app = new InfectApp(getConfig());
@@ -47,19 +68,6 @@ test('doesn\'t throw with valid config', (t) => {
 
 });
 
-
-
-
-function testInvalidApiCall(config, t) {
-    const app = new InfectApp(config);
-    return app.initialize().then(() => {
-        console.log('Call succeeded; this should not happen!');
-    }, (err) => {
-        // If first arg of then is called, all's fine (did not throw)
-        t.is(err.message.includes('HTTP status 404'), true);
-        return err.message;
-    });
-}
 
 test('throws with any invalid config', (t) => {
 
@@ -80,10 +88,33 @@ test('throws with any invalid config', (t) => {
     const allPromises = promises.reduce((prev, item) => prev.then(() => item), Promise.resolve());
 
     allPromises.then(() => {
-        t.end();
         resetFetch();
+        t.end();
     });
 
 });
 
+
+
+test('errors with guidelines are handled internally', async(t) => {
+
+    mockFetch();
+
+    // Fake 404 on guidelines
+    const config = getConfig();
+    config.endpoints.guidelines = 'invalidURL';
+
+    const app = new InfectApp(config);
+    try {
+        await app.initialize();
+        const { errors } = app.errorHandler;
+        t.is(errors.length, 1);
+        t.is(errors[0].message.includes('Guidelines could not be fetched from server'), true);
+    } catch (err) {
+        console.log('Error is %o', err);
+        t.fail('Guidelines should not throw');
+    }
+    t.end();
+
+});
 

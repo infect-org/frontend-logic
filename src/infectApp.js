@@ -21,10 +21,10 @@ import SelectedFilters from './models/filters/selectedFilters.js';
 import MostUsedFilters from './models/filters/mostUsedFilters.js';
 import PopulationFilterUpdater from './models/populationFilter/populationFilterUpdater.js';
 import PopulationFilterFetcher from './models/populationFilter/populationFilterFetcher.js';
-import GuidelineFetcher from './models/guidelines/GuidelineFetcher.js';
-import GuidelineStore from './models/guidelines/GuidelineStore.js';
 import errorHandler from './models/errorHandler/errorHandler.js';
 import updateDrawerFromGuidelines from './models/drawer/updateDrawerFromGuidelines.js';
+import setupGuidelines from './models/guidelines/setupGuidelines.js';
+import GuidelineStore from './models/guidelines/GuidelineStore.js';
 
 const log = debug('infect:App');
 
@@ -38,8 +38,8 @@ export default class InfectApp {
 
     bacteria = new BacteriaStore();
     antibiotics = new AntibioticsStore();
-    substanceClasses = new SubstanceClassesStore();
     guidelines = new GuidelineStore();
+    substanceClasses = new SubstanceClassesStore();
     resistances = new ResistancesStore([], item => `${item.bacterium.id}/${item.antibiotic.id}`);
     filterValues = new PropertyMap();
 
@@ -142,31 +142,37 @@ export default class InfectApp {
         );
         // Gets data for default filter switzerland-all
         const resistancePromise = resistanceFetcher.getData();
+        log('Fetching data for resistances.');
 
-        /**
-         * Fake-get guidelines; only fetch them after bacteria and antibiotics are ready as we need
-         * to link those to our therapies.
-         * TODO: Update when API is ready.
-         */
-        const guidelinePromise = Promise.all([bacteriaPromise, antibioticPromise]).then(() => {
-            const guidelineFetcher = new GuidelineFetcher(
-                this.guidelines,
-                this.antibiotics,
-                this.bacteria,
-            );
-            guidelineFetcher.getData();
+
+        // Guidelines are important – but not crucial for INFECT to work. Handle errors nicely.
+        // TODO: Make sure we are informed when they fail!
+        const guidelinePromise = setupGuidelines(
+            this._config,
+            this.guidelines,
+            this.bacteria,
+            this.antibiotics,
+        ).catch((err) => {
+            const humanReadableError = new Error(`Guidelines could not be fetched from server, but INFECT will work without them. Please contact us if the issue persists. Original error:  ${err.message}`);
+            this.errorHandler.handle(humanReadableError);
         });
+        
 
         new PopulationFilterUpdater(
             resistanceFetcher,
             this.selectedFilters,
         );
 
-        log('Fetching data for resistances.');
+
         log('Fetchers setup done.');
 
-        return Promise.all([substanceClassesPromise, antibioticPromise, bacteriaPromise,
-            resistancePromise, guidelinePromise]);
+        return Promise.all([
+            substanceClassesPromise,
+            antibioticPromise,
+            bacteriaPromise,
+            resistancePromise,
+            guidelinePromise,
+        ]);
 
     }
 

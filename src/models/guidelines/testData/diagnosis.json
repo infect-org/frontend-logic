@@ -1,0 +1,18 @@
+[
+  {
+    "id": 1,
+    "id_diagnosisClass": 1,
+    "id_guideline": 1,
+    "identifier": "komplizierte-zystitis",
+    "name": "Komplizierte Zystitis",
+    "markdownText": "# Überlegungen bei der Wahl eines Antibiotikums\n    - Frühere Harnwegsinfekte\n    - Frühere Antibiotikaexposition\n    - Reise- und Sexualanamnese"
+  },
+  {
+    "id": 2,
+    "id_diagnosisClass": 1,
+    "id_guideline": 1,
+    "identifier": "unkomplizierte-zystitis",
+    "name": "Unkomplizierte Zystitis",
+    "markdownText": "# Überlegungen bei der Wahl eines Antibiotikums\n    - Frühere Harnwegsinfekte\n    - Frühere Antibiotikaexposition\n    - Reise- und Sexualanamnese"
+  }
+]
