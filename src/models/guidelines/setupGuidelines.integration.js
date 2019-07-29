@@ -68,6 +68,11 @@ function setupData() {
         },
     };
 
+    const handledErrors = [];
+    function handleError(err) {
+        handledErrors.push(err);
+    }
+
     return {
         apiData,
         fetch,
@@ -77,6 +82,8 @@ function setupData() {
         antibioticsStorePromise,
         bacteriaStore,
         bacteriaStorePromise,
+        handledErrors,
+        handleError,
     };
 
 }
@@ -133,6 +140,7 @@ test('creates all models', async(t) => {
         guidelineStore,
         bacteriaStore,
         antibioticsStore,
+        () => {},
     );
 
     setTimeout(() => {
@@ -206,6 +214,7 @@ test('fails if request fails', async(t) => {
         guidelineStore,
         bacteriaStore,
         antibioticsStore,
+        () => {},
     );
 
     setTimeout(() => {
@@ -226,5 +235,48 @@ test('fails if request fails', async(t) => {
 
 });
 
+
+
+
+// TODO: Add tests for therapies (already implemented) and other errors that are handled gently
+test('fails gently if bacteria or antibiotics are missing', async(t) => {
+    const {
+        fetch,
+        config,
+        antibioticsStore,
+        antibioticsStorePromise,
+        bacteriaStore,
+        guidelineStore,
+        bacteriaStorePromise,
+        handledErrors,
+        handleError,
+    } = setupData();
+
+    global.fetch = fetch;
+
+    const promise = setupGuidelines(
+        config,
+        guidelineStore,
+        bacteriaStore,
+        antibioticsStore,
+        handleError,
+    );
+
+    bacteriaStore.remove(bacteriaStore.getById(3));
+    // TODO: Same for others!
+
+    setTimeout(() => {
+        bacteriaStorePromise.resolve();
+        antibioticsStorePromise.resolve();
+    });
+
+    await promise;
+
+    t.is(handledErrors.length, 1);
+
+    global.fetch = originalFetch;
+    t.end();
+
+});
 
 

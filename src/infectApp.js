@@ -152,6 +152,7 @@ export default class InfectApp {
             this.guidelines,
             this.bacteria,
             this.antibiotics,
+            errorHandler.handle.bind(errorHandler),
         ).catch((err) => {
             const humanReadableError = new Error(`Guidelines could not be fetched from server, but INFECT will work without them. Please contact us if the issue persists. Original error:  ${err.message}`);
             this.errorHandler.handle(humanReadableError);

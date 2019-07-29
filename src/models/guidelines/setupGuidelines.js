@@ -15,6 +15,11 @@ import DiagnosisClassFetcher from './DiagnosisClassFetcher.js';
  *                                          for Diagnosis
  * @param  {AntibioticsStore} antibioticsStore    Antibiotics store; needed to resolve recommended
  *                                                antibiotics for a Therapy
+ * @param {Function} handleError            Error handler function that we can pass an error to
+ *                                          which is then displayed. Needed to handle issues that
+ *                                          the user should be aware of but that should not break
+ *                                          the guideline functionality; e.g. if an bacteria that
+ *                                          incudes a diagnosis cannot be found.
  * @return {Promise}                        Promise; returned value is an instnace of
  *                                          GuidelineStore
  */
@@ -23,6 +28,7 @@ export default async function setupGuidelines(
     guidelineStore,
     bacteriaStore,
     antibioticsStore,
+    handleError,
 ) {
 
     if (!config || !config.endpoints) {
@@ -91,6 +97,7 @@ export default async function setupGuidelines(
         therapiesStore,
         undefined,
         [therapyPriorityStore, therapyCompoundsStore, antibioticsStore],
+        handleError,
     );
     fetchPromises.push(therapiesFetcher.getData());
 
@@ -102,6 +109,7 @@ export default async function setupGuidelines(
         diagnosesStore,
         undefined,
         [diagnosisClassesStore, diagnosesBacteriaStore, bacteriaStore, therapiesStore],
+        handleError,
     );
     fetchPromises.push(diagnosesFetcher.getData());
 
@@ -111,8 +119,6 @@ export default async function setupGuidelines(
         guidelinesURL,
         guidelineStore,
         undefined,
-        // Contrary to the API, the guideline is not a field on the diagnosis, but the diagnoses are
-        // part of the guideline (because that's how we use them in the frontend)
         [diagnosesStore],
     );
     fetchPromises.push(guidelineFetcher.getData());

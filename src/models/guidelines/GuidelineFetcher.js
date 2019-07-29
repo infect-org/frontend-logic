@@ -8,6 +8,7 @@ export default class GuidelineFetcher extends Fetcher {
 
         data.forEach((guideline) => {
 
+            // TODO: HANDLE GENTLY if missing
             const diagnoses = diagnosesStore
                 .getAsArray()
                 .filter(diagnosis => diagnosis.guidelineId === guideline.id);
