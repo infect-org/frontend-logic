@@ -51,7 +51,8 @@ export default class Diagnosis {
 
     /**
      * Removes the guidelineId property completely when not needed any more (i.e. after setting up
-     * the guidelines)
+     * the guidelines).
+     * See https://github.com/infect-org/infect-frontend-logic/pull/2#discussion_r320131912
      */
     removeGuidelineId() {
         delete this.guidelineId;

@@ -94,7 +94,23 @@ test('handles default data correctly', async(t) => {
     const store = new Store();
     const fetcher = new Fetcher('/test', store);
     await fetcher.getData();
-    t.equals(store.get().size, 2);
+    // Check if StandardFetcher's handleData method stores data correctly
+    t.deepEquals(store.get().toJS(), new Map([
+        [1, { number: 1, id: 1 }],
+        [2, { number: 2, id: 2 }],
+    ]));
+    fetchMock.restore();
+    global.fetch = originalFetch;
+    t.end();
+});
+
+test('getData() resolves to raw data gotten from server', async(t) => {
+    const body = [{ number: 1, id: 1 }, { number: 2, id: 2 }];
+    fetchMock.mock('/test', { status: 200, body });
+    const store = new Store();
+    const fetcher = new Fetcher('/test', store);
+    const data = await fetcher.getData();
+    t.deepEquals(data, body);
     fetchMock.restore();
     global.fetch = originalFetch;
     t.end();

@@ -14,7 +14,7 @@ export default function updateDrawerFromGuidelines(guidelineStore, drawer, error
     reaction(
         () => (
             // We only need to update the drawer when the diagnosis has changed (not the guideline),
-            // as guideline does not contain any relevant information for the drawer
+            // as only changing the guideline does not have any impact on the drawer.
             guidelineStore.selectedGuideline && guidelineStore.selectedGuideline.selectedDiagnosis
         ),
         (diagnosis) => {

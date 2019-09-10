@@ -1,6 +1,6 @@
 import { observe } from 'mobx';
 import debug from 'debug';
-import { fetchApi } from './api';
+import { fetchApi } from './api.js';
 
 const log = debug('infect:StandardFetcher');
 
@@ -34,6 +34,7 @@ export default class StandardFetcher {
     /**
     * Main method: Fetches data from this.url, awaits this.dependentStores, then calls
     * this.handleData() with the data fetched.
+    * @return {Promise}     Returns a promise that resolves to the raw data fetched from server
     */
     async getData() {
         /**
@@ -44,8 +45,7 @@ export default class StandardFetcher {
          * We could use AbortController to cancel old/earlier requests; but it is not compatible
          * with IE11 (https://developer.mozilla.org/en-US/docs/Web/API/AbortController/abort)
          */
-        const { url } = this;
-        const dataPromise = this.getAndParseData(url);
+        const dataPromise = this.getAndParseData(this.url);
         this.store.setFetchPromise(dataPromise);
         return dataPromise;
     }
@@ -90,6 +90,11 @@ export default class StandardFetcher {
 
         // Resolve promise in store
         log('Data handled, store now contains %d items', this.store.get().size);
+
+        // As getData() returns the promise created by this method, we return the data so that
+        // getData() resolves to the data passed in
+        return result.data;
+
     }
 
 
@@ -117,8 +122,10 @@ export default class StandardFetcher {
 
 
     /**
-    * Default data handler, should be overwritten in derived classes. Handles data and must add it
-    * to store if that's what you intend.
+    * Default data handler, should be overwritten in derived classes. Handles/transforms data and
+    * usually adds it to the store.
+    * Two parameters are available: data (raw data fetched from server) and url (URL that data
+    * was fetched from)
     * @private
     */
     handleData(data) {
