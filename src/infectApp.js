@@ -108,6 +108,7 @@ export default class InfectApp {
             { headers: { select: 'substance.*, substance.substanceClass.*' } },
             [this.substanceClasses],
             this.substanceClasses,
+            this.errorHandler.handle.bind(this.errorHandler),
         );
         const antibioticPromise = antibioticsFetcher.getData();
         log('Fetching data for antibiotics.');
@@ -131,6 +132,7 @@ export default class InfectApp {
                 antibiotics: this.antibiotics,
                 bacteria: this.bacteria,
             },
+            this.errorHandler.handle.bind(this.errorHandler),
         );
         // Gets data for default filter switzerland-all
         const resistancePromise = resistanceFetcher.getData();
@@ -143,8 +145,15 @@ export default class InfectApp {
         log('Fetching data for resistances.');
         log('Fetchers setup done.');
 
-        return Promise.all([substanceClassesPromise, antibioticPromise, bacteriaPromise,
-            resistancePromise]);
+        return Promise
+            .all([
+                substanceClassesPromise,
+                antibioticPromise,
+                bacteriaPromise,
+                resistancePromise,
+            ])
+            // Catch and display error; if we don't, app will fail half-way because we're async.
+            .catch(err => this.errorHandler.handle(err));
 
     }
 
