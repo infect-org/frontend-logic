@@ -13,13 +13,13 @@ export default class ResistancesFetcher extends Fetcher {
     * Fetches resistances from server, then updates ResistancesStore passed as an argument.
     *
     * @param [0-3]                              See Fetcher
-    * @param {ResistanceStore} stores           Stores for antibiotics and bacteria
-    * @param {SelectedFilters} selectedFilters  Selected filters – needed to determine which
-    *                                           resistance data (e.g. region) to fetch.
+    * @param {ResistanceStore} stores           Stores for antibiotics *and* bacteria
+    * @param {Function} handleError             Function that gently handles non-critical exceptions
     */
-    constructor(url, store, options, dependentStores, stores) {
+    constructor(url, store, options, dependentStores, stores, handleError) {
         super(url, store, options, dependentStores);
         this._stores = stores;
+        this.handleError = handleError;
     }
 
 
@@ -47,8 +47,7 @@ export default class ResistancesFetcher extends Fetcher {
 
         // On the very first round (when we're getting data for switzerland-all) remove all
         // antibiotics that don't have any resistance data.
-        // TODO: We need a good endpoint which only returns ab/bact with data available. This
-        // is bullshit.
+        // TODO: We need a good endpoint which only returns ab/bact with data available.
         if (this.dataHandled === 1) {
 
             const emptyBacteria = bacteria
@@ -56,7 +55,7 @@ export default class ResistancesFetcher extends Fetcher {
                 .filter(bacterium => !data.values.find(res => res.bacteriumId === bacterium.id));
 
             if (emptyBacteria.length) {
-                log('Remove empty bacteria %o', bacteria);
+                log('Remove empty bacteria %o', emptyBacteria);
             }
 
             // Remove bacterium from store which triggers removal from matrixView – do it in
@@ -84,23 +83,27 @@ export default class ResistancesFetcher extends Fetcher {
             // ee [4:38 PM]
             // iu
             // müssen wir dann noch anschauen
-            if (!resistance.compoundId) {
-                console.warn(`ResistanceFetcher: Resistance %o does not have compound information;
-                    ignore for now, but should be fixed.`);
+            if (!Object.prototype.hasOwnProperty.call(resistance, 'compoundId')) {
+                console.error(`ResistanceFetcher: Resistance ${JSON.stringify(resistance)} does not have compound information; ignore for now, but should be fixed.`);
                 return;
             }
 
             const bacterium = bacteria.find(item => item.id === resistance.bacteriumId);
             const antibiotic = antibiotics.find(item => item.id === resistance.compoundId);
 
+            // Missing bacterium or antibiotic is not crucial; display error but continue
             if (!antibiotic) {
-                throw new Error(`ResistancesFetcher: Antibiotic missing for 
-                    ${JSON.stringify(resistance)} %o`);
+                const antibioticMissingError = new Error(`ResistancesFetcher: Antibiotic with ID ${resistance.compoundId} missing, resistance ${JSON.stringify(resistance)} cannot be displayed.`);
+                this.handleError(antibioticMissingError);
+                console.error('Antibiotic for resistance %o missi/ng; antibiotics are %o', resistance, antibiotics);
+                return;
             }
 
             if (!bacterium) {
-                throw new Error(`ResistancesFetcher: Bacterium missing for 
-                    ${JSON.stringify(resistance)}`);
+                const bacteriumMissingError = new Error(`ResistancesFetcher: Bacterium with ID ${resistance.bacteriumId} missing, resistance ${JSON.stringify(resistance)} cannot be displayed.`);
+                this.handleError(bacteriumMissingError);
+                console.error('Bacterium for resistance %o missing; bacteria are %o', resistance, bacteria);
+                return;
             }
 
             const resistanceValues = [{
@@ -116,8 +119,7 @@ export default class ResistancesFetcher extends Fetcher {
 
             // Duplicate resistance
             if (this._store.hasWithId(resistanceObject)) {
-                console.warn(`ResistanceFetcher: Resistance ${JSON.stringify(resistance)} is
-                    a duplicate; an entry for the same bacterium and antibiotic does exist.`);
+                console.warn(`ResistanceFetcher: Resistance ${JSON.stringify(resistance)} is a duplicate; an entry for the same bacterium and antibiotic does exist.`);
                 return;
             }
 
