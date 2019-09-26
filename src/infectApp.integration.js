@@ -73,6 +73,11 @@ test('throws with any invalid config', (t) => {
 
     mockFetch();
 
+    // This displays a lot of errors in the console; send them to the sink for this test or
+    // test output will be barely readable.
+    const originalConsoleError = console.error;
+    console.error = () => {};
+
     // Only test fields that are called in intialize.
     const relevantFields = ['bacteria', 'antibiotics', 'resistances', 'substanceClasses',
         'regions', 'countries', 'ageGroups', 'hospitalStatus'];
@@ -89,6 +94,7 @@ test('throws with any invalid config', (t) => {
 
     allPromises.then(() => {
         resetFetch();
+        console.error = originalConsoleError;
         t.end();
     });
 

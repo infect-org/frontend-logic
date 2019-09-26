@@ -7,7 +7,7 @@ import Bacterium from '../bacteria/bacterium';
 // Fetch-mock does not reset itself if there's no global fetch
 const originalFetch = global.fetch;
 
-function setupFetcher() {
+function setupStores() {
     const antibiotics = {
         get() {
             return {
@@ -53,18 +53,18 @@ function setupBodyData() {
     };
 }
 
-test('handles resistance data correctly', async (t) => {
+test('handles resistance data correctly', async(t) => {
     fetchMock.mock('/test', {
         status: 200,
         body: setupBodyData(),
     });
-    const { antibiotics, bacteria } = setupFetcher();
+    const { antibiotics, bacteria } = setupStores();
     const store = new Store([], () => 2);
     const stores = {
         antibiotics,
         bacteria,
     };
-    const fetcher = new ResistancesFetcher('/test', store, {}, [], stores);
+    const fetcher = new ResistancesFetcher('/test', store, {}, [], stores, () => {});
     await fetcher.getData();
     t.equals(store.get().size, 1);
     const result = store.getById(2);
@@ -79,13 +79,13 @@ test('handles resistance data correctly', async (t) => {
 
 test('handles filter updates', async(t) => {
 
-    const regionfilterData = setupBodyData();
-    regionfilterData.values[0].resistantPercent = 99;
+    const filterData = setupBodyData();
+    filterData.values[0].resistantPercent = 99;
 
     fetchMock
         .mock('/test?filter={"region":[3,6]}', {
             status: 200,
-            body: regionfilterData,
+            body: filterData,
         })
         .mock('/test', {
             status: 200,
@@ -93,7 +93,7 @@ test('handles filter updates', async(t) => {
         });
 
 
-    const { antibiotics, bacteria } = setupFetcher();
+    const { antibiotics, bacteria } = setupStores();
     const store = new Store([], () => 2);
     const stores = {
         antibiotics,
@@ -116,6 +116,65 @@ test('handles filter updates', async(t) => {
 
 });
 
+test('handles missing antibiotics/bacteria gracefully', async(t) => {
+
+    const recordedErrors = [];
+    const handleError = err => recordedErrors.push(err);
+
+    // Create API endpoint that returns a resistance with invalid compoundId and bacteriumId
+    fetchMock
+        .mock('/invalidBacterium', {
+            status: 200,
+            body: {
+                values: [{
+                    bacteriumId: -1,
+                    compoundId: 4,
+                }],
+            },
+        })
+        .mock('/invalidAntibiotic', {
+            status: 200,
+            body: {
+                values: [{
+                    bacteriumId: 5,
+                    compoundId: -1,
+                }],
+            },
+        });
+
+    const { antibiotics, bacteria } = setupStores();
+    const store = new Store([], () => 2);
+    const stores = {
+        antibiotics,
+        bacteria,
+    };
+
+    const bacteriaFetcher = new ResistancesFetcher(
+        '/invalidBacterium',
+        store,
+        {},
+        [],
+        stores,
+        handleError,
+    );
+    const antibioticsFetcher = new ResistancesFetcher(
+        '/invalidAntibiotic',
+        store,
+        {},
+        [],
+        stores,
+        handleError,
+    );
+
+    await bacteriaFetcher.getData();
+    await antibioticsFetcher.getData();
+
+    t.is(recordedErrors.length, 2);
+    t.is(recordedErrors[0].message.includes('Bacterium with ID -1 missing'), true);
+    t.is(recordedErrors[1].message.includes('Antibiotic with ID -1 missing'), true);
+    t.end();
+
+});
 
 test('prevents race conditions', async(t) => {
 
