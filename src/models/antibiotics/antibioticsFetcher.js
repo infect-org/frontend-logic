@@ -72,6 +72,7 @@ export default class AntibioticsFetcher extends Fetcher {
 
             this.store.add(antibiotic);
         });
+
     }
 
 }

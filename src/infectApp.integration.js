@@ -15,15 +15,13 @@ function getConfig() {
             resistances: 'rda.data',
             substanceClasses: 'substance.substanceClass',
             regions: 'generics.region',
-            countries: 'generics.country',
             ageGroups: 'generics.ageGroup',
             hospitalStatus: 'generics.hospitalStatus',
-            guidelineBaseUrl: 'http://guidelines.infect.info/v1/',
+            guidelineBaseUrl: 'http://api.infect.info/guideline/v1/',
             diagnosisClass: 'diagnosisClass',
             therapyPriorities: 'therapyPriority',
             therapyCompounds: 'therapy_compound',
             diagnosisBacteria: 'diagnosis_bacterium',
-            dataSources: 'dataSource',
             diagnoses: 'diagnosis',
             guidelines: 'guideline',
             therapies: 'therapy',
@@ -41,18 +39,23 @@ function mockFetch() {
 
 function resetFetch() {
     global.fetch = originalFetch;
+    fetchMock.restore();
 }
 
-function testInvalidApiCall(config, t) {
+async function testInvalidApiCall(config, t) {
     const app = new InfectApp(config);
-    return app.initialize().then(() => {
-        console.log('Call succeeded; this should not happen!');
-    }, (err) => {
-        // If first arg of then is called, all's fine (did not throw)
-        t.is(err.message.includes('HTTP status 404'), true);
-        return err.message;
-    });
+    await app.initialize();
+    // Errors are handled within app.initialize; initalize should does therefore not throw.
+    // Depending on the endpoint, multiple errors may be given; if e.g. substance classes cannot
+    // be fetched, antibiotics cannot be linked to them and will also fail (and therefore display
+    // an error).
+    const containsCorrectError = app.errorHandler.errors
+        .filter(err => err.message.includes('HTTP status 404'));
+    t.is(containsCorrectError.length, 1);
 }
+
+
+
 
 
 test('doesn\'t throw with valid config', (t) => {
@@ -79,14 +82,17 @@ test('throws with any invalid config', (t) => {
     console.error = () => {};
 
     // Only test fields that are called in intialize.
+    // TODO: Use all config fields available so that test automatically fails when new endpoints
+    // are added. Await new config structure.
     const relevantFields = ['bacteria', 'antibiotics', 'resistances', 'substanceClasses',
-        'regions', 'countries', 'ageGroups', 'hospitalStatus'];
+        'regions', 'ageGroups', 'hospitalStatus', 'diagnosisClass',
+        'therapyPriorities', 'therapyCompounds', 'diagnosisBacteria', 'diagnoses', 'therapies'];
 
     // Create a promise for every bad endpoint; execute one promise after another, at the end
     // restore everything and end test.
     const promises = relevantFields.map((field) => {
         const invalidConfig = getConfig();
-        invalidConfig.endpoints[field] = 'nooooope!';
+        invalidConfig.endpoints[field] += '-nope!';
         return testInvalidApiCall(invalidConfig, t);
     });
 

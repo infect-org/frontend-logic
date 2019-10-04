@@ -42,7 +42,6 @@ export default async function setupGuidelines(
         'therapyPriorities',
         'therapyCompounds',
         'diagnosisBacteria',
-        'dataSources',
         'diagnoses',
         'guidelines',
         'therapies',
@@ -82,12 +81,6 @@ export default async function setupGuidelines(
     const diagnosesBacteriaURL = `${endpoints.guidelineBaseUrl}${endpoints.diagnosisBacteria}`;
     const diagnosesBacteriaFetcher = new Fetcher(diagnosesBacteriaURL, diagnosesBacteriaStore);
     fetchPromises.push(diagnosesBacteriaFetcher.getData());
-
-    // Data sources
-    const dataSourcesStore = new Store();
-    const dataSourcesURL = `${endpoints.guidelineBaseUrl}${endpoints.dataSources}`;
-    const dataSourcesFetcher = new Fetcher(dataSourcesURL, dataSourcesStore);
-    fetchPromises.push(dataSourcesFetcher.getData());
 
     // Therapy
     const therapiesStore = new Store();

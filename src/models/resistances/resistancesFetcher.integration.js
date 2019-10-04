@@ -195,7 +195,7 @@ test('prevents race conditions', async(t) => {
         }), 10));
 
 
-    const { antibiotics, bacteria } = setupFetcher();
+    const { antibiotics, bacteria } = setupStores();
     const store = new Store([], () => 2);
     const stores = {
         antibiotics,

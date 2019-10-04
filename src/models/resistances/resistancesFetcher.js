@@ -34,7 +34,7 @@ export default class ResistancesFetcher extends Fetcher {
          *  latest call (as earlier calls might be answered later and data for the wrong filters
          *  would be displayed
          */
-        this.lastestCallURL = this.url;
+        this.latestCallURL = this.url;
         await super.getData(...params);
     }
 
@@ -55,8 +55,8 @@ export default class ResistancesFetcher extends Fetcher {
         log('Handle data %o', data);
         this.dataHandled += 1;
 
-        if (url !== this.lastestCallURL) {
-            log('Data belongs to URL %s, latest URL is %s; drop data.', url, this.lastestCallURL);
+        if (url !== this.latestCallURL) {
+            log('Data belongs to URL %s, latest URL is %s; drop data.', url, this.latestCallURL);
             return;
         }
 
