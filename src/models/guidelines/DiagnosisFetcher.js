@@ -89,7 +89,7 @@ export default class DiagnosisFetcher extends Fetcher {
                 inducingBacteria,
                 markdownText: diagnosis.markdownText,
                 therapies,
-                link: diagnosis.link,
+                link: diagnosis.href,
                 latestUpdate: sortedLatestUpdates[0],
                 synonyms: diagnosis.synonyms,
             });

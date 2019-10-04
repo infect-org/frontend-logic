@@ -168,6 +168,7 @@ test('creates all models', async(t) => {
     t.is(diagnosis.markdownText.startsWith('# Überlegungen'), true);
     t.is(diagnosis.diagnosisClass.id, 1);
     t.is(diagnosis.diagnosisClass.name, 'Urinary Tract');
+    t.is(diagnosis.link, 'https://ssi.guidelines.ch/guideline/2981');
     t.deepEquals(diagnosis.inducingBacteria, [{ id: 3 }, { id: 34 }]);
     // Check that only newest latestUpdate is used
     t.deepEquals(diagnosis.latestUpdate, {
