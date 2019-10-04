@@ -16,12 +16,20 @@ export default class Guideline {
     @observable selectedDiagnosis;
 
     /**
-     * @param  {Number} id              ID of guideline (on API)
-     * @param  {String} name            Guideline's name, mostly name of the publishing institution
-     *                                  (e.g. «Schweiz. Ges. für Infektiologie»)
-     * @param  {Diagnosis[]} diagnoses  Array of all diagnoses that this guideline consists of
+     * @param {Object} param
+     * @param {Number} param.id             ID of guideline (on API)
+     * @param {String} param.name           Guideline's name, mostly name of the publishing
+     *                                      institution (e.g. «Schweiz. Ges. für Infektiologie»)
+     * @param {Diagnosis[]} param.diagnoses Array of all diagnoses that this guideline consists of
+     * @param {String} param.contactEmail   Contact email to for feedback concerning guideline
      */
-    constructor(id, name = '', diagnoses = [], markdownDisclaimer = '') {
+    constructor({
+        id,
+        name = '',
+        diagnoses = [],
+        markdownDisclaimer = '',
+        contactEmail,
+    } = {}) {
 
         if (typeof id !== 'number') {
             throw new Error(`Guideline: First constructor argument (id) must be a number, is ${id}.`);
@@ -33,6 +41,7 @@ export default class Guideline {
         this.name = name;
         this.diagnoses = diagnoses;
         this.markdownDisclaimer = markdownDisclaimer;
+        this.contactEmail = contactEmail;
     }
 
     /**
