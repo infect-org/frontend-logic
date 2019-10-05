@@ -29,8 +29,8 @@ test('opens and closes when content changes', (t) => {
     t.is(drawer.isOpen, false);
     const guideline = new Guideline({ id: 5 });
     drawer.setContent(guideline);
-    // t.is(drawer.isOpen, true);
-    t.is(drawer.isOpen, false); // Don't open on change, this sucks
+    t.is(drawer.isOpen, true);
+    // t.is(drawer.isOpen, false); // Don't open on change, this sucks
     drawer.setContent();
     t.is(drawer.isOpen, false);
     t.end();
