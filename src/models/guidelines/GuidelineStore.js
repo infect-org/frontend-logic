@@ -1,6 +1,7 @@
 import debug from 'debug';
 import { observable, action } from 'mobx';
 import Store from '../../helpers/store.js';
+import searchDiagnoses from './searchDiagnoses.js';
 
 const log = debug('infect:GuidelineStore');
 
@@ -27,6 +28,14 @@ export default class GuidelineStore extends Store {
      */
     @action selectGuideline(selectedGuideline) {
         this.selectedGuideline = selectedGuideline;
+    }
+
+    /**
+     * Searches all guidelines for a certain diagnosis. As search should happen across all
+     * guidelines and only GuidelineStore is exposed on infectApp, we execute the search here.
+     */
+    search(searchTerm) {
+        return searchDiagnoses(this.getAsArray(), searchTerm);
     }
 
 }
