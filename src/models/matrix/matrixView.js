@@ -252,7 +252,7 @@ class MatrixView {
     }
 
     /**
-     * Returns with of all visible antibiotics (corresponds to position.right of the right-most
+     * Returns width of all visible antibiotics (corresponds to position.right of the right-most
      * antibiotic or substance class)
      * @return {Number}
      */

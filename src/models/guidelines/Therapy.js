@@ -44,9 +44,8 @@ export default class Therapy {
      * @return {Boolean}
      */
     containsAntibiotic(antibiotic) {
-        return this.recommendedAntibiotics
-            .filter(recommendation => recommendation.antibiotic === antibiotic)
-            .length > 0;
+        return !!this.recommendedAntibiotics
+            .find(recommendation => recommendation.antibiotic === antibiotic);
     }
 
     /**
