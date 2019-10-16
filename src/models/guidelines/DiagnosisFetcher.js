@@ -74,11 +74,12 @@ export default class DiagnosisFetcher extends Fetcher {
 
             // There may be multiple latestUpdates, as they are taken from therapies (and only added
             // to diagnosis on API level). Only use/display the very latest update.
+            // TODO: Add test to see if data returned by server is valid.
             const sortedLatestUpdates = diagnosis.latestUpdates
-                .map(synonym => ({
-                    date: new Date(synonym.date),
-                    name: synonym.dataSourceName,
-                    link: synonym.dataSourceHref,
+                .map(update => ({
+                    date: new Date(update.date),
+                    name: update.dataSourceName,
+                    link: update.dataSourceHref,
                 }))
                 .sort((a, b) => b.date.getTime() - a.date.getTime());
 

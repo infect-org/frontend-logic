@@ -57,7 +57,6 @@ export default class DrawerViewModel {
         this.content = content;
         // Automatically open whenever content changes
         if (content === undefined) this.close();
-        // TODO: Discuss if needed
         else this.open();
     }
 

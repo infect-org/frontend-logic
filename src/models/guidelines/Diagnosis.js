@@ -43,7 +43,11 @@ export default class Diagnosis {
         if (typeof name !== 'string') {
             throw new Error(`Diagnosis: Second constructor argument (name) must be a string, is ${name}.`);
         }
-        if (markdownText !== undefined && markdownText !== null && typeof markdownText !== 'string') {
+        if (
+            markdownText !== undefined &&
+            markdownText !== null &&
+            typeof markdownText !== 'string'
+        ) {
             throw new Error(`Diagnosis: Constructor argument markdownText must be a string if set, but is ${markdownText}.`);
         }
         if (
