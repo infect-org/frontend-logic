@@ -1,5 +1,5 @@
 {
-  "name": "infect-frontend-logic",
+  "name": "@infect/frontend-logic",
   "version": "3.0.0",
   "description": "",
   "main": "index.js",
