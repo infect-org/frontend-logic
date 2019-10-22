@@ -19,9 +19,10 @@ function setupData() {
     const basePath = './src/models/guidelines/testData';
     const apiData = readdirSync(basePath).reduce((prev, fileName) => {
         const content = readFileSync(join(basePath, fileName), { encoding: 'utf8' });
-        const url = `https://baseUrl/${fileName.replace(/\.json$/, '')}`;
+        const url = `https://baseurl/${fileName.replace(/\.json$/, '')}`;
         return prev.set(url, JSON.parse(content));
     }, new Map());
+
 
     // Setup fetchMock that returns correct data for data endpoint
     const fetch = fetchMock.sandbox().mock(
@@ -56,7 +57,7 @@ function setupData() {
 
     const config = {
         endpoints: {
-            guidelineBaseUrl: 'https://baseUrl/',
+            guidelineBaseUrl: 'https://baseurl/',
             diagnosisClass: 'diagnosisClass',
             therapyPriorities: 'therapyPriority',
             therapyCompounds: 'therapy_compound',
@@ -210,7 +211,7 @@ test('fails if request fails', async(t) => {
     } = setupData();
 
     // Use fetchMock that does not know guideline
-    const badEndpoint = 'https://baseUrl/guideline';
+    const badEndpoint = 'https://baseurl/guideline';
     fetchMock
         .mock(
             url => apiData.has(url) && url !== badEndpoint,
