@@ -1,7 +1,6 @@
 /**
 * The main application that sets everything up and brings it together
 */
-import 'whatwg-fetch';
 import { when, observable, transaction } from 'mobx';
 import debug from 'debug';
 import AntibioticsStore from './models/antibiotics/antibioticsStore.js';
