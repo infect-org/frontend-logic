@@ -1,0 +1,12 @@
+[
+  {
+    "id": 1,
+    "priority": 1,
+    "name": "Erste Wahl"
+  },
+  {
+    "id": 2,
+    "priority": 10,
+    "name": "Alternative Wahl"
+  }
+]

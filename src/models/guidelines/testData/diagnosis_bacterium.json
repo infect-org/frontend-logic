@@ -1,0 +1,27 @@
+[
+  {
+    "id": 1,
+    "id_bacterium": 3,
+    "id_diagnosis": 1
+  },
+  {
+    "id": 2,
+    "id_bacterium": 34,
+    "id_diagnosis": 1
+  },
+  {
+    "id": 3,
+    "id_bacterium": 26,
+    "id_diagnosis": 2
+  },
+  {
+    "id": 4,
+    "id_bacterium": 5,
+    "id_diagnosis": 2
+  },
+  {
+    "id": 5,
+    "id_bacterium": 539,
+    "id_diagnosis": 2
+  }
+]

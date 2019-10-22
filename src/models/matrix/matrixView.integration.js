@@ -162,6 +162,25 @@ test('sorts bacteria', (t) => {
 });
 
 
+test('returns height of visible bacteria', (t) => {
+    const set = createValidSet();
+
+    // We need bacteria, antibiotics and their dimensions to calculate defaultRadius, which is
+    // needed to calculate width.
+    set.antibiotics.forEach(ab => set.matrix.addAntibiotic(ab));
+    set.bacteria.forEach(bact => set.matrix.addBacterium(bact));
+    set.bacteria.forEach(bact => set.matrix.setBacteriumLabelWidth(bact, 20));
+    set.antibiotics.forEach(ab => set.matrix.setAntibioticLabelDimensions(ab, 10, 10));
+
+    // Dimensions are needed to calculate real positions
+    set.matrix.setDimensions({ height: 100, width: 100 });
+    // 30: Not manually calculated, used return value
+    t.is(set.matrix.visibleBacteriaHeight, 30);
+
+    t.end();
+});
+
+
 /*test('only returns visible bacteria for sortedVisibleBacteria', (t) => {
 	const set = createValidSet();
 	const {matrix} = set;
@@ -285,6 +304,27 @@ test('antibiotic functions', (t) => {
 
 });
 
+
+
+test('returns width of visible antibiotics', (t) => {
+
+    const set = createValidSet();
+
+    // We need bacteria, antibiotics and their dimensions to calculate defaultRadius, which is
+    // needed to calculate width.
+    set.antibiotics.forEach(ab => set.matrix.addAntibiotic(ab));
+    set.bacteria.forEach(bact => set.matrix.addBacterium(bact));
+    set.bacteria.forEach(bact => set.matrix.setBacteriumLabelWidth(bact, 20));
+    set.antibiotics.forEach(ab => set.matrix.setAntibioticLabelDimensions(ab, 10, 10));
+
+    // Dimensions are needed to calculate real positions
+    set.matrix.setDimensions({ height: 100, width: 100 });
+    // 69: Not manually calculated, used return value
+    t.is(set.matrix.visibleAntibioticsWidth, 69);
+
+    t.end();
+
+});
 
 
 

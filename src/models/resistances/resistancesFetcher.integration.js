@@ -104,7 +104,6 @@ test('handles filter updates', async(t) => {
     await fetcher.getData();
     t.equals(store.getById(2).values[0].value, 1);
 
-    // Filtered data was fetched and parsed
     await fetcher.getDataForFilters({ region: [3, 6] });
     t.equals(store.getById(2).values[0].value, 0.99);
 
@@ -176,5 +175,47 @@ test('handles missing antibiotics/bacteria gracefully', async(t) => {
     t.end();
 
 });
+
+test('prevents race conditions', async(t) => {
+
+    const regionfilterData = setupBodyData();
+    regionfilterData.values[0].resistantPercent = 99;
+
+    fetchMock
+        .mock('/test?filter={"region":[3,6]}', {
+            status: 200,
+            body: regionfilterData,
+        })
+        // Delay resolution of first call by 10ms; first call will be resolved after second call.
+        .mock('/test', new Promise(resolve => setTimeout(() => {
+            resolve({
+                status: 200,
+                body: setupBodyData(),
+            });
+        }), 10));
+
+
+    const { antibiotics, bacteria } = setupStores();
+    const store = new Store([], () => 2);
+    const stores = {
+        antibiotics,
+        bacteria,
+    };
+    const fetcher = new ResistancesFetcher('/test', store, {}, [], stores);
+
+    const slowFetchPromise = fetcher.getData();
+    fetcher.getDataForFilters({ region: [3, 6] });
+
+    // First promise resolves slower; wait for it. By default, it would overwrite the data that
+    // was fetched later, but faster. This is exactly what should *not* happen.
+    await slowFetchPromise;
+    t.equals(store.getById(2).values[0].value, 0.99);
+    fetchMock.restore();
+    global.fetch = originalFetch;
+    t.end();
+
+});
+
+
 
 
