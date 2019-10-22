@@ -43,7 +43,7 @@ export default class Resistance {
     * Returns all resistance values, sorted by precision (see resistanceTypes)
     */
     getValuesByPrecision() {
-        return this.values.sort((a, b) => (a.type.precision > b.type.precision ? -1 : 1));
+        return this.values.slice().sort((a, b) => (a.type.precision > b.type.precision ? -1 : 1));
     }
 
 }

@@ -1,26 +1,29 @@
 /**
 * The main application that sets everything up and brings it together
 */
-import 'whatwg-fetch';
 import { when, observable, transaction } from 'mobx';
 import debug from 'debug';
-import AntibioticsStore from './models/antibiotics/antibioticsStore';
-import AntibioticsFetcher from './models/antibiotics/antibioticsFetcher';
-import SubstanceClassesStore from './models/antibiotics/substanceClassesStore';
-import SubstanceClassesFetcher from './models/antibiotics/substanceClassesFetcher';
-import BacteriaStore from './models/bacteria/bacteriaStore';
-import BacteriaFetcher from './models/bacteria/bacteriaFetcher';
-import ResistancesStore from './models/resistances/resistancesStore';
-import ResistancesFetcher from './models/resistances/resistancesFetcher';
-import MatrixView from './models/matrix/matrixView';
-import getFilterConfig from './models/filters/getFilterConfig';
-import PropertyMap from './models/propertyMap/propertyMap';
-import OffsetFilters from './models/filters/offsetFilters';
-import SelectedFilters from './models/filters/selectedFilters';
-import MostUsedFilters from './models/filters/mostUsedFilters';
-import PopulationFilterUpdater from './models/populationFilter/populationFilterUpdater';
-import PopulationFilterFetcher from './models/populationFilter/populationFilterFetcher';
-import errorHandler from './models/errorHandler/errorHandler';
+import AntibioticsStore from './models/antibiotics/antibioticsStore.js';
+import AntibioticsFetcher from './models/antibiotics/antibioticsFetcher.js';
+import SubstanceClassesStore from './models/antibiotics/substanceClassesStore.js';
+import SubstanceClassesFetcher from './models/antibiotics/substanceClassesFetcher.js';
+import BacteriaStore from './models/bacteria/bacteriaStore.js';
+import BacteriaFetcher from './models/bacteria/bacteriaFetcher.js';
+import ResistancesStore from './models/resistances/resistancesStore.js';
+import ResistancesFetcher from './models/resistances/resistancesFetcher.js';
+import MatrixView from './models/matrix/matrixView.js';
+import DrawerViewModel from './models/drawer/DrawerViewModel.js';
+import getFilterConfig from './models/filters/getFilterConfig.js';
+import PropertyMap from './models/propertyMap/propertyMap.js';
+import OffsetFilters from './models/filters/offsetFilters.js';
+import SelectedFilters from './models/filters/selectedFilters.js';
+import MostUsedFilters from './models/filters/mostUsedFilters.js';
+import PopulationFilterUpdater from './models/populationFilter/populationFilterUpdater.js';
+import PopulationFilterFetcher from './models/populationFilter/populationFilterFetcher.js';
+import ErrorHandler from './models/errorHandler/errorHandler.js';
+import updateDrawerFromGuidelines from './models/drawer/updateDrawerFromGuidelines.js';
+import setupGuidelines from './models/guidelines/setupGuidelines.js';
+import GuidelineStore from './models/guidelines/GuidelineStore.js';
 
 const log = debug('infect:App');
 
@@ -28,11 +31,13 @@ export default class InfectApp {
 
     @observable views = {
         matrix: new MatrixView(),
+        drawer: new DrawerViewModel(),
     };
 
 
     bacteria = new BacteriaStore();
     antibiotics = new AntibioticsStore();
+    guidelines = new GuidelineStore();
     substanceClasses = new SubstanceClassesStore();
     resistances = new ResistancesStore([], item => `${item.bacterium.id}/${item.antibiotic.id}`);
     filterValues = new PropertyMap();
@@ -43,7 +48,7 @@ export default class InfectApp {
     offsetFilters = new OffsetFilters();
     mostUsedFilters = new MostUsedFilters(this.selectedFilters, this.filterValues);
 
-    errorHandler = errorHandler;
+    errorHandler = new ErrorHandler();
 
 
     /**
@@ -67,6 +72,8 @@ export default class InfectApp {
         this.views.matrix.setOffsetFilters(this.offsetFilters);
         this.views.matrix.setupDataWatchers(this.antibiotics, this.bacteria, this.resistances);
 
+        updateDrawerFromGuidelines(this.guidelines, this.views.drawer, this.errorHandler);
+
     }
 
 
@@ -81,7 +88,10 @@ export default class InfectApp {
             this.filterValues,
         );
         const populationFilterPromise = populationFilterFetcher.init();
-        return Promise.all([fetcherPromise, populationFilterPromise]);
+        return Promise
+            .all([fetcherPromise, populationFilterPromise])
+            // Catch and display error; if we don't, app will fail half-way because we're async.
+            .catch(err => this.errorHandler.handle(err));
     }
 
 
@@ -136,24 +146,38 @@ export default class InfectApp {
         );
         // Gets data for default filter switzerland-all
         const resistancePromise = resistanceFetcher.getData();
+        log('Fetching data for resistances.');
+
+
+        // Guidelines are important – but not crucial for INFECT to work. Handle errors nicely.
+        // TODO: Make sure we are informed when they fail!
+        const guidelinePromise = setupGuidelines(
+            this._config,
+            this.guidelines,
+            this.bacteria,
+            this.antibiotics,
+            this.errorHandler.handle.bind(this.errorHandler),
+        ).catch((err) => {
+            const humanReadableError = new Error(`Guidelines could not be fetched from server, but INFECT will work without them. Please contact us if the issue persists. Original error:  ${err.message}`);
+            this.errorHandler.handle(humanReadableError);
+        });
+
 
         new PopulationFilterUpdater(
             resistanceFetcher,
             this.selectedFilters,
         );
 
-        log('Fetching data for resistances.');
+
         log('Fetchers setup done.');
 
-        return Promise
-            .all([
-                substanceClassesPromise,
-                antibioticPromise,
-                bacteriaPromise,
-                resistancePromise,
-            ])
-            // Catch and display error; if we don't, app will fail half-way because we're async.
-            .catch(err => this.errorHandler.handle(err));
+        return Promise.all([
+            substanceClassesPromise,
+            antibioticPromise,
+            bacteriaPromise,
+            resistancePromise,
+            guidelinePromise,
+        ]);
 
     }
 

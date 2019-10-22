@@ -25,7 +25,8 @@ export default class SelectedFilters {
 	@observable filterChanges = 0;
 
 	@action addFilter(filter) {
-		log('Add filter %o, filters were %o', filter, this._selectedFilters.peek());
+		// no peek() method in mobx > 4, so we use slice
+		log('Add filter %o, filters were %o', filter, this._selectedFilters.slice());
 
 		// Prevent users from adding the same filter twice
 		const duplicate = this._selectedFilters.find((item) => deepEqual(item, filter));
@@ -40,7 +41,8 @@ export default class SelectedFilters {
 	}
 
 	@action removeFilter(filter) {
-		log('Remove filter %o, filters are %o', filter, this._selectedFilters.peek());
+		// no peek() method in mobx > 4, so we use slice
+		log('Remove filter %o, filters are %o', filter, this._selectedFilters.slice());
 		const index = this._selectedFilters.indexOf(this.findFilter(filter));
 		if (index === -1) {
 			log('Filter %o not found in selectedFilters %o', filter, this._selectedFilters);
@@ -72,7 +74,8 @@ export default class SelectedFilters {
 	}
 
 	@computed get filters() {
-		return this._selectedFilters.peek();
+		// no peek() method in mobx > 4, so we use slice
+		return this._selectedFilters.slice();
 	}
 
 	@computed get originalFilters() {

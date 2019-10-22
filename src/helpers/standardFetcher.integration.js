@@ -7,88 +7,150 @@ import Store from './store';
 const originalFetch = global.fetch;
 
 test('throws on setup if params are missing', (t) => {
-	t.throws(() => new Fetcher(), /missing/);
-	t.throws(() => new Fetcher('test'), /missing/);
-	t.doesNotThrow(() => new Fetcher('test', {}));
-	t.end();
+    t.throws(() => new Fetcher(), /missing/);
+    t.throws(() => new Fetcher('test'), /missing/);
+    t.doesNotThrow(() => new Fetcher('test', {}));
+    t.end();
 });
 
-test('passes fetch options to fetch call', (t) => {
-	fetchMock.mock('/test', { status: 200, body: [] });
-	const store = new Store();
-	const fetcher = new Fetcher('/test', store, { headers: { 'accept-language': 'fr' } });
-	fetcher.getData();
-	// Call done
-	setTimeout(() => {
-		// Check if request got back 200 (only happens when headers are passed)
-		//t.equals(store.status.identifier, 'ready'); 
-		t.deepEquals(fetchMock.lastCall()[1], {
-			headers: { 'accept-language': 'fr' },
-			cache: 'no-store',
-			credentials: 'include',
-		});
-		fetchMock.restore();
-		t.end();
-	});
-
+test('passes fetch options to fetch call', async(t) => {
+    fetchMock.mock('/test', { status: 200, body: [] });
+    const store = new Store();
+    const fetcher = new Fetcher('/test', store, { headers: { 'accept-language': 'fr' } });
+    await fetcher.getData();
+    t.deepEquals(fetchMock.lastCall()[1], {
+        headers: { 'accept-language': 'fr' },
+        cache: 'no-store',
+        credentials: 'include',
+    });
+    fetchMock.restore();
+    t.end();
 });
 
-test('updates status on store', (t) => {
-	fetchMock.mock('/test', { status: 200, body: [] });
-	const store = new Store();
-	const fetcher = new Fetcher('/test', store);
-	fetcher.getData();
-	t.equals(store.status.identifier, 'loading');
-	// Call done
-	setTimeout(() => {
-		t.equals(store.status.identifier, 'ready');
-		fetchMock.restore();
-		t.end();
-	});
+test('updates status on store', async(t) => {
+    fetchMock.mock('/test', { status: 200, body: [] });
+    const store = new Store();
+    const fetcher = new Fetcher('/test', store);
+    const promise = fetcher.getData();
+    t.equals(store.status.identifier, 'loading');
+    await promise;
+    t.equals(store.status.identifier, 'ready');
+    fetchMock.restore();
+    t.end();
 });
 
-test('updates status on store on fail', (t) => {
-	fetchMock.mock('/test', { status: 400, body: [] });
-	const store = new Store();
-	const fetcher = new Fetcher('/test', store);
-	// getData rejects
-	fetcher.getData().then(() => {}, (err) => {
-		t.equals(err.message.indexOf('status 400') > -1, true);
-		t.equals(store.status.identifier, 'error');
-		fetchMock.restore();
-		t.end();
-	});
+test('updates status on store on fail', async(t) => {
+    fetchMock.mock('/test', { status: 400, body: [] });
+    const store = new Store();
+    const fetcher = new Fetcher('/test', store);
+    try {
+        await fetcher.getData();
+    } catch (err) {
+        t.equals(err.message.indexOf('status 400') > -1, true);
+        t.equals(store.status.identifier, 'error');
+    }
+    fetchMock.restore();
+    t.end();
 });
 
-test('waits for dependent stores', (t) => {
-	fetchMock.mock('/test', { status: 200, body: [] });
-	const store = new Store();
-	const dependentStore = new Store();
-	let resolver;
-	dependentStore.setFetchPromise(new Promise((resolve) => { resolver = resolve; }));
-	const fetcher = new Fetcher('/test', store, undefined, [dependentStore]);
-	fetcher.getData();
-	setTimeout(() => {
-		t.equals(store.status.identifier, 'loading');
-		resolver();
-		setTimeout(() => {			
-			t.equals(store.status.identifier, 'ready');
-			fetchMock.restore();
-			t.end();
-		}, 10);
-	}, 20);
+test('waits for dependent stores', async(t) => {
+    fetchMock.mock('/test', { status: 200, body: [] });
+    const store = new Store();
+
+    // Add one store that is loading (status = 'loading')
+    const loadingStore = new Store();
+    let resolver;
+    loadingStore.setFetchPromise(new Promise((resolve) => { resolver = resolve; }));
+
+    // Add one store that data has not yet been fetched for (status = 'initialized')
+    const initializedStore = new Store();
+
+    const fetcher = new Fetcher('/test', store, undefined, [loadingStore, initializedStore]);
+    const fetchPromise = fetcher.getData();
+    t.equals(store.status.identifier, 'loading');
+
+    // Resolve promise of loading store; status should still be 'loading', as we're waiting for
+    // the initialized store
+    resolver();
+    t.equals(store.status.identifier, 'loading');
+
+    // Start loading second store
+    let initializedStoreResolver;
+    initializedStore.setFetchPromise(new Promise((resolve) => {
+        initializedStoreResolver = resolve;
+    }));
+    t.equals(store.status.identifier, 'loading');
+    initializedStoreResolver();
+
+    // Wait for fetch to complete
+    await fetchPromise;
+    t.equals(store.status.identifier, 'ready');
+    fetchMock.restore();
+    t.end();
 });
 
-test('handles default data correctly', (t) => {
-	fetchMock.mock('/test', { status: 200, body: [{ number: 1, id: 1}, {number: 2, id: 2}] });
-	const store = new Store();
-	const fetcher = new Fetcher('/test', store);
-	fetcher.getData();
-	setTimeout(() => {
-		t.equals(store.get().size, 2);
-		fetchMock.restore();
-		global.fetch = originalFetch;
-		t.end();
-	}, 0);
+test('handles default data correctly', async(t) => {
+    fetchMock.mock('/test', { status: 200, body: [{ number: 1, id: 1 }, { number: 2, id: 2 }] });
+    const store = new Store();
+    const fetcher = new Fetcher('/test', store);
+    await fetcher.getData();
+    // Check if StandardFetcher's handleData method stores data correctly
+    t.deepEquals(store.get().toJS(), new Map([
+        [1, { number: 1, id: 1 }],
+        [2, { number: 2, id: 2 }],
+    ]));
+    fetchMock.restore();
+    global.fetch = originalFetch;
+    t.end();
+});
+
+test('getData() resolves to raw data gotten from server', async(t) => {
+    const body = [{ number: 1, id: 1 }, { number: 2, id: 2 }];
+    fetchMock.mock('/test', { status: 200, body });
+    const store = new Store();
+    const fetcher = new Fetcher('/test', store);
+    const data = await fetcher.getData();
+    t.deepEquals(data, body);
+    fetchMock.restore();
+    global.fetch = originalFetch;
+    t.end();
+});
+
+test('calls handleData with data and url', async(t) => {
+    fetchMock.mock('/test', { status: 200, body: [{ number: 1, id: 1 }] });
+    const store = new Store();
+    const args = [];
+    class ExtendedFetcher extends Fetcher {
+        handleData(data, url) {
+            args.push({ data, url });
+        }
+    }
+    const fetcher = new ExtendedFetcher('/test', store);
+    await fetcher.getData();
+    t.deepEquals(args, [{ url: '/test', data: [{ number: 1, id: 1 }] }]);
+    fetchMock.restore();
+    global.fetch = originalFetch;
+    t.end();
+});
+
+test('whole fetch promise fails if handleData on one instance fails', async(t) => {
+    fetchMock.mock('/test', { status: 200, body: [{ number: 1, id: 1 }] });
+    const store = new Store();
+    class ExtendedFetcher extends Fetcher {
+        handleData() {
+            throw new Error('Fetcher failed');
+        }
+    }
+    const fetcher = new ExtendedFetcher('/test', store);
+    try {
+        await fetcher.getData();
+        t.fails('Fetcher should throw');
+    } catch (err) {
+        t.is(err.message, 'Fetcher failed');
+    }
+    t.is(store.status.identifier, 'error');
+    fetchMock.restore();
+    global.fetch = originalFetch;
+    t.end();
 });
 

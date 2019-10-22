@@ -9,7 +9,7 @@ export default class AntibioticsFetcher extends Fetcher {
         this.handleError = args[5];
     }
 
-    _handleData(data) {
+    handleData(data) {
 
         // Cone data as we're modifying it
         data.forEach((item) => {
@@ -70,8 +70,9 @@ export default class AntibioticsFetcher extends Fetcher {
                 identifier: item.identifier,
             });
 
-            this._store.add(antibiotic);
+            this.store.add(antibiotic);
         });
+
     }
 
 }

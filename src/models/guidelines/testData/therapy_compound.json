@@ -1,0 +1,50 @@
+[
+  {
+    "id": 1,
+    "id_compound": 13,
+    "id_therapy": 1,
+    "markdownText": "* TMP/SMX forte alle 12 h für 7 d\n* (Anpassung gemäss Urinkultur!)\n* **ODER**"
+  },
+  {
+    "id": 2,
+    "id_compound": 36,
+    "id_therapy": 1,
+    "markdownText": "Nitrofurantoin [100 mg](http://infect.info) alle 12 h für 7 d"
+  },
+  {
+    "id": 3,
+    "id_compound": 17,
+    "id_therapy": 2,
+    "markdownText": "Ciprofloxacin 500 mg alle 12 h für 7 d"
+  },
+  {
+    "id": 4,
+    "id_compound": 2,
+    "id_therapy": 2,
+    "markdownText": "* Penicillin alle 12 h für 7 d\n    * Levofloxacin"
+  },
+  {
+    "id": 5,
+    "id_compound": 13,
+    "id_therapy": 3,
+    "markdownText": "* TMP/SMX forte alle 12 h für 7 d\n* (Anpassung gemäss Urinkultur!)\n* **ODER**"
+  },
+  {
+    "id": 6,
+    "id_compound": 36,
+    "id_therapy": 4,
+    "markdownText": "Nitrofurantoin [100 mg](http://infect.info) alle 12 h für 7 d"
+  },
+  {
+    "id": 7,
+    "id_compound": 17,
+    "id_therapy": 4,
+    "markdownText": "Ciprofloxacin 500 mg alle 12 h für 7 d"
+  },
+  {
+    "id": 8,
+    "id_compound": 2,
+    "id_therapy": 3,
+    "markdownText": "* Penicillin alle 12 h für 7 d\n    * Levofloxacin"
+  }
+]

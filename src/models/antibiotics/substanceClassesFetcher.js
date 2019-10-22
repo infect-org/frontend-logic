@@ -6,7 +6,7 @@ const log = debug('infect:SubstanceClassesFetcher');
 
 export default class SubstanceClassesFetcher extends Fetcher {
 
-	_handleData(originalData) {
+	handleData(originalData) {
 
 		log('Handle data %o', originalData);
 
@@ -40,13 +40,13 @@ export default class SubstanceClassesFetcher extends Fetcher {
 			// Sort order corresponds to order of tree created from nested set
 			additionalProperties.order = index;
 
-			const parent = item.parent ? this._store.getById(item.parent.id) : undefined;
+			const parent = item.parent ? this.store.getById(item.parent.id) : undefined;
 			const substanceClass = new SubstanceClass(item.id, item.name, parent, 
 				additionalProperties);
-			this._store.add(substanceClass);
+			this.store.add(substanceClass);
 		});
 
-		log('%d substance classes added to store', this._store.get().size);
+		log('%d substance classes added to store', this.store.get().size);
 
 	}
 

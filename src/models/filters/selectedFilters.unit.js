@@ -100,7 +100,8 @@ test('toggles filters', (t) => {
 
 test('returns originalFilters', (t) => {
 	const { filter, values } = setupFilters();
-	t.deepEquals(filter.originalFilters.peek(), values);
+	// no peek() method in mobx > 4, so we use slice
+	t.deepEquals(filter.originalFilters.slice(), values);
 	t.end();
 });
 

@@ -1,6 +1,5 @@
 import InfectApp from './src/infectApp';
 import filterTypes from './src/models/filters/filterTypes';
-import errorHandler from './src/models/errorHandler/errorHandler';
 import resistanceTypes from './src/models/resistances/resistanceTypes';
 
 // Export models. Needed in App to check if value returned by xPositions is an Antibiotic or
@@ -11,5 +10,5 @@ const models = {
     AntibioticMatrixView,
 };
 
-export { InfectApp as default, filterTypes, errorHandler, resistanceTypes, models };
+export { InfectApp as default, filterTypes, resistanceTypes, models };
 
