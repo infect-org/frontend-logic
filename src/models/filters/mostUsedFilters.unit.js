@@ -33,7 +33,8 @@ test('watches filter changes', (t) => {
 	});
 	selected.addFilter('test2');
 	t.equals(used.mostUsedFilters.length, 2);
-	t.deepEquals(used.mostUsedFilters.peek(), [{
+	// no peek() method in mobx > 4, so we use slice
+	t.deepEquals(used.mostUsedFilters.slice(), [{
 			count: 2
 			, filter: 'test1'
 		}, {
@@ -42,7 +43,8 @@ test('watches filter changes', (t) => {
 		}]);
 	selected.removeFilter('test2');
 	t.equals(used.mostUsedFilters.length, 2);
-	t.deepEquals(used.mostUsedFilters.peek(), [{
+	// no peek() method in mobx > 4, so we use slice
+	t.deepEquals(used.mostUsedFilters.slice(), [{
 			count: 3
 			, filter: 'test1'
 		}, {
