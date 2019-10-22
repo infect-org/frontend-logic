@@ -24,7 +24,7 @@
     "tinycolor2": "^1.4.1"
   },
   "peerDependencies": {
-    "mobx": "4.14.1",
+    "mobx": "4.14.1"
   },
   "devDependencies": {
     "@babel/core": "^7.6.4",
