@@ -116,7 +116,7 @@ export default class ResistancesFetcher extends Fetcher {
             if (!antibiotic) {
                 const antibioticMissingError = new Error(`ResistancesFetcher: Antibiotic with ID ${resistance.compoundId} missing, resistance ${JSON.stringify(resistance)} cannot be displayed.`);
                 this.handleError(antibioticMissingError);
-                console.error('Antibiotic for resistance %o missi/ng; antibiotics are %o', resistance, antibiotics);
+                console.error('Antibiotic for resistance %o missing; antibiotics are %o', resistance, antibiotics);
                 return;
             }
 

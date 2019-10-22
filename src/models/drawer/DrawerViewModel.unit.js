@@ -15,7 +15,7 @@ test('is closed by default; can open and close', (t) => {
 test('can update content', (t) => {
     const drawer = new DrawerViewModel();
     t.throws(() => drawer.setContent('newType'), /only supports Guideline as content/);
-    const guideline = new Guideline(5);
+    const guideline = new Guideline({ id: 5 });
     drawer.setContent(guideline);
     t.is(drawer.content, guideline);
     // Check if content can be emptied
@@ -27,10 +27,10 @@ test('can update content', (t) => {
 test('opens and closes when content changes', (t) => {
     const drawer = new DrawerViewModel();
     t.is(drawer.isOpen, false);
-    const guideline = new Guideline(5);
+    const guideline = new Guideline({ id: 5 });
     drawer.setContent(guideline);
-    // t.is(drawer.isOpen, true);
-    t.is(drawer.isOpen, false); // Don't open on change, this sucks
+    t.is(drawer.isOpen, true);
+    // t.is(drawer.isOpen, false); // Don't open on change, this sucks
     drawer.setContent();
     t.is(drawer.isOpen, false);
     t.end();
@@ -39,7 +39,7 @@ test('opens and closes when content changes', (t) => {
 test('returns correct content type', (t) => {
     const drawer = new DrawerViewModel();
     t.is(drawer.contentType, undefined);
-    const guideline = new Guideline(5);
+    const guideline = new Guideline({ id: 5 });
     drawer.setContent(guideline);
     t.is(drawer.contentType, 'guideline');
     t.end();

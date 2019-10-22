@@ -5,7 +5,18 @@
     "id_guideline": 1,
     "identifier": "komplizierte-zystitis",
     "name": "Komplizierte Zystitis",
-    "markdownText": "# Überlegungen bei der Wahl eines Antibiotikums\n    - Frühere Harnwegsinfekte\n    - Frühere Antibiotikaexposition\n    - Reise- und Sexualanamnese"
+    "markdownText": "# Überlegungen bei der Wahl eines Antibiotikums\n    - Frühere Harnwegsinfekte\n    - Frühere Antibiotikaexposition\n    - Reise- und Sexualanamnese",
+    "href": "https://ssi.guidelines.ch/guideline/2981",
+    "latestUpdates": [{
+      "date": "2019-09-09T11:36:35",
+      "dataSourceName": "SGInf-Guidelines1",
+      "dataSourceHref": "https://ssi.guidelines.ch/"      
+    }, {
+      "date": "2019-09-08T11:36:35",
+      "dataSourceName": "SGInf-Guidelines2",
+      "dataSourceHref": "https://ssi.guidelines.ch/"      
+    }],
+    "synonyms": ["test1", "test2"]
   },
   {
     "id": 2,
@@ -13,6 +24,8 @@
     "id_guideline": 1,
     "identifier": "unkomplizierte-zystitis",
     "name": "Unkomplizierte Zystitis",
-    "markdownText": "# Überlegungen bei der Wahl eines Antibiotikums\n    - Frühere Harnwegsinfekte\n    - Frühere Antibiotikaexposition\n    - Reise- und Sexualanamnese"
+    "markdownText": "# Überlegungen bei der Wahl eines Antibiotikums\n    - Frühere Harnwegsinfekte\n    - Frühere Antibiotikaexposition\n    - Reise- und Sexualanamnese",
+    "synonyms": [],
+    "latestUpdates": []
   }
 ]

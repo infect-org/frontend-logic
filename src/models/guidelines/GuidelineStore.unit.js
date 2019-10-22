@@ -29,3 +29,12 @@ test('updates selected guideline', (t) => {
     t.is(guidelineStore.selectedGuideline, undefined);
     t.end();
 });
+
+test(
+    'returns empty search result if no guidelines exist (e.g. for tenants without guidelines',
+    (t) => {
+        const guidelineStore = new GuidelineStore();
+        t.deepEqual(guidelineStore.search('something'), []);
+        t.end();
+    },
+);

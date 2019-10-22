@@ -2,14 +2,14 @@
   {
     "id": 1,
     "id_diagnosis": 1,
-    "id_therapyPriority": 1,
-    "markdownText": "Ein wichtiger kommentar zur ersten Wahl"
+    "id_therapyPriority": 2,
+    "markdownText": "Kommentar"
   },
   {
     "id": 2,
     "id_diagnosis": 1,
-    "id_therapyPriority": 2,
-    "markdownText": null
+    "id_therapyPriority": 1,
+    "markdownText": "First priority"
   },
   {
     "id": 3,

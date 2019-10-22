@@ -59,22 +59,42 @@ export default class DiagnosisFetcher extends Fetcher {
                 // Remove entries that could not be found (error was thrown)
                 .filter(bacterium => bacterium !== undefined);
 
-            // TODO: HANDLE GENTLY if missing
             const therapies = therapiesStore
                 .getAsArray()
-                .filter(therapy => therapy.diagnosisId === diagnosis.id);
+                .filter(therapy => therapy.diagnosisId === diagnosis.id)
+                // Make sure therapies are sorted by their priority (or they will be displayed in
+                // the UI in a non-reasonable way)
+                .sort((a, b) => a.priority.order - b.priority.order);
+
+            // Clean therapy data to not have any unneeded relicts and prevent usage of
+            // therapy.diagnosisId
             therapies.forEach(therapy => therapy.removeDiagnosisId());
 
             log('Inducing bacteria are %o, therapies are %o', inducingBacteria, therapies);
 
-            const diagnosisModel = new Diagnosis(
-                diagnosis.id,
-                diagnosis.name,
-                diagnosisClasses.getById(diagnosis.id_diagnosisClass),
+            // There may be multiple latestUpdates, as they are taken from therapies (and only added
+            // to diagnosis on API level). Only use/display the very latest update.
+            // TODO: Add test to see if data returned by server is valid.
+            const sortedLatestUpdates = diagnosis.latestUpdates
+                .map(update => ({
+                    date: new Date(update.date),
+                    name: update.dataSourceName,
+                    link: update.dataSourceHref,
+                }))
+                .sort((a, b) => b.date.getTime() - a.date.getTime());
+
+            const diagnosisModel = new Diagnosis({
+                id: diagnosis.id,
+                name: diagnosis.name,
+                diagnosisClass: diagnosisClasses.getById(diagnosis.id_diagnosisClass),
                 inducingBacteria,
-                diagnosis.markdownText,
+                markdownText: diagnosis.markdownText,
                 therapies,
-            );
+                link: diagnosis.href,
+                latestUpdate: sortedLatestUpdates[0],
+                synonyms: diagnosis.synonyms,
+            });
+
             /**
              * Temporarily store guideline ID on diagnosis; will be needed to resolve matching
              * diagnoses when we create the guidelines (see GuidelineFetcher)

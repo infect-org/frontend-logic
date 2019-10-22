@@ -158,6 +158,7 @@ test('creates all models', async(t) => {
     t.is(guideline.id, 1);
     t.is(guideline.name, 'SGInf-Guidelines');
     t.is(guideline.markdownDisclaimer.startsWith('*Alle*'), true);
+    t.is(guideline.contactEmail, 'guidelines@infect.info');
 
     // Check first diagnosis for guideline
     t.is(guideline.diagnoses.length, 2);
@@ -167,21 +168,29 @@ test('creates all models', async(t) => {
     t.is(diagnosis.markdownText.startsWith('# Überlegungen'), true);
     t.is(diagnosis.diagnosisClass.id, 1);
     t.is(diagnosis.diagnosisClass.name, 'Urinary Tract');
+    t.is(diagnosis.link, 'https://ssi.guidelines.ch/guideline/2981');
     t.deepEquals(diagnosis.inducingBacteria, [{ id: 3 }, { id: 34 }]);
+    // Check that only newest latestUpdate is used
+    t.deepEquals(diagnosis.latestUpdate, {
+        date: new Date(2019, 8, 9, 11, 36, 35),
+        name: 'SGInf-Guidelines1',
+        link: 'https://ssi.guidelines.ch/',
+    });
 
     // Check first therapy for diagnosis
     t.is(diagnosis.therapies.length, 2);
     const [therapy] = diagnosis.therapies;
-    t.is(therapy.id, 1);
-    t.is(therapy.markdownText.startsWith('Ein wichtiger'), true);
+    // Make sure therapy with higher priority comes first
+    t.is(therapy.id, 2);
+    t.is(therapy.markdownText, 'First priority');
     t.is(therapy.priority.name, 'Erste Wahl');
     t.is(therapy.priority.order, 1);
 
     // Recommended antibiotics for therapy
     t.deepEquals(therapy.recommendedAntibiotics.length, 2);
     const [antibiotic] = therapy.recommendedAntibiotics;
-    t.is(antibiotic.markdownText.startsWith('* TMP/SMX'), true);
-    t.deepEquals(antibiotic.antibiotic, { id: 13 });
+    t.is(antibiotic.markdownText.startsWith('Ciprofloxacin 500 mg'), true);
+    t.deepEquals(antibiotic.antibiotic, { id: 17 });
 
     global.fetch = originalFetch;
     t.end();

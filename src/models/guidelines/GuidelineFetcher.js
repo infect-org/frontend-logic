@@ -15,12 +15,13 @@ export default class GuidelineFetcher extends Fetcher {
 
             diagnoses.forEach(diagnosis => diagnosis.removeGuidelineId);
 
-            this.store.add(new Guideline(
-                guideline.id,
-                guideline.name,
+            this.store.add(new Guideline({
+                id: guideline.id,
+                name: guideline.name,
                 diagnoses,
-                guideline.markdownDisclaimer,
-            ));
+                markdownDisclaimer: guideline.markdownDisclaimer,
+                contactEmail: guideline.contactEmail,
+            }));
 
         });
 
