@@ -1,6 +1,5 @@
 import { computed, reaction } from 'mobx';
 import filterTypes from '../filters/filterTypes';
-import errorHandler from '../errorHandler/errorHandler';
 
 /**
  * Create headers for pupulation filters that will be passed to ResistanceFetcher. Invoke
@@ -10,9 +9,10 @@ export default class PopulationFilterUpdater {
 
     previousFilters = '';
 
-    constructor(resistancesFetcher, selectedFilters) {
+    constructor(resistancesFetcher, selectedFilters, errorHandler) {
         this.resistancesFetcher = resistancesFetcher;
         this.selectedFilters = selectedFilters;
+        this.errorHandler = errorHandler;
         this.setupWatcher();
     }
 
@@ -37,11 +37,11 @@ export default class PopulationFilterUpdater {
      * @private
      */
     setupWatcher() {
-        reaction(() => this.filterHeaders, async (data) => {
+        reaction(() => this.filterHeaders, async(data) => {
             try {
                 await this.resistancesFetcher.getDataForFilters(data);
             } catch (err) {
-                errorHandler.handle(err);
+                this.errorHandler.handle(err);
             }
             // errorHandler.handle(new Error('shit'));
         }, {
