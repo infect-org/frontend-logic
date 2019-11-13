@@ -20,7 +20,7 @@ import SelectedFilters from './models/filters/selectedFilters.js';
 import MostUsedFilters from './models/filters/mostUsedFilters.js';
 import PopulationFilterUpdater from './models/populationFilter/populationFilterUpdater.js';
 import PopulationFilterFetcher from './models/populationFilter/populationFilterFetcher.js';
-import NotificationCenter from './models/notificationCenter/NotificationCenter.js';
+import NotificationCenter from './models/notifications/NotificationCenter.js';
 import updateDrawerFromGuidelines from './models/drawer/updateDrawerFromGuidelines.js';
 import setupGuidelines from './models/guidelines/setupGuidelines.js';
 import GuidelineStore from './models/guidelines/GuidelineStore.js';
@@ -158,16 +158,20 @@ export default class InfectApp {
             this.antibiotics,
             this.notificationCenter.handle.bind(this.notificationCenter),
         ).catch((err) => {
-            const humanReadableError = new Error(`Guidelines could not be fetched from server, but INFECT will work without them. Please contact us if the issue persists. Original error:  ${err.message}`);
-            this.notificationCenter.handle(humanReadableError);
+            const humanReadableError = `Guidelines could not be fetched from server, but INFECT will work without them. Please contact us if the issue persists. Original error:  ${err.message}`;
+            this.notificationCenter.handle({
+                severity: 'warning',
+                message: humanReadableError,
+            });
         });
 
 
-        new PopulationFilterUpdater(
+        const updater = new PopulationFilterUpdater(
             resistanceFetcher,
             this.selectedFilters,
             this.notificationCenter.handle.bind(this.notificationCenter),
         );
+        updater.setup();
 
 
         log('Fetchers setup done.');

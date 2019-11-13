@@ -1,7 +1,8 @@
 import test from 'tape';
-import InfectApp from './infectApp';
 import nodeFetch from 'node-fetch';
 import fetchMock from 'fetch-mock';
+import { toJS } from 'mobx';
+import InfectApp from './infectApp';
 
 // Test main app against the real API (to test integration/keep things simple
 
@@ -49,6 +50,11 @@ async function testInvalidApiCall(config, t) {
     // Depending on the endpoint, multiple errors may be given; if e.g. substance classes cannot
     // be fetched, antibiotics cannot be linked to them and will also fail (and therefore display
     // an error).
+    /* console.log(
+        'Notifications for config %o are %o',
+        config,
+        toJS(app.notificationCenter.notifications),
+    ); */
     const containsCorrectError = app.notificationCenter.notifications
         .filter(notification => notification.message.includes('HTTP status 404'));
     t.is(containsCorrectError.length, 1);

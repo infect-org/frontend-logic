@@ -8,8 +8,7 @@ export default class Notification {
     /**
      * Hide property can be set to true by views (React components) if message was hidden by user
      */
-    @observable
-    hide = false;
+    @observable hide = false;
 
     /**
      * @param {Object} notification

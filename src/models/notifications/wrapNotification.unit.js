@@ -35,6 +35,10 @@ test('converts to error on invalid data', (t) => {
     t.is(noMessage.severity, 'error');
     t.is(noMessage.message.includes('must include a property "message"'), true);
 
+    const wrongMessage = wrapNotification({ severity: 'error', message: 5 }, ['error']);
+    t.is(wrongMessage.error instanceof Error, true);
+    t.is(noMessage.message.includes('must include a property "message"'), true);
+
     t.end();
 });
 

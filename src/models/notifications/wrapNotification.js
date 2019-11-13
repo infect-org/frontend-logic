@@ -24,8 +24,8 @@ const wrapNotification = (notification, severityLevels) => {
     if (!notification.severity || !severityLevels.includes(notification.severity)) {
         return wrapNotification(new Error(`wrapNotification: Notifications passed to ErrorHandler must include a property "severity" which is one of ${(severityLevels || []).join(', ')}; you passed ${notification.severity} instead. Your original message is ${JSON.stringify(notification)}`));
     }
-    // Message is missing
-    if (!notification.message) {
+    // Message is missing or not a string
+    if (!notification.message || typeof notification.message !== 'string') {
         return wrapNotification(new Error(`wrapNotification: Notifications passed to ErrorHandler must include a property "message" which is a string; you passed ${notification.message} instead. Your original message is ${JSON.stringify(notification)}.`));
     }
     // All fine with original notification: Return notification provided
