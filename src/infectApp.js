@@ -20,7 +20,7 @@ import SelectedFilters from './models/filters/selectedFilters.js';
 import MostUsedFilters from './models/filters/mostUsedFilters.js';
 import PopulationFilterUpdater from './models/populationFilter/populationFilterUpdater.js';
 import PopulationFilterFetcher from './models/populationFilter/populationFilterFetcher.js';
-import ErrorHandler from './models/errorHandler/errorHandler.js';
+import NotificationCenter from './models/notifications/NotificationCenter.js';
 import updateDrawerFromGuidelines from './models/drawer/updateDrawerFromGuidelines.js';
 import setupGuidelines from './models/guidelines/setupGuidelines.js';
 import GuidelineStore from './models/guidelines/GuidelineStore.js';
@@ -50,7 +50,7 @@ export default class InfectApp {
     offsetFilters = new OffsetFilters();
     mostUsedFilters = new MostUsedFilters(this.selectedFilters, this.filterValues);
 
-    errorHandler = new ErrorHandler();
+    notificationCenter = new NotificationCenter();
 
     guidelineRelatedFilters = new GuidelineSelectedFiltersBridge(
         this.selectedFilters,
@@ -80,7 +80,7 @@ export default class InfectApp {
         this.views.matrix.setOffsetFilters(this.offsetFilters);
         this.views.matrix.setupDataWatchers(this.antibiotics, this.bacteria, this.resistances);
 
-        updateDrawerFromGuidelines(this.guidelines, this.views.drawer, this.errorHandler);
+        updateDrawerFromGuidelines(this.guidelines, this.views.drawer, this.notificationCenter);
 
     }
 
@@ -99,7 +99,7 @@ export default class InfectApp {
         return Promise
             .all([fetcherPromise, populationFilterPromise])
             // Catch and display error; if we don't, app will fail half-way because we're async.
-            .catch(err => this.errorHandler.handle(err));
+            .catch(err => this.notificationCenter.handle(err));
     }
 
 
@@ -126,7 +126,7 @@ export default class InfectApp {
             { headers: { select: 'substance.*, substance.substanceClass.*' } },
             [this.substanceClasses],
             this.substanceClasses,
-            this.errorHandler.handle.bind(this.errorHandler),
+            this.notificationCenter.handle.bind(this.notificationCenter),
         );
         const antibioticPromise = antibioticsFetcher.getData();
         log('Fetching data for antibiotics.');
@@ -150,7 +150,7 @@ export default class InfectApp {
                 antibiotics: this.antibiotics,
                 bacteria: this.bacteria,
             },
-            this.errorHandler.handle.bind(this.errorHandler),
+            this.notificationCenter.handle.bind(this.notificationCenter),
         );
         // Gets data for default filter switzerland-all
         const resistancePromise = resistanceFetcher.getData();
@@ -164,17 +164,22 @@ export default class InfectApp {
             this.guidelines,
             this.bacteria,
             this.antibiotics,
-            this.errorHandler.handle.bind(this.errorHandler),
+            this.notificationCenter.handle.bind(this.notificationCenter),
         ).catch((err) => {
-            const humanReadableError = new Error(`Guidelines could not be fetched from server, but INFECT will work without them. Please contact us if the issue persists. Original error:  ${err.message}`);
-            this.errorHandler.handle(humanReadableError);
+            const humanReadableError = `Guidelines could not be fetched from server, but INFECT will work without them. Please contact us if the issue persists. Original error:  ${err.message}`;
+            this.notificationCenter.handle({
+                severity: 'warning',
+                message: humanReadableError,
+            });
         });
 
 
-        new PopulationFilterUpdater(
+        const updater = new PopulationFilterUpdater(
             resistanceFetcher,
             this.selectedFilters,
+            this.notificationCenter.handle.bind(this.notificationCenter),
         );
+        updater.setup();
 
 
         log('Fetchers setup done.');

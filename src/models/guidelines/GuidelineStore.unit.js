@@ -38,3 +38,15 @@ test(
         t.end();
     },
 );
+
+test('returns selected guideline', (t) => {
+    const guidelineStore = new GuidelineStore();
+    const first = { id: 0, name: 'firstGuideline', selectedDiagnosis: undefined };
+    guidelineStore.add(first);
+    t.is(guidelineStore.getSelectedDiagnosis(), undefined);
+    guidelineStore.selectGuideline(first);
+    t.is(guidelineStore.getSelectedDiagnosis(), undefined);
+    guidelineStore.selectedGuideline.selectedDiagnosis = 'selectedDiagnosis';
+    t.is(guidelineStore.getSelectedDiagnosis(), 'selectedDiagnosis');
+    t.end();
+});
