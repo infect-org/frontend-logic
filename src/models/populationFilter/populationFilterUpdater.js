@@ -1,18 +1,26 @@
 import { computed, reaction } from 'mobx';
 import filterTypes from '../filters/filterTypes';
-import errorHandler from '../errorHandler/errorHandler';
 
 /**
- * Create headers for pupulation filters that will be passed to ResistanceFetcher. Invoke
- * ResistancesFetcher whenever population filters change.
+ * Create headers for population filters that will be passed to ResistanceFetcher. Invoke
+ * ResistancesFetcher whenever population filters change. Do this in a separate class to not
+ * tightly couple ResistancesFetcher and SelectedFilters.
  */
 export default class PopulationFilterUpdater {
 
     previousFilters = '';
 
-    constructor(resistancesFetcher, selectedFilters) {
+    constructor(resistancesFetcher, selectedFilters, handleError) {
         this.resistancesFetcher = resistancesFetcher;
         this.selectedFilters = selectedFilters;
+        this.handleError = handleError;
+    }
+
+    /**
+     * Main function that starts watching for changes in selectedFilters and updates data
+     * accordingly.
+     */
+    setup() {
         this.setupWatcher();
     }
 
@@ -37,13 +45,12 @@ export default class PopulationFilterUpdater {
      * @private
      */
     setupWatcher() {
-        reaction(() => this.filterHeaders, async (data) => {
+        reaction(() => this.filterHeaders, async(data) => {
             try {
                 await this.resistancesFetcher.getDataForFilters(data);
             } catch (err) {
-                errorHandler.handle(err);
+                this.handleError(err);
             }
-            // errorHandler.handle(new Error('shit'));
         }, {
             // Overwrite existing comparator function as filterHeaders returns a *new* (and
             // therefore different) object every time it is invoked. Compare if their JSON

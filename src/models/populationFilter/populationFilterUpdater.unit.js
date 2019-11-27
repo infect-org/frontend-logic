@@ -25,7 +25,8 @@ function setupData() {
 
 test('creates correct headers', (t) => {
     const { selectedFilters, resistancesFetcher, resistancesFetcherFilters } = setupData();
-    new PopulationFilterUpdater(resistancesFetcher, selectedFilters);
+    const updater = new PopulationFilterUpdater(resistancesFetcher, selectedFilters);
+    updater.setup();
 
     // Region
     selectedFilters.filters.push({
@@ -47,3 +48,26 @@ test('creates correct headers', (t) => {
 
     t.end();
 });
+
+test('handles errors through handleError', (t) => {
+    const errors = [];
+    const resistancesFetcher = {
+        getDataForFilters: () => { throw new Error('someError') },
+    };
+    const { selectedFilters } = setupData();
+    const updater = new PopulationFilterUpdater(
+        resistancesFetcher,
+        selectedFilters,
+        err => errors.push(err),
+    );
+    updater.setup();
+    // Errors only happen when we fetch data; therefore we have to change the filters
+    selectedFilters.filters.push({
+        type: filterTypes.region,
+        value: 5,
+    });
+    t.is(errors.length, 1);
+    t.is(errors[0].message.includes('someError'), true);
+    t.end();
+});
+
