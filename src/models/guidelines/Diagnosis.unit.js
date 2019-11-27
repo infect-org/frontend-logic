@@ -57,8 +57,6 @@ test('sets and removes guidelineId', (t) => {
     const diagnosis = new Diagnosis({
         id: 5,
         name: 'name',
-        diagnosisClass: 'fakeClass',
-        inducingBacteria: ['inducing'],
         markdownText: 'markdownText',
         therapies: ['therapies'],
     });
@@ -66,5 +64,34 @@ test('sets and removes guidelineId', (t) => {
     t.is(diagnosis.guidelineId, 5);
     diagnosis.removeGuidelineId();
     t.is(Object.prototype.hasOwnProperty.call(diagnosis, 'guidelineId'), false);
+    t.end();
+});
+
+test('returns therapies for antibiotic', (t) => {
+    const therapyA = {
+        name: 'a',
+        containsAntibiotic: name => name === 'abName',
+        priorityOrder: 2,
+    };
+    const therapyC = {
+        name: 'c',
+        containsAntibiotic: name => name === 'abName',
+        priorityOrder: 1,
+    };
+    const diagnosis = new Diagnosis({
+        id: 5,
+        name: 'name',
+        markdownText: 'markdownText',
+        therapies: [
+            therapyA,
+            {
+                name: 'b',
+                containsAntibiotic: () => false,
+            },
+            therapyC,
+        ],
+        synonyms: [],
+    });
+    t.deepEqual(diagnosis.getTherapiesForAntibiotic('abName'), [therapyC, therapyA]);
     t.end();
 });
