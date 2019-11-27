@@ -24,6 +24,8 @@ import ErrorHandler from './models/errorHandler/errorHandler.js';
 import updateDrawerFromGuidelines from './models/drawer/updateDrawerFromGuidelines.js';
 import setupGuidelines from './models/guidelines/setupGuidelines.js';
 import GuidelineStore from './models/guidelines/GuidelineStore.js';
+import GuidelineSelectedFiltersBridge from
+    './models/guidelineSelectedFiltersBridge/GuidelineSelectedFiltersBridge.js';
 
 const log = debug('infect:App');
 
@@ -49,6 +51,12 @@ export default class InfectApp {
     mostUsedFilters = new MostUsedFilters(this.selectedFilters, this.filterValues);
 
     errorHandler = new ErrorHandler();
+
+    guidelineRelatedFilters = new GuidelineSelectedFiltersBridge(
+        this.selectedFilters,
+        this.guidelines,
+        this.filterValues,
+    );
 
 
     /**
