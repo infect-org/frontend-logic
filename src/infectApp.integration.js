@@ -1,7 +1,8 @@
 import test from 'tape';
-import InfectApp from './infectApp';
 import nodeFetch from 'node-fetch';
 import fetchMock from 'fetch-mock';
+import { toJS } from 'mobx';
+import InfectApp from './infectApp';
 
 // Test main app against the real API (to test integration/keep things simple
 
@@ -49,8 +50,13 @@ async function testInvalidApiCall(config, t) {
     // Depending on the endpoint, multiple errors may be given; if e.g. substance classes cannot
     // be fetched, antibiotics cannot be linked to them and will also fail (and therefore display
     // an error).
-    const containsCorrectError = app.errorHandler.errors
-        .filter(err => err.message.includes('HTTP status 404'));
+    /* console.log(
+        'Notifications for config %o are %o',
+        config,
+        toJS(app.notificationCenter.notifications),
+    ); */
+    const containsCorrectError = app.notificationCenter.notifications
+        .filter(notification => notification.message.includes('HTTP status 404'));
     t.is(containsCorrectError.length, 1);
 }
 
@@ -96,9 +102,7 @@ test('throws with any invalid config', (t) => {
         return testInvalidApiCall(invalidConfig, t);
     });
 
-    const allPromises = promises.reduce((prev, item) => prev.then(() => item), Promise.resolve());
-
-    allPromises.then(() => {
+    Promise.all(promises).then(() => {
         resetFetch();
         console.error = originalConsoleError;
         t.end();
@@ -119,9 +123,12 @@ test('errors with guidelines are handled internally', async(t) => {
     const app = new InfectApp(config);
     try {
         await app.initialize();
-        const { errors } = app.errorHandler;
-        t.is(errors.length, 1);
-        t.is(errors[0].message.includes('Guidelines could not be fetched from server'), true);
+        const { notifications } = app.notificationCenter;
+        t.is(notifications.length, 1);
+        t.is(
+            notifications[0].message.includes('Guidelines could not be fetched from server'),
+            true,
+        );
     } catch (err) {
         console.log('Error is %o', err);
         t.fail('Guidelines should not throw');
