@@ -31,6 +31,16 @@ export default class GuidelineStore extends Store {
     }
 
     /**
+     * Returns the selected diagnosis, if one is set, else undefined. Quick access method
+     * to simplify calls from components.
+     * @return {Diagnosis|undefined}    Selected diagnosis, if any
+     */
+    getSelectedDiagnosis() {
+        return this.selectedGuideline &&
+            this.selectedGuideline.selectedDiagnosis;
+    }
+
+    /**
      * Searches all guidelines for a certain diagnosis. As search should happen across all
      * guidelines and only GuidelineStore is exposed on infectApp, we execute the search here.
      */

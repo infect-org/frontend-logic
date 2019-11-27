@@ -86,4 +86,16 @@ export default class Diagnosis {
         delete this.guidelineId;
     }
 
+    /**
+     * Returns all therapies that contain given antibiotic, sorted by priority order. Simplifies
+     * access and reduces code in components.
+     * @param {Antibiotic} antibiotic
+     * @return {Therapy[]}            Therapies that contain antibiotic, sorted by priority
+     */
+    getTherapiesForAntibiotic(antibiotic) {
+        return this.therapies
+            .filter(therapy => therapy.containsAntibiotic(antibiotic))
+            .sort((a, b) => a.priorityOrder - b.priorityOrder);
+    }
+
 }

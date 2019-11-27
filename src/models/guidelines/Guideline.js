@@ -25,20 +25,25 @@ export default class Guideline {
      */
     constructor({
         id,
-        name = '',
+        name,
+        link,
         diagnoses = [],
         markdownDisclaimer = '',
         contactEmail,
     } = {}) {
 
         if (typeof id !== 'number') {
-            throw new Error(`Guideline: First constructor argument (id) must be a number, is ${id}.`);
+            throw new Error(`Guideline: Constructor argument id must be a number, is ${id}.`);
         }
         if (typeof name !== 'string') {
-            throw new Error(`Guideline: Second constructor argument (name) must be a string, is ${name}.`);
+            throw new Error(`Guideline: Constructor argument name must be a string, is ${name}.`);
+        }
+        if (typeof link !== 'string') {
+            throw new Error(`Guideline: Constructor argument link must be a string, is ${link}.`);
         }
         this.id = id;
         this.name = name;
+        this.link = link;
         this.diagnoses = diagnoses;
         this.markdownDisclaimer = markdownDisclaimer;
         this.contactEmail = contactEmail;
