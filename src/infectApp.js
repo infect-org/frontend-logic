@@ -53,8 +53,8 @@ export default class InfectApp {
     notificationCenter = new NotificationCenter();
 
     guidelineRelatedFilters = new GuidelineSelectedFiltersBridge(
-        this.selectedFilters,
         this.guidelines,
+        this.selectedFilters,
         this.filterValues,
     );
 

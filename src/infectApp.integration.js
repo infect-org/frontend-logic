@@ -137,3 +137,11 @@ test('errors with guidelines are handled internally', async(t) => {
 
 });
 
+test('exposes guidelineSelectedFiltersBridge', (t) => {
+    mockFetch();
+    const config = getConfig();
+    const app = new InfectApp(config);
+    t.is(typeof app.guidelineRelatedFilters, 'object');
+    t.doesNotThrow(() => app.guidelineRelatedFilters.selectFiltersRelatedToSelectedDiagnosis());
+    t.end();
+});
