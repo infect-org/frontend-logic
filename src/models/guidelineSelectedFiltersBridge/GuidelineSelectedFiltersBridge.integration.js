@@ -15,7 +15,7 @@ const setupData = () => {
     // does not create new entries.
     const values = {
         bacteria: [
-            { type: 'bact', value: 'bact1', id: Math.random() },
+            { type: 'bact', value: 'bact1' },
             { type: 'bact', value: 'bact2' },
             // Should not be added
             { type: 'bact', value: 'bact3' },
