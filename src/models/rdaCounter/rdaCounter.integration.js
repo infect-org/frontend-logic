@@ -29,7 +29,7 @@ test('failed rda fetcher fails gracefully', (t) => {
     const fetcher = new RDACounterFetcher('/test', store, handler);
     fetcher.getData().then(() => {
         t.is(notifications.length, 1);
-        t.is(notifications[0].severity, notificationSeverityLevels.notification);
+        t.is(notifications[0].severity, notificationSeverityLevels.warning);
         t.is(notifications[0].message.includes('you might see more data than expected'), true);
         fetchMock.restore();
         t.end();
