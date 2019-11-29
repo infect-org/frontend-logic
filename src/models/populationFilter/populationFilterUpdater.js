@@ -1,5 +1,8 @@
+import debug from 'debug';
 import { computed, reaction } from 'mobx';
 import filterTypes from '../filters/filterTypes';
+
+const log = debug('infect:PopulationFilterUpdater');
 
 /**
  * Create headers for population filters that will be passed to ResistanceFetcher. Invoke
@@ -47,6 +50,7 @@ export default class PopulationFilterUpdater {
     setupWatcher() {
         reaction(() => this.filterHeaders, async(data) => {
             try {
+                log('Selected filters changed, new headers are %o', data);
                 await this.resistancesFetcher.getDataForFilters(data);
             } catch (err) {
                 this.handleError(err);
