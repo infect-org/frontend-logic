@@ -68,8 +68,8 @@ export default class GuidelineSelectedFiltersBridge {
     selectFiltersRelatedToSelectedDiagnosis() {
         const relatedFilters = this.getFilterValuesRelatedToSelectedDiagnosis();
         transaction(() => {
-            relatedFilters.forEach((bacteriumFilter) => {
-                this.selectedFilters.addFilter(bacteriumFilter);
+            relatedFilters.forEach((filter) => {
+                this.selectedFilters.addFilter(filter);
             });
         });
     }
