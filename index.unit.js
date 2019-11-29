@@ -11,7 +11,7 @@ test('exports non-defaults', (t) => {
         severityLevels: 'object',
     };
 
-    Object.keys(expectations).every(key => {
+    Object.keys(expectations).forEach((key) => {
         t.is(typeof infect[key], expectations[key]);
     });
     t.end();
