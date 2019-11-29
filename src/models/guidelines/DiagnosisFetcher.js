@@ -1,6 +1,7 @@
 import debug from 'debug';
 import Fetcher from '../../helpers/standardFetcher.js';
 import Diagnosis from './Diagnosis.js';
+import notificationSeverityLevels from '../notifications/notificationSeverityLevels.js';
 
 const log = debug('infect:DiagnosisFetcher');
 
@@ -12,9 +13,10 @@ export default class DiagnosisFetcher extends Fetcher {
      * @param  {Function} handleError   Function that takes an Error instance as the only argument
      *                                  (and displays it to the user)
      */
-    constructor(...params) {
-        super(...params);
-        [,,,, this.handleError] = params;
+    constructor(options) {
+        super(options);
+        const { handleError } = options;
+        this.handleError = handleError;
         log('handleError set to %o', this.handleError);
     }
 
@@ -51,8 +53,10 @@ export default class DiagnosisFetcher extends Fetcher {
                     const bacterium = bacteria.getById(mapping.id_bacterium);
                     // If bacterium cannot be found, display error without crashing
                     if (!bacterium) {
-                        const bacteriumMissingError = new Error(`Bacterium ${mapping.id_bacterium} could not be found. The results displayed to you will therefore not be complete for diagnosis ${diagnosis.name}.`);
-                        this.handleError(bacteriumMissingError);
+                        this.handleError({
+                            severity: notificationSeverityLevels.warning,
+                            message: `Bacterium ${mapping.id_bacterium} could not be found. The results displayed to you will therefore not be complete for diagnosis ${diagnosis.name}.`,
+                        });
                     }
                     return bacterium;
                 })

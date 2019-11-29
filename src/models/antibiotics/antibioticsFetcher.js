@@ -1,6 +1,6 @@
 import debug from 'debug';
-import Fetcher from '../../helpers/standardFetcher';
-import Antibiotic from './antibiotic';
+import Fetcher from '../../helpers/standardFetcher.js';
+import Antibiotic from './antibiotic.js';
 import notificationSeverityLevels from '../notifications/notificationSeverityLevels.js';
 import rdaCounterTypes from '../rdaCounter/rdaCounterTypes.js';
 
@@ -8,12 +8,19 @@ const log = debug('infect:AntibioticsFetcher');
 
 export default class AntibioticsFetcher extends Fetcher {
 
-    constructor(...args) {
-        super(...args.slice(0, 4));
-        this.substanceClasses = args[3][0];
-        this.rdaCounter = args[3][1];
-        this.handleError = args[4];
+    /**
+     * @param {Object} config
+     * @param {function} config.handleError    Error handling function
+     * @param {Array} config.dependentStores   SubstanceClassStore and RDACounterStore (optional)
+     */
+    constructor(config = {}) {
+        super(config);
+        const { dependentStores, handleError } = config;
+        // rdaCounter is optional (for easier testing)
+        [this.substanceClasses, this.rdaCounter] = dependentStores;
+        this.handleError = handleError;
     }
+
 
     handleData(data) {
 
@@ -24,9 +31,11 @@ export default class AntibioticsFetcher extends Fetcher {
 
             // If unfiltered RDA does not have any data for antibiotic, we don't display it. This
             // is not an exception, it is an expected behavior.
-            if (!this.rdaCounter.hasItem(rdaCounterTypes.antibiotic, antibioticData.id)) {
-                log('Antibiotic %o has no RDA data, ignore it.', antibioticData);
-                return;
+            if (this.rdaCounter) {
+                if (!this.rdaCounter.hasItem(rdaCounterTypes.antibiotic, antibioticData.id)) {
+                    log('Antibiotic %o has no RDA data, ignore it.', antibioticData);
+                    return;
+                }
             }
 
             // There are 2 special cases: amoxicillin/clavulanate and piperacillin/tazobactam

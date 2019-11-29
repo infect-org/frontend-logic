@@ -10,9 +10,10 @@ export default class ResistancesFetcher extends Fetcher {
     * Fetches resistances from server, then updates ResistancesStore passed as an argument.
     * @param {function} handleException   Exception handler
     */
-    constructor(url, store, handleException) {
-        super(url, store);
-        this.handleException = handleException;
+    constructor(options) {
+        super(options);
+        const { handleError } = options;
+        this.handleException = handleError;
     }
 
     /**
@@ -36,7 +37,7 @@ export default class ResistancesFetcher extends Fetcher {
             regionIds: data.regionIds,
             bacteriumIds: data.bacteriumIds,
             antibioticIds: data.compoundIds,
-        }
+        };
 
         log('Pass data %o to store', dataForStore);
 

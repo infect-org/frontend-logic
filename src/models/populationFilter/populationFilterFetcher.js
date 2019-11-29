@@ -25,7 +25,6 @@ export default class PopulationFilterFetcher {
         await this.setupHospitalStatus();
     }
 
-
     /**
      * @private
      */

@@ -26,7 +26,7 @@ test('failed rda fetcher fails gracefully', (t) => {
         body: '["notAnObject"]',
     });
     const store = new RDACounterStore(handler);
-    const fetcher = new RDACounterFetcher('/test', store, handler);
+    const fetcher = new RDACounterFetcher({ url: '/test', store, handleError: handler });
     fetcher.getData().then(() => {
         t.is(notifications.length, 1);
         t.is(notifications[0].severity, notificationSeverityLevels.warning);
@@ -43,7 +43,7 @@ test('does not fail with valid data', async(t) => {
         body: JSON.stringify(response),
     });
     const store = new RDACounterStore(handler);
-    const fetcher = new RDACounterFetcher('/test', store, handler);
+    const fetcher = new RDACounterFetcher({ url: '/test', store, handleError: handler });
     await fetcher.getData();
     t.is(notifications.length, 0);
     fetchMock.restore();
@@ -61,7 +61,7 @@ test('store fails gracefully with invalid data', (t) => {
             body: JSON.stringify(response),
         });
         const store = new RDACounterStore(handler);
-        const fetcher = new RDACounterFetcher(`/${type}`, store, handler);
+        const fetcher = new RDACounterFetcher({ url: `/${type}`, store, handleError: handler });
         return fetcher.getData().then(() => {
             t.is(notifications[0].message.includes('of type array'), true);
             t.is(notifications[0].severity, notificationSeverityLevels.notification);
@@ -80,7 +80,7 @@ test('returns correct result for hasItem', async(t) => {
         body: JSON.stringify(response),
     });
     const store = new RDACounterStore(handler);
-    const fetcher = new RDACounterFetcher('/test', store, handler);
+    const fetcher = new RDACounterFetcher({ url: '/test', store, handleError: handler });
     await fetcher.getData();
     t.deepEqual(store.hasItem(rdaCounterTypes.ageGroup, 1), true);
     t.deepEqual(store.hasItem(rdaCounterTypes.region, 2), true);
@@ -98,7 +98,7 @@ test('hasItem does not fail if data is missing', async(t) => {
         body: JSON.stringify(response),
     });
     const store = new RDACounterStore(handler);
-    const fetcher = new RDACounterFetcher('/test', store, handler);
+    const fetcher = new RDACounterFetcher({ url: '/test', store, handleError: handler });
     await fetcher.getData();
     // There is no regionId data: Error is handled gracefully, hasItem returns false
     t.deepEqual(store.hasItem(rdaCounterTypes.region, 2), false);

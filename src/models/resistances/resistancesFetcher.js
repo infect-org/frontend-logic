@@ -1,7 +1,8 @@
 import { transaction } from 'mobx';
 import debug from 'debug';
-import Fetcher from '../../helpers/standardFetcher';
-import Resistance from './resistance';
+import Fetcher from '../../helpers/standardFetcher.js';
+import Resistance from './resistance.js';
+import notificationSeverityLevels from '../notifications/notificationSeverityLevels.js';
 
 const log = debug('infect:ResistancesFetcher');
 
@@ -17,13 +18,15 @@ export default class ResistancesFetcher extends Fetcher {
     /**
     * Fetches resistances from server, then updates ResistancesStore passed as an argument.
     *
-    * @param [0-3]                              See Fetcher
-    * @param {ResistanceStore} stores           Stores for antibiotics *and* bacteria
-    * @param {Function} handleError             Function that gently handles non-critical exceptions
+    * @param {object} options
+    * @param {array} options.dependentStores    AntibioticStore and BacteriaStore
+    * @param {function} options.handleError     Error handling function
     */
-    constructor(url, store, options, dependentStores, stores, handleError) {
-        super(url, store, options, dependentStores);
-        this.stores = stores;
+    constructor(options) {
+        super(options);
+        const { handleError, dependentStores } = options;
+        const [antibiotics, bacteria] = dependentStores;
+        this.stores = { antibiotics, bacteria };
         this.handleError = handleError;
     }
 
@@ -65,64 +68,34 @@ export default class ResistancesFetcher extends Fetcher {
         const bacteria = Array.from(this.stores.bacteria.get().values());
         const antibiotics = Array.from(this.stores.antibiotics.get().values());
 
-        // On the very first round (when we're getting data for switzerland-all) remove all
-        // antibiotics that don't have any resistance data.
-        // TODO: We need a good endpoint which only returns ab/bact with data available. This
-        // is a quick-fix.
-        if (this.dataHandled === 1) {
-
-            const emptyBacteria = bacteria
-                // Get all bacteria that don't have any resistance data
-                .filter(bacterium => !data.values.find(res => res.bacteriumId === bacterium.id));
-
-            if (emptyBacteria.length) {
-                log('Remove empty bacteria %o', emptyBacteria);
-            }
-
-            // Remove bacterium from store which triggers removal from matrixView – do it in
-            // 1 step to save resources. TODO: update the whole logic and don't create Bacteria
-            // for unused bacteria data
-            transaction(() => {
-                emptyBacteria.forEach((emptyBacterium) => {
-                    this.stores.bacteria.remove(emptyBacterium);
-                });
-            });
-        }
 
         // Values missing: There's nothing we could add
         if (!data.values || !data.values.length) {
-            log('Values missing');
+            log('Values missing for %o', data);
             return;
         }
 
         let counter = 0;
         data.values.forEach((resistance) => {
 
-            // Some resistances don't contain compound data. Slack, 2018-04-05:
-            // fxstr [4:38 PM]
-            // es hat einige resistances ohne id_compound. wie soll ich die handeln? ignorieren?
-            // ee [4:38 PM]
-            // iu
-            // müssen wir dann noch anschauen
-            if (!Object.prototype.hasOwnProperty.call(resistance, 'compoundId')) {
-                console.error(`ResistanceFetcher: Resistance ${JSON.stringify(resistance)} does not have compound information; ignore for now, but should be fixed.`);
-                return;
-            }
-
             const bacterium = bacteria.find(item => item.id === resistance.bacteriumId);
             const antibiotic = antibiotics.find(item => item.id === resistance.compoundId);
 
             // Missing bacterium or antibiotic is not crucial; display error but continue
             if (!antibiotic) {
-                const antibioticMissingError = new Error(`ResistancesFetcher: Antibiotic with ID ${resistance.compoundId} missing, resistance ${JSON.stringify(resistance)} cannot be displayed.`);
-                this.handleError(antibioticMissingError);
+                this.handleError({
+                    severity: notificationSeverityLevels.warning,
+                    message: `ResistancesFetcher: Antibiotic with ID ${resistance.compoundId} missing, resistance ${JSON.stringify(resistance)} cannot be displayed.`,
+                });
                 console.error('Antibiotic for resistance %o missing; antibiotics are %o', resistance, antibiotics);
                 return;
             }
 
             if (!bacterium) {
-                const bacteriumMissingError = new Error(`ResistancesFetcher: Bacterium with ID ${resistance.bacteriumId} missing, resistance ${JSON.stringify(resistance)} cannot be displayed.`);
-                this.handleError(bacteriumMissingError);
+                this.handleError({
+                    severity: notificationSeverityLevels.warning,
+                    message: `ResistancesFetcher: Bacterium with ID ${resistance.bacteriumId} missing, resistance ${JSON.stringify(resistance)} cannot be displayed.`,
+                });
                 console.error('Bacterium for resistance %o missing; bacteria are %o', resistance, bacteria);
                 return;
             }

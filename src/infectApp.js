@@ -113,46 +113,42 @@ export default class InfectApp {
     _setupFetchers() {
 
         // Substance classes (must be loaded first)
-        const substanceClassesFetcher = new SubstanceClassesFetcher(
-            this._config.endpoints.apiPrefix + this._config.endpoints.substanceClasses,
-            this.substanceClasses,
-        );
+        const substanceClassesFetcher = new SubstanceClassesFetcher({
+            url: this._config.endpoints.apiPrefix + this._config.endpoints.substanceClasses,
+            store: this.substanceClasses,
+        });
         const substanceClassesPromise = substanceClassesFetcher.getData();
 
         log('Fetching data for substanceClasses.');
 
         // Antibiotics (wait for substance classes)
-        const antibioticsFetcher = new AntibioticsFetcher(
-            this._config.endpoints.apiPrefix + this._config.endpoints.antibiotics,
-            this.antibiotics,
-            { headers: { select: 'substance.*, substance.substanceClass.*' } },
-            [this.substanceClasses, this.rdaCounterStore],
-            this.notificationCenter.handle.bind(this.notificationCenter),
-        );
+        const antibioticsFetcher = new AntibioticsFetcher({
+            url: this._config.endpoints.apiPrefix + this._config.endpoints.antibiotics,
+            store: this.antibiotics,
+            options: { headers: { select: 'substance.*, substance.substanceClass.*' } },
+            dependentStores: [this.substanceClasses, this.rdaCounterStore],
+            handleError: this.notificationCenter.handle.bind(this.notificationCenter),
+        });
         const antibioticPromise = antibioticsFetcher.getData();
         log('Fetching data for antibiotics.');
 
         // Bacteria
-        const bacteriaFetcher = new BacteriaFetcher(
-            this._config.endpoints.apiPrefix + this._config.endpoints.bacteria,
-            this.bacteria,
-            { headers: { select: 'shape.*' } },
-        );
+        const bacteriaFetcher = new BacteriaFetcher({
+            url: this._config.endpoints.apiPrefix + this._config.endpoints.bacteria,
+            store: this.bacteria,
+            options: { headers: { select: 'shape.*' } },
+            dependentStores: [this.rdaCounterStore],
+        });
         const bacteriaPromise = bacteriaFetcher.getData();
         log('Fetching data for bacteria.');
 
         // Resistances (wait for antibiotics and bacteria)
-        const resistanceFetcher = new ResistancesFetcher(
-            this._config.endpoints.apiPrefix + this._config.endpoints.resistances,
-            this.resistances,
-            {},
-            [this.antibiotics, this.bacteria],
-            {
-                antibiotics: this.antibiotics,
-                bacteria: this.bacteria,
-            },
-            this.notificationCenter.handle.bind(this.notificationCenter),
-        );
+        const resistanceFetcher = new ResistancesFetcher({
+            url: this._config.endpoints.apiPrefix + this._config.endpoints.resistances,
+            store: this.resistances,
+            dependentStores: [this.antibiotics, this.bacteria],
+            handleError: this.notificationCenter.handle.bind(this.notificationCenter),
+        });
         // Gets data for default filter switzerland-all
         const resistancePromise = resistanceFetcher.getData();
         log('Fetching data for resistances.');
@@ -175,11 +171,11 @@ export default class InfectApp {
         });
 
 
-        const rdaCounterFetcher = new RDACounterFetcher(
-            `${this._config.endpoints.apiPrefix}${this._config.endpoints.rdaCounter}`,
-            this.rdaCounterStore,
-            this.notificationCenter.handle.bind(this.notificationCenter),
-        );
+        const rdaCounterFetcher = new RDACounterFetcher({
+            url: `${this._config.endpoints.apiPrefix}${this._config.endpoints.rdaCounter}`,
+            store: this.rdaCounterStore,
+            handleError: this.notificationCenter.handle.bind(this.notificationCenter),
+        });
         const rdaCounterFetcherPromise = rdaCounterFetcher.getData();
 
 

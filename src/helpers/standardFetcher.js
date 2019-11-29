@@ -8,12 +8,13 @@ const log = debug('infect:StandardFetcher');
 export default class StandardFetcher {
 
     /**
-    * @param {String} url
-    * @param {Store} store                  Store to which we save the data once it's loaded
-    * @param {Object} options               Options for the fetch request (see fetch docs)
-    * @param {Array} dependentStores        Stores that's status must be ready before data of this
-    *                                       store is handled. Example: Antibiotics must wait for
-    *                                       substanceClasses, resistances for antibiotics and
+    * @param {object} options
+    * @param {string} options.url
+    * @param {Store} options.store          Store to which we save the data once it's loaded
+    * @param {object} options.options       Options for the fetch request (see fetch docs)
+    * @param {Store[]} options.dependentStores   Stores that's status must be ready before data of
+    *                                       this store is handled. Example: Antibiotics must wait
+    *                                       for substanceClasses, resistances for antibiotics and
     *                                       bacteria.
     *                                       Pass a Store (and not the Fetcher) here as we might
     *                                       want to access the store's data when it's ready – e.g.
@@ -21,7 +22,12 @@ export default class StandardFetcher {
     *                                       bacterium and antibiotic. As the store is a property of
     *                                       this class, we can access it in this.handleData().
     */
-    constructor(url, store, options = {}, dependentStores = []) {
+    constructor({
+        url,
+        store,
+        options = {},
+        dependentStores = [],
+    } = {}) {
         if (!url || !store) {
             throw new Error(`StandardFetcher: Arguments 'url' (${url}) or 'store' ${store} missing .`);
         }
