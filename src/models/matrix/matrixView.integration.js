@@ -8,7 +8,7 @@ import SubstanceClass from '../antibiotics/substanceClass';
 import Bacterium from '../bacteria/bacterium';
 import Resistance from '../resistances/resistance';
 import SelectedFilters from '../filters/selectedFilters';
-import Store from '../../helpers/store';
+import Store from '../../helpers/Store.js';
 
 function createSubstanceClass(parent, name = 'testSC', id = Math.random()) {
 	return new SubstanceClass(id, name, parent);

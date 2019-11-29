@@ -1,7 +1,7 @@
 import test from 'tape';
 import fetchMock from 'fetch-mock';
 import ResistancesFetcher from './resistancesFetcher';
-import Store from '../../helpers/store';
+import Store from '../../helpers/Store.js';
 import Bacterium from '../bacteria/bacterium';
 
 // Fetch-mock does not reset itself if there's no global fetch
@@ -176,6 +176,10 @@ test('handles missing antibiotics/bacteria gracefully', async(t) => {
 
 });
 
+/**
+ * Race condition may be given if user switches rda filters quickly; the latest data that is
+ * returned from the server will be displayed; this may not be the latest filter the user set.
+ */
 test('prevents race conditions', async(t) => {
 
     const regionfilterData = setupBodyData();

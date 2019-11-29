@@ -1,4 +1,5 @@
 import test from 'tape';
+import notificationSeverityLevels from './notificationSeverityLevels.js';
 import NotificationCenter from './NotificationCenter.js';
 import Notification from './Notification.js';
 
@@ -9,7 +10,7 @@ test('adds notifications', (t) => {
     // Valid notification
     const notification = {
         message: 'notification',
-        severity: 'warning',
+        severity: notificationSeverityLevels.warning,
     };
     // Invalid notification
     const invalid = {
@@ -23,12 +24,12 @@ test('adds notifications', (t) => {
     // Wraps error
     t.is(center.notifications[0] instanceof Notification, true);
     t.is(center.notifications[0].error instanceof Error, true);
-    t.is(center.notifications[0].severity, 'error');
+    t.is(center.notifications[0].severity, notificationSeverityLevels.error);
     // Works with notifications
     t.is(center.notifications[1].severity, notification.severity);
     t.is(center.notifications[1].message, notification.message);
     // Converts invalid notification to error
-    t.is(center.notifications[2].severity, 'error');
+    t.is(center.notifications[2].severity, notificationSeverityLevels.error);
     t.is(center.notifications[2].error instanceof Error, true);
     t.end();
 });

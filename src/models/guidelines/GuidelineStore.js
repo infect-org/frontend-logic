@@ -1,6 +1,6 @@
 import debug from 'debug';
 import { observable, action } from 'mobx';
-import Store from '../../helpers/store.js';
+import Store from '../../helpers/Store.js';
 import searchDiagnoses from './searchDiagnoses.js';
 
 const log = debug('infect:GuidelineStore');

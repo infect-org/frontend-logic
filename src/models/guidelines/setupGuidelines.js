@@ -1,4 +1,4 @@
-import Store from '../../helpers/store.js';
+import Store from '../../helpers/Store.js';
 import Fetcher from '../../helpers/standardFetcher.js';
 import GuidelineFetcher from './GuidelineFetcher.js';
 import DiagnosisFetcher from './DiagnosisFetcher.js';

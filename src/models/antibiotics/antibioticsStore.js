@@ -1,4 +1,3 @@
-import Store from '../../helpers/store';
+import Store from '../../helpers/Store.js';
 
-export default class AnitibioticsStore extends Store {
-}
+export default class AnitibioticsStore extends Store {}

@@ -3,6 +3,7 @@
 */
 import { when, observable, transaction } from 'mobx';
 import debug from 'debug';
+import storeStatus from './helpers/storeStatus.js';
 import AntibioticsStore from './models/antibiotics/antibioticsStore.js';
 import AntibioticsFetcher from './models/antibiotics/antibioticsFetcher.js';
 import SubstanceClassesStore from './models/antibiotics/substanceClassesStore.js';
@@ -24,6 +25,8 @@ import NotificationCenter from './models/notifications/NotificationCenter.js';
 import updateDrawerFromGuidelines from './models/drawer/updateDrawerFromGuidelines.js';
 import setupGuidelines from './models/guidelines/setupGuidelines.js';
 import GuidelineStore from './models/guidelines/GuidelineStore.js';
+import RDACounterStore from './models/rdaCounter/RDACounterStore.js';
+import RDACounterFetcher from './models/rdaCounter/RDACounterFetcher.js';
 
 const log = debug('infect:App');
 
@@ -50,6 +53,9 @@ export default class InfectApp {
 
     notificationCenter = new NotificationCenter();
 
+    // Counts amount of properties available on RDA (in unfiltered state for the current tenant)
+    rdaCounterStore = new RDACounterStore(this.notificationCenter.handle
+        .bind(this.notificationCenter));
 
     /**
     * @param {Object} config        e.g. {
@@ -91,7 +97,11 @@ export default class InfectApp {
         return Promise
             .all([fetcherPromise, populationFilterPromise])
             // Catch and display error; if we don't, app will fail half-way because we're async.
-            .catch(err => this.notificationCenter.handle(err));
+            .then(() => {
+                log('INFECT app successfully initialized');
+            }, (err) => {
+                this.notificationCenter.handle(err);
+            });
     }
 
 
@@ -116,8 +126,7 @@ export default class InfectApp {
             this._config.endpoints.apiPrefix + this._config.endpoints.antibiotics,
             this.antibiotics,
             { headers: { select: 'substance.*, substance.substanceClass.*' } },
-            [this.substanceClasses],
-            this.substanceClasses,
+            [this.substanceClasses, this.rdaCounterStore],
             this.notificationCenter.handle.bind(this.notificationCenter),
         );
         const antibioticPromise = antibioticsFetcher.getData();
@@ -166,6 +175,14 @@ export default class InfectApp {
         });
 
 
+        const rdaCounterFetcher = new RDACounterFetcher(
+            `${this._config.endpoints.apiPrefix}${this._config.endpoints.rdaCounter}`,
+            this.rdaCounterStore,
+            this.notificationCenter.handle.bind(this.notificationCenter),
+        );
+        const rdaCounterFetcherPromise = rdaCounterFetcher.getData();
+
+
         const updater = new PopulationFilterUpdater(
             resistanceFetcher,
             this.selectedFilters,
@@ -178,6 +195,7 @@ export default class InfectApp {
 
         return Promise.all([
             substanceClassesPromise,
+            rdaCounterFetcherPromise,
             antibioticPromise,
             bacteriaPromise,
             resistancePromise,
@@ -222,7 +240,7 @@ export default class InfectApp {
         entities.forEach((entityConfig) => {
             // Only add entities to filterValues when **all** entity types are ready to prevent
             // unndecessary re-renderings when filterValues change.
-            when(() => this[entityConfig.plural].status.identifier === 'ready', () => {
+            when(() => this[entityConfig.plural].status.identifier === storeStatus.ready, () => {
                 entitiesReady += 1;
                 if (entitiesReady === entities.length) this._addAllEntitiesToFilters(entities);
                 log('%d of %d entities ready.', entitiesReady, entities.length);

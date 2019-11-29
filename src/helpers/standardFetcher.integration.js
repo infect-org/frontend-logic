@@ -1,7 +1,8 @@
 import test from 'tape';
 import fetchMock from 'fetch-mock';
-import Fetcher from './standardFetcher';
-import Store from './store';
+import storeStatus from './storeStatus.js';
+import Fetcher from './standardFetcher.js';
+import Store from './Store.js';
 
 // Fetch-mock does not reset itself if there's no global fetch
 const originalFetch = global.fetch;
@@ -32,9 +33,9 @@ test('updates status on store', async(t) => {
     const store = new Store();
     const fetcher = new Fetcher('/test', store);
     const promise = fetcher.getData();
-    t.equals(store.status.identifier, 'loading');
+    t.equals(store.status.identifier, storeStatus.loading);
     await promise;
-    t.equals(store.status.identifier, 'ready');
+    t.equals(store.status.identifier, storeStatus.ready);
     fetchMock.restore();
     t.end();
 });
@@ -47,7 +48,7 @@ test('updates status on store on fail', async(t) => {
         await fetcher.getData();
     } catch (err) {
         t.equals(err.message.indexOf('status 400') > -1, true);
-        t.equals(store.status.identifier, 'error');
+        t.equals(store.status.identifier, storeStatus.error);
     }
     fetchMock.restore();
     t.end();
@@ -67,24 +68,24 @@ test('waits for dependent stores', async(t) => {
 
     const fetcher = new Fetcher('/test', store, undefined, [loadingStore, initializedStore]);
     const fetchPromise = fetcher.getData();
-    t.equals(store.status.identifier, 'loading');
+    t.equals(store.status.identifier, storeStatus.loading);
 
     // Resolve promise of loading store; status should still be 'loading', as we're waiting for
     // the initialized store
     resolver();
-    t.equals(store.status.identifier, 'loading');
+    t.equals(store.status.identifier, storeStatus.loading);
 
     // Start loading second store
     let initializedStoreResolver;
     initializedStore.setFetchPromise(new Promise((resolve) => {
         initializedStoreResolver = resolve;
     }));
-    t.equals(store.status.identifier, 'loading');
+    t.equals(store.status.identifier, storeStatus.loading);
     initializedStoreResolver();
 
     // Wait for fetch to complete
     await fetchPromise;
-    t.equals(store.status.identifier, 'ready');
+    t.equals(store.status.identifier, storeStatus.ready);
     fetchMock.restore();
     t.end();
 });
@@ -148,7 +149,7 @@ test('whole fetch promise fails if handleData on one instance fails', async(t) =
     } catch (err) {
         t.is(err.message, 'Fetcher failed');
     }
-    t.is(store.status.identifier, 'error');
+    t.is(store.status.identifier, storeStatus.error);
     fetchMock.restore();
     global.fetch = originalFetch;
     t.end();

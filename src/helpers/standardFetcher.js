@@ -1,6 +1,7 @@
 import { observe } from 'mobx';
 import debug from 'debug';
 import { fetchApi } from './api.js';
+import storeStatus from './storeStatus.js';
 
 const log = debug('infect:StandardFetcher');
 
@@ -89,7 +90,7 @@ export default class StandardFetcher {
         this.handleData(result.data, url);
 
         // Resolve promise in store
-        log('Data handled, store now contains %d items', this.store.get().size);
+        log('Data handled, store is %o', this.store);
 
         // As getData() returns the promise created by this method, we return the data so that
         // getData() resolves to the data passed in
@@ -106,7 +107,8 @@ export default class StandardFetcher {
 
         const loadingStores = this.dependentStores
             .filter(store => (
-                store.status.identifier === 'loading' || store.status.identifier === 'initialized'
+                store.status.identifier === (storeStatus.loading ||
+                    store.status.identifier === storeStatus.initialized)
             ));
         log('Waiting for %d stores', loadingStores.length);
 
@@ -114,7 +116,7 @@ export default class StandardFetcher {
         await Promise.all(loadingStores.map(store => (
             new Promise((resolve) => {
                 observe(store.status, (status) => {
-                    if (status.newValue === 'ready') resolve();
+                    if (status.newValue === storeStatus.ready) resolve();
                 });
             })
         )));
@@ -129,7 +131,6 @@ export default class StandardFetcher {
     * @private
     */
     handleData(data) {
-        console.warn('StandardFetcher: handleData method not implemented in derived class.');
         data.forEach((item) => {
             this.store.add(item);
         });

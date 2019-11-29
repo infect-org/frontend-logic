@@ -1,3 +1,5 @@
+import notificationSeverityLevels from './notificationSeverityLevels.js';
+
 /**
  * Validates the notification provided and brings it into a format that errorHandler can handle.
  * If notification is not valid, it is converted into a correctly-formatted notification of severity
@@ -5,13 +7,12 @@
  * @param {(Error|Object)} notification      Notification that will be
  * @param {string} notification.severity     Severity level of the notification
  * @param {string} notification.message      Message that should be displayed
- * @param {string[]} severityLevels          A list of valid severity levels
  * @return {{severity: string, message: string, error?: Error}}              [description]
  */
-const wrapNotification = (notification, severityLevels) => {
+const wrapNotification = (notification) => {
     if (notification instanceof Error) {
         return {
-            severity: 'error',
+            severity: notificationSeverityLevels.error,
             // Use stack for environments that support it, else message
             message: notification.stack || notification.message,
             error: notification,
@@ -21,8 +22,11 @@ const wrapNotification = (notification, severityLevels) => {
     if (!notification) {
         return wrapNotification(new Error(`wrapNotification: Pass an Error or a notification that contains a message and severity property, you passed ${notification} instead.`));
     }
-    if (!notification.severity || !severityLevels.includes(notification.severity)) {
-        return wrapNotification(new Error(`wrapNotification: Notifications passed to ErrorHandler must include a property "severity" which is one of ${(severityLevels || []).join(', ')}; you passed ${notification.severity} instead. Your original message is ${JSON.stringify(notification)}`));
+    if (
+        !notification.severity ||
+        !Object.values(notificationSeverityLevels).includes(notification.severity)
+    ) {
+        return wrapNotification(new Error(`wrapNotification: Notifications passed to ErrorHandler must include a property "severity" which is one of ${(Object.keys(notificationSeverityLevels) || []).join(', ')}; you passed ${notification.severity} instead. Your original message is ${JSON.stringify(notification)}`));
     }
     // Message is missing or not a string
     if (!notification.message || typeof notification.message !== 'string') {
