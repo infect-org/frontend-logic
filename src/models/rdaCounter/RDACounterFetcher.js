@@ -37,6 +37,7 @@ export default class ResistancesFetcher extends Fetcher {
             regionIds: data.regionIds,
             bacteriumIds: data.bacteriumIds,
             antibioticIds: data.compoundIds,
+            animalIds: data.animalIds,
         };
 
         log('Pass data %o to store', dataForStore);

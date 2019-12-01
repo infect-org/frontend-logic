@@ -19,8 +19,8 @@ import PropertyMap from './models/propertyMap/propertyMap.js';
 import OffsetFilters from './models/filters/offsetFilters.js';
 import SelectedFilters from './models/filters/selectedFilters.js';
 import MostUsedFilters from './models/filters/mostUsedFilters.js';
-import PopulationFilterUpdater from './models/populationFilter/populationFilterUpdater.js';
-import PopulationFilterFetcher from './models/populationFilter/populationFilterFetcher.js';
+import PopulationFilterUpdater from './models/populationFilter/PopulationFilterUpdater.js';
+import PopulationFilterFetcher from './models/populationFilter/PopulationFilterFetcher.js';
 import NotificationCenter from './models/notifications/NotificationCenter.js';
 import updateDrawerFromGuidelines from './models/drawer/updateDrawerFromGuidelines.js';
 import setupGuidelines from './models/guidelines/setupGuidelines.js';
@@ -92,6 +92,7 @@ export default class InfectApp {
         const populationFilterFetcher = new PopulationFilterFetcher(
             this._config,
             this.filterValues,
+            this.rdaCounterStore,
         );
         const populationFilterPromise = populationFilterFetcher.init();
         return Promise

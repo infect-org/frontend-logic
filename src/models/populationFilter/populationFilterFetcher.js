@@ -1,7 +1,9 @@
 import debug from 'debug';
-import { transaction } from 'mobx';
+import { transaction, autorun } from 'mobx';
 import { fetchApi } from '../../helpers/api.js';
 import filterTypes from '../filters/filterTypes';
+import storeStatus from '../../helpers/storeStatus.js';
+import rdaCounterTypes from '../rdaCounter/rdaCounterTypes.js';
 
 const log = debug('infect:PopulationFilterFetcher');
 
@@ -10,19 +12,82 @@ const log = debug('infect:PopulationFilterFetcher');
  */
 export default class PopulationFilterFetcher {
 
-    constructor(config, filterValues) {
+    /**
+     * @param  {object} config                Config for URLs
+     * @param  {PropertyMap} filterValues     Instance of PropertyMap that holds all filter values
+     * @param  {RDACounterStore} rdaCounter   Instance of RDACounterStore that knows what data is
+     *                                        available on the (unfiltered) RDA view for this
+     *                                        tenant. Optional (for easier testing).
+     */
+    constructor(config, filterValues, rdaCounter) {
         this.config = config;
         this.filterValues = filterValues;
+        this.rdaCounter = rdaCounter;
     }
 
-    /**
-    * Fetches regions from server, adds them to filters and sets 'switzerland-all' as selected
-    * filter which triggers the resistancesFetcher to fetch.
-    */
+
     async init() {
         await this.setupRegions();
         await this.setupAgeGroups();
         await this.setupHospitalStatus();
+        await this.setupAnimals();
+    }
+
+    /**
+     * If an RDA Counter was provided, we should wait until it's ready before we handle the data we
+     * received
+     * @return {Promise}    Promise that resolves to RDACounterStore or undefined (if none was
+     *                      passed)
+     * @private
+     */
+    async waitForRDACounter() {
+        if (!this.rdaCounter) return Promise.resolve();
+        const { identifier } = this.rdaCounter.status;
+        log('Wait for RDACounter, status is %o', identifier);
+        if (identifier > storeStatus.loading) {
+            return Promise.resolve(this.rdaCounter);
+        }
+        return new Promise((resolve) => {
+            autorun((currentReaction) => {
+                log('RDACounter status changed to %o', this.rdaCounter.status);
+                if (this.rdaCounter.status.identifier > storeStatus.loading) {
+                    resolve(this.rdaCounter);
+                    currentReaction.dispose();
+                }
+            });
+        });
+    }
+
+
+    /**
+     * Fetches animals from server, adds the ones with RDA data to filtersValues
+     * @private
+     */
+    async setupAnimals() {
+        const url = this.config.endpoints.apiPrefix + this.config.endpoints.animals;
+        const animalData = await fetchApi(url);
+        const rdaCounter = await this.waitForRDACounter();
+
+        transaction(() => {
+            animalData.data.forEach((animal) => {
+
+                // If RDACounter was passed in but current animal is not part of RDA, don't add
+                // it to filters
+                if (rdaCounter && !rdaCounter.hasItem(rdaCounterTypes.animal, animal.id)) {
+                    log('Animal %o is not part of RDA, skip it', animal);
+                    return;
+                }
+
+                log('Add filter %o for animal', animal);
+                this.filterValues.addEntity(filterTypes.animal, animal);
+            });
+        });
+
+        log(
+            'Animal filters added, are %o',
+            this.filterValues.getValuesForProperty(filterTypes.animal, 'id'),
+        );
+
     }
 
     /**
@@ -31,9 +96,18 @@ export default class PopulationFilterFetcher {
     async setupRegions() {
         const url = this.config.endpoints.apiPrefix + this.config.endpoints.regions;
         const regionData = await fetchApi(url);
+        const rdaCounter = await this.waitForRDACounter();
 
         transaction(() => {
             regionData.data.forEach((region) => {
+
+                // If RDACounter was passed in but current animal is not part of RDA, don't add
+                // it to filters
+                if (rdaCounter && !rdaCounter.hasItem(rdaCounterTypes.region, region.id)) {
+                    log('Region %o is not part of RDA, skip it', region);
+                    return;
+                }
+
                 // Don't add default filter (switzerland-all) to filters; will be add manually to
                 // filter list as it shouldnot be visible (and it corresponds to no filter set)
                 if (region.identifier === 'switzerland-all') return;
@@ -62,8 +136,14 @@ export default class PopulationFilterFetcher {
     async setupAgeGroups() {
         const url = this.config.endpoints.apiPrefix + this.config.endpoints.ageGroups;
         const ageGroupData = await fetchApi(url);
+        const rdaCounter = await this.waitForRDACounter();
 
         ageGroupData.data.forEach((ageGroup) => {
+            if (rdaCounter && !rdaCounter.hasItem(rdaCounterTypes.ageGroup, ageGroup.id)) {
+                log('Age group %o is not part of RDA, skip it', ageGroup);
+                return;
+            }
+
             log('Add filter %o for ageGroup', ageGroup);
             this.filterValues.addEntity(filterTypes.ageGroup, ageGroup);
         });
@@ -76,6 +156,9 @@ export default class PopulationFilterFetcher {
     }
 
 
+    /**
+     * @private
+     */
     async setupHospitalStatus() {
         const url = this.config.endpoints.apiPrefix + this.config.endpoints.hospitalStatus;
         const hospitalStatusData = await fetchApi(url);

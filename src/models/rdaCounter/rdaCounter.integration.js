@@ -15,6 +15,7 @@ const setupData = () => {
         regionIds: [2],
         bacteriumIds: [3],
         compoundIds: [4],
+        animalIds: [5],
     };
     return { notifications, handler, response };
 };
@@ -36,7 +37,7 @@ test('failed rda fetcher fails gracefully', (t) => {
     });
 });
 
-test('does not fail with valid data', async(t) => {
+test('rdaCounter does not fail with valid data', async(t) => {
     const { notifications, handler, response } = setupData();
     fetchMock.mock('/test', {
         status: 200,
@@ -45,6 +46,7 @@ test('does not fail with valid data', async(t) => {
     const store = new RDACounterStore(handler);
     const fetcher = new RDACounterFetcher({ url: '/test', store, handleError: handler });
     await fetcher.getData();
+    console.log('nfs', notifications);
     t.is(notifications.length, 0);
     fetchMock.restore();
     t.end();
@@ -52,7 +54,13 @@ test('does not fail with valid data', async(t) => {
 
 test('store fails gracefully with invalid data', (t) => {
     // Check if it fails on any invalid endpoint
-    const calls = ['bacteriumIds', 'compoundIds', 'regionIds', 'ageGroupIds'].map((type) => {
+    const calls = [
+        'bacteriumIds',
+        'compoundIds',
+        'regionIds',
+        'ageGroupIds',
+        'animalIds',
+    ].map((type) => {
         const { response, notifications, handler } = setupData();
         // Create bad data for current type
         response[type] = 'notAnArray';
@@ -64,7 +72,7 @@ test('store fails gracefully with invalid data', (t) => {
         const fetcher = new RDACounterFetcher({ url: `/${type}`, store, handleError: handler });
         return fetcher.getData().then(() => {
             t.is(notifications[0].message.includes('of type array'), true);
-            t.is(notifications[0].severity, notificationSeverityLevels.notification);
+            t.is(notifications[0].severity, notificationSeverityLevels.warning);
             fetchMock.restore();
         }, () => {
             t.fail('Should not throw');
@@ -86,6 +94,7 @@ test('returns correct result for hasItem', async(t) => {
     t.deepEqual(store.hasItem(rdaCounterTypes.region, 2), true);
     t.deepEqual(store.hasItem(rdaCounterTypes.bacterium, 3), true);
     t.deepEqual(store.hasItem(rdaCounterTypes.antibiotic, 4), true);
+    t.deepEqual(store.hasItem(rdaCounterTypes.animal, 5), true);
     fetchMock.restore();
     t.end();
 });
