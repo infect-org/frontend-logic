@@ -1,5 +1,5 @@
 import debug from 'debug';
-import Fetcher from '../../helpers/standardFetcher';
+import Fetcher from '../../helpers/standardFetcher.js';
 import notificationSeverityLevels from '../notifications/notificationSeverityLevels.js';
 
 const log = debug('infect:RDACounterFetcher.js');

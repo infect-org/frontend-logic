@@ -27,6 +27,8 @@ import setupGuidelines from './models/guidelines/setupGuidelines.js';
 import GuidelineStore from './models/guidelines/GuidelineStore.js';
 import RDACounterStore from './models/rdaCounter/RDACounterStore.js';
 import RDACounterFetcher from './models/rdaCounter/RDACounterFetcher.js';
+import TenantConfigFetcher from './models/tenantConfig/TenantConfigFetcher.js';
+import TenantConfigStore from './models/tenantConfig/TenantConfigStore.js';
 
 const log = debug('infect:App');
 
@@ -44,6 +46,7 @@ export default class InfectApp {
     substanceClasses = new SubstanceClassesStore();
     resistances = new ResistancesStore([], item => `${item.bacterium.id}/${item.antibiotic.id}`);
     filterValues = new PropertyMap();
+    tenantConfig = new TenantConfigStore();
 
     // Filters for bacteria, antibiotics etc.
     selectedFilters = new SelectedFilters();
@@ -170,6 +173,15 @@ export default class InfectApp {
             });
         });
 
+        const tenantConfigFetcher = new TenantConfigFetcher({
+            url: `${this._config.endpoints.apiPrefix}${this._config.endpoints.tenantConfig}`,
+            store: this.tenantConfig,
+            // Handle errors gracefully, as there should always be a fallback for all values/flags
+            // in tenantConfig
+            handleException: this.notificationCenter.handle.bind(this.notificationCenter),
+        });
+        const tenantConfigFetcherPromise = tenantConfigFetcher.getData();
+
 
         const rdaCounterFetcher = new RDACounterFetcher({
             url: `${this._config.endpoints.apiPrefix}${this._config.endpoints.rdaCounter}`,
@@ -196,6 +208,7 @@ export default class InfectApp {
             bacteriaPromise,
             resistancePromise,
             guidelinePromise,
+            tenantConfigFetcherPromise,
         ]);
 
     }
