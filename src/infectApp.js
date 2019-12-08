@@ -20,7 +20,7 @@ import OffsetFilters from './models/filters/offsetFilters.js';
 import SelectedFilters from './models/filters/selectedFilters.js';
 import MostUsedFilters from './models/filters/mostUsedFilters.js';
 import PopulationFilterUpdater from './models/populationFilter/PopulationFilterUpdater.js';
-import PopulationFilterFetcher from './models/populationFilter/PopulationFilterFetcher.js';
+import setupPopulationFilters from './models/populationFilter/setupPopulationFilters.js';
 import NotificationCenter from './models/notifications/NotificationCenter.js';
 import updateDrawerFromGuidelines from './models/drawer/updateDrawerFromGuidelines.js';
 import setupGuidelines from './models/guidelines/setupGuidelines.js';
@@ -89,12 +89,11 @@ export default class InfectApp {
      */
     initialize() {
         const fetcherPromise = this._setupFetchers();
-        const populationFilterFetcher = new PopulationFilterFetcher(
+        const populationFilterPromise = setupPopulationFilters(
             this._config,
             this.filterValues,
             this.rdaCounterStore,
         );
-        const populationFilterPromise = populationFilterFetcher.init();
         return Promise
             .all([fetcherPromise, populationFilterPromise])
             // Catch and display error; if we don't, app will fail half-way because we're async.

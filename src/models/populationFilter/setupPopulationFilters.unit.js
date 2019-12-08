@@ -1,7 +1,6 @@
 import test from 'tape';
 import fetchMock from 'fetch-mock';
-import { observable, runInAction } from 'mobx';
-import PopulationFilterFetcher from './PopulationFilterFetcher.js';
+import setupPopulationFilters from './setupPopulationFilters.js';
 import PropertyMap from '../propertyMap/propertyMap.js';
 import getFilterConfig from '../filters/getFilterConfig.js';
 import storeStatus from '../../helpers/storeStatus.js';
@@ -57,10 +56,16 @@ const setupData = () => {
  */
 test('sets up filters as expected', (t) => {
 
+    const rdaCounterStore = {
+        hasItem: () => true,
+        status: {
+            identifier: storeStatus.ready,
+        },
+    };
     const { config, filterValues } = setupData();
-    const fetcher = new PopulationFilterFetcher(config, filterValues);
+    const fetcher = setupPopulationFilters(config, filterValues, rdaCounterStore);
 
-    fetcher.init().then(() => {
+    fetcher.then(() => {
         const mapValueAndName = entry => `${entry.value}/${entry.niceValue}`;
         t.deepEqual(
             filterValues.getValuesForProperty('animal', 'id').map(mapValueAndName),
@@ -87,7 +92,7 @@ test('sets up filters as expected', (t) => {
 
 test('uses available rdaCounter and removes entries without RDA data', (t) => {
 
-    const rdaCounter = {
+    const rdaCounterStore = {
         status: { identifier: storeStatus.ready },
         hasItem: (type, id) => {
             if (type === rdaCounterTypes.animal && id === 2) return false;
@@ -97,9 +102,9 @@ test('uses available rdaCounter and removes entries without RDA data', (t) => {
         },
     };
     const { config, filterValues } = setupData();
-    const fetcher = new PopulationFilterFetcher(config, filterValues, rdaCounter);
+    const fetcher = setupPopulationFilters(config, filterValues, rdaCounterStore);
 
-    fetcher.init().then(() => {
+    fetcher.then(() => {
         const mapValueAndName = entry => `${entry.value}/${entry.niceValue}`;
         t.deepEqual(
             filterValues.getValuesForProperty('animal', 'id').map(mapValueAndName),
@@ -116,35 +121,6 @@ test('uses available rdaCounter and removes entries without RDA data', (t) => {
         fetchMock.restore();
         t.end();
     });
-
-});
-
-
-test('awaits rdaCounter and removes entries without RDA data', (t) => {
-
-    const rdaCounter = {
-        status: observable({ identifier: storeStatus.loading }),
-        hasItem: (type, id) => {
-            if (type === rdaCounterTypes.animal && id === 2) return false;
-            return true;
-        },
-    };
-    const { config, filterValues } = setupData();
-    const fetcher = new PopulationFilterFetcher(config, filterValues, rdaCounter);
-
-    fetcher.init().then(() => {
-        const mapValueAndName = entry => `${entry.value}/${entry.niceValue}`;
-        t.deepEqual(
-            filterValues.getValuesForProperty(filterTypes.animal, 'id').map(mapValueAndName),
-            ['1/Cow'],
-        );
-        fetchMock.restore();
-        t.end();
-    });
-
-    setTimeout(() => {
-        runInAction(() => { rdaCounter.status.identifier = storeStatus.ready; });
-    }, 5);
 
 });
 

@@ -29,7 +29,7 @@ export default class StandardFetcher {
         dependentStores = [],
     } = {}) {
         if (!url || !store) {
-            throw new Error(`StandardFetcher: Arguments 'url' (${url}) or 'store' ${store} missing .`);
+            throw new Error(`StandardFetcher: Arguments 'url' (${url}) or 'store' (${store}) missing .`);
         }
         this.url = url;
         this.store = store;
