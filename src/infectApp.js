@@ -29,6 +29,7 @@ import RDACounterStore from './models/rdaCounter/RDACounterStore.js';
 import RDACounterFetcher from './models/rdaCounter/RDACounterFetcher.js';
 import TenantConfigFetcher from './models/tenantConfig/TenantConfigFetcher.js';
 import TenantConfigStore from './models/tenantConfig/TenantConfigStore.js';
+import notificationSeverityLevels from './models/notifications/notificationSeverityLevels.js';
 
 const log = debug('infect:App');
 
@@ -168,7 +169,7 @@ export default class InfectApp {
         ).catch((err) => {
             const humanReadableError = `Guidelines could not be fetched from server, but INFECT will work without them. Please contact us if the issue persists. Original error:  ${err.message}`;
             this.notificationCenter.handle({
-                severity: 'warning',
+                severity: notificationSeverityLevels.warning,
                 message: humanReadableError,
             });
         });
