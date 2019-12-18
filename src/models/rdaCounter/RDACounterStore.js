@@ -22,8 +22,8 @@ export default class RDACounterStore extends BaseStore {
             // Check if data is valid for every rdaCounterType
             if (!data[type] || !Array.isArray(data[type])) {
                 this.handleException({
-                    severity: notificationSeverityLevels.notification,
-                    message: `RDACounterStore: Got different data than expected. Expected field ${type} of type array, is ${typeof type} (${data[type]}) instead.`,
+                    severity: notificationSeverityLevels.warning,
+                    message: `RDACounterStore: Got different data than expected. Expected field ${type} of type array, is ${typeof data[type]} (${data[type]}) instead; the whole response is ${JSON.stringify(data)}.`,
                 });
                 return;
             }

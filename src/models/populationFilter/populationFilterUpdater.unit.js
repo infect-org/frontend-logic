@@ -1,7 +1,7 @@
 import test from 'tape';
 import { observable } from 'mobx';
-import filterTypes from '../filters/filterTypes';
-import PopulationFilterUpdater from './populationFilterUpdater';
+import filterTypes from '../filters/filterTypes.js';
+import PopulationFilterUpdater from './PopulationFilterUpdater.js';
 
 function setupData() {
 
@@ -37,6 +37,7 @@ test('creates correct headers', (t) => {
         regionIds: [5],
         ageGroupIds: [],
         hospitalStatusIds: [],
+        animalIds: [],
     }]);
 
     // Non-related filter: Should not update
@@ -52,7 +53,7 @@ test('creates correct headers', (t) => {
 test('handles errors through handleError', (t) => {
     const errors = [];
     const resistancesFetcher = {
-        getDataForFilters: () => { throw new Error('someError') },
+        getDataForFilters: () => { throw new Error('someError'); },
     };
     const { selectedFilters } = setupData();
     const updater = new PopulationFilterUpdater(

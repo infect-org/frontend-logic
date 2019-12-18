@@ -1,5 +1,5 @@
 import debug from 'debug';
-import Fetcher from '../../helpers/standardFetcher';
+import Fetcher from '../../helpers/standardFetcher.js';
 import notificationSeverityLevels from '../notifications/notificationSeverityLevels.js';
 
 const log = debug('infect:RDACounterFetcher.js');
@@ -37,6 +37,7 @@ export default class ResistancesFetcher extends Fetcher {
             regionIds: data.regionIds,
             bacteriumIds: data.bacteriumIds,
             antibioticIds: data.compoundIds,
+            animalIds: data.animalIds,
         };
 
         log('Pass data %o to store', dataForStore);

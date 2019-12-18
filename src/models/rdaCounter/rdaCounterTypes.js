@@ -7,4 +7,5 @@ export default Object.freeze({
     antibiotic: 'antibioticIds',
     region: 'regionIds',
     ageGroup: 'ageGroupIds',
+    animal: 'animalIds',
 });

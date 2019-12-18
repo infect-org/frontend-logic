@@ -1,0 +1,57 @@
+{
+  "name": "INFECT by anresis",
+  "identifier": "infect-anresis",
+  "configuration": [
+    {
+      "config": {
+        "sampleCountFilterLowerThreshold": 5
+      },
+      "identifier": "rda"
+    },
+    {
+      "config": {
+        "rda": {
+          "ageGroups": [
+            {
+              "label": "<15",
+              "order": 1,
+              "daysFrom": 0,
+              "daysTo": 5474
+            },
+            {
+              "label": "15–44",
+              "order": 2,
+              "daysFrom": 5475,
+              "daysTo": 16424
+            },
+            {
+              "label": "45–64",
+              "order": 3,
+              "daysFrom": 16425,
+              "daysTo": 23724
+            },
+            {
+              "label": ">64",
+              "order": 4,
+              "daysFrom": 23725,
+              "daysTo": 72999
+            }
+          ],
+          "availableAnimals": [
+            {
+              "id": 1,
+              "identifier": "human"
+            }
+          ]
+        }
+      },
+      "identifier": "frontend"
+    }
+  ],
+  "featureFlags": [
+    {
+      "enabled": true,
+      "identifier": "guidelines"
+    }
+  ]
+}
