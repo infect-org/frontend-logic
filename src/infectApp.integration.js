@@ -27,6 +27,7 @@ function getConfig() {
             diagnoses: 'diagnosis',
             guidelines: 'guideline',
             therapies: 'therapy',
+            tenantConfig: 'tenant/v1/config',
         },
     };
     return config;
