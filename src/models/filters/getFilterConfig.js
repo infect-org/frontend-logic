@@ -60,6 +60,16 @@ export default function() {
             },
         },
     }, {
+        entityType: 'animal',
+        config: {
+            // The property we need to add the filter is id
+            id: {
+                translation: 'Name',
+                // Get name from the whole entity
+                valueTranslations: (name, entity) => entity.name,
+            },
+        },
+    }, {
         entityType: 'substanceClass'
         , config: {
             name: {

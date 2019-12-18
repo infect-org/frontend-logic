@@ -8,6 +8,7 @@ import SubstanceClassMatrixView from '../antibiotics/substanceClassMatrixView';
 import SubstanceClass from '../antibiotics/substanceClass';
 import BacteriumMatrixView from '../bacteria/bacteriumMatrixView';
 import getArrayDiff from '../../helpers/getArrayDiff';
+import storeStatus from '../../helpers/storeStatus.js';
 
 const log = debug('infect:MatrixView');
 
@@ -94,7 +95,7 @@ class MatrixView {
     @action setupDataWatchers(antibiotics = [], bacteria = [], resistances) {
 
         observe(antibiotics.status, (change) => {
-            if (change.newValue === 'ready') {
+            if (change.newValue === storeStatus.ready) {
                 antibiotics.getAsArray().forEach((antibiotic) => {
                     this.addAntibiotic(antibiotic);
                 });
@@ -102,7 +103,7 @@ class MatrixView {
         });
 
         observe(bacteria.status, (change) => {
-            if (change.newValue === 'ready') {
+            if (change.newValue === storeStatus.ready) {
                 bacteria.getAsArray().forEach((bacterium) => {
                     this.addBacterium(bacterium);
                 });
@@ -118,7 +119,7 @@ class MatrixView {
         // Resistances will change whenever a population filter is changed.
         // Make sure we're watching them.
         observe(resistances.status, (change) => {
-            if (change.newValue !== 'ready') return;
+            if (change.newValue !== storeStatus.ready) return;
             // Use own function as we need an @action
             this._clearResistances();
             resistances.getAsArray().forEach((resistance) => {

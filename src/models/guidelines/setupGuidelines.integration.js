@@ -4,7 +4,7 @@ import fetchMock from 'fetch-mock';
 import test from 'tape';
 import setupGuidelines from './setupGuidelines.js';
 import GuidelineStore from './GuidelineStore.js';
-import Store from '../../helpers/store.js';
+import Store from '../../helpers/Store.js';
 
 /**
  * Tests all guideline related fetches and stores (as the all play together)

@@ -1,18 +1,20 @@
 import { observe } from 'mobx';
 import debug from 'debug';
 import { fetchApi } from './api.js';
+import storeStatus from './storeStatus.js';
 
 const log = debug('infect:StandardFetcher');
 
 export default class StandardFetcher {
 
     /**
-    * @param {String} url
-    * @param {Store} store                  Store to which we save the data once it's loaded
-    * @param {Object} options               Options for the fetch request (see fetch docs)
-    * @param {Array} dependentStores        Stores that's status must be ready before data of this
-    *                                       store is handled. Example: Antibiotics must wait for
-    *                                       substanceClasses, resistances for antibiotics and
+    * @param {object} options
+    * @param {string} options.url
+    * @param {Store} options.store          Store to which we save the data once it's loaded
+    * @param {object} options.options       Options for the fetch request (see fetch docs)
+    * @param {Store[]} options.dependentStores   Stores that's status must be ready before data of
+    *                                       this store is handled. Example: Antibiotics must wait
+    *                                       for substanceClasses, resistances for antibiotics and
     *                                       bacteria.
     *                                       Pass a Store (and not the Fetcher) here as we might
     *                                       want to access the store's data when it's ready – e.g.
@@ -20,9 +22,14 @@ export default class StandardFetcher {
     *                                       bacterium and antibiotic. As the store is a property of
     *                                       this class, we can access it in this.handleData().
     */
-    constructor(url, store, options = {}, dependentStores = []) {
+    constructor({
+        url,
+        store,
+        options = {},
+        dependentStores = [],
+    } = {}) {
         if (!url || !store) {
-            throw new Error(`StandardFetcher: Arguments 'url' (${url}) or 'store' ${store} missing .`);
+            throw new Error(`StandardFetcher: Arguments 'url' (${url}) or 'store' (${store}) missing .`);
         }
         this.url = url;
         this.store = store;
@@ -89,7 +96,7 @@ export default class StandardFetcher {
         this.handleData(result.data, url);
 
         // Resolve promise in store
-        log('Data handled, store now contains %d items', this.store.get().size);
+        log('Data handled, store is %o', this.store);
 
         // As getData() returns the promise created by this method, we return the data so that
         // getData() resolves to the data passed in
@@ -106,7 +113,8 @@ export default class StandardFetcher {
 
         const loadingStores = this.dependentStores
             .filter(store => (
-                store.status.identifier === 'loading' || store.status.identifier === 'initialized'
+                store.status.identifier === (storeStatus.loading ||
+                    store.status.identifier === storeStatus.initialized)
             ));
         log('Waiting for %d stores', loadingStores.length);
 
@@ -114,7 +122,7 @@ export default class StandardFetcher {
         await Promise.all(loadingStores.map(store => (
             new Promise((resolve) => {
                 observe(store.status, (status) => {
-                    if (status.newValue === 'ready') resolve();
+                    if (status.newValue === storeStatus.ready) resolve();
                 });
             })
         )));
@@ -129,7 +137,6 @@ export default class StandardFetcher {
     * @private
     */
     handleData(data) {
-        console.warn('StandardFetcher: handleData method not implemented in derived class.');
         data.forEach((item) => {
             this.store.add(item);
         });

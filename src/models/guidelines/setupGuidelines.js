@@ -1,4 +1,4 @@
-import Store from '../../helpers/store.js';
+import Store from '../../helpers/Store.js';
 import Fetcher from '../../helpers/standardFetcher.js';
 import GuidelineFetcher from './GuidelineFetcher.js';
 import DiagnosisFetcher from './DiagnosisFetcher.js';
@@ -58,62 +58,73 @@ export default async function setupGuidelines(
     // Diagnosis classes
     const diagnosisClassesStore = new Store();
     const diagnosisClassesURL = `${endpoints.guidelineBaseUrl}${endpoints.diagnosisClass}`;
-    const diagnosisClassesFetcher = new DiagnosisClassFetcher(
-        diagnosisClassesURL,
-        diagnosisClassesStore,
-    );
+    const diagnosisClassesFetcher = new DiagnosisClassFetcher({
+        url: diagnosisClassesURL,
+        store: diagnosisClassesStore,
+    });
     fetchPromises.push(diagnosisClassesFetcher.getData());
 
     // Therapy priority
     const therapyPriorityStore = new Store();
     const therapyPriorityURL = `${endpoints.guidelineBaseUrl}${endpoints.therapyPriorities}`;
-    const therapyPriorityFetcher = new Fetcher(therapyPriorityURL, therapyPriorityStore);
+    const therapyPriorityFetcher = new Fetcher({
+        url: therapyPriorityURL,
+        store: therapyPriorityStore,
+    });
     fetchPromises.push(therapyPriorityFetcher.getData());
 
     // Therapy compound
     const therapyCompoundsStore = new Store();
     const therapyCompoundsURL = `${endpoints.guidelineBaseUrl}${endpoints.therapyCompounds}`;
-    const therapyCompoundsFetcher = new Fetcher(therapyCompoundsURL, therapyCompoundsStore);
+    const therapyCompoundsFetcher = new Fetcher({
+        url: therapyCompoundsURL,
+        store: therapyCompoundsStore,
+    });
     fetchPromises.push(therapyCompoundsFetcher.getData());
 
     // Diagnoses bacteria mapping
     const diagnosesBacteriaStore = new Store();
     const diagnosesBacteriaURL = `${endpoints.guidelineBaseUrl}${endpoints.diagnosisBacteria}`;
-    const diagnosesBacteriaFetcher = new Fetcher(diagnosesBacteriaURL, diagnosesBacteriaStore);
+    const diagnosesBacteriaFetcher = new Fetcher({
+        url: diagnosesBacteriaURL,
+        store: diagnosesBacteriaStore,
+    });
     fetchPromises.push(diagnosesBacteriaFetcher.getData());
 
     // Therapy
     const therapiesStore = new Store();
     const therapiesURL = `${endpoints.guidelineBaseUrl}${endpoints.therapies}`;
-    const therapiesFetcher = new TherapyFetcher(
-        therapiesURL,
-        therapiesStore,
-        undefined,
-        [therapyPriorityStore, therapyCompoundsStore, antibioticsStore],
+    const therapiesFetcher = new TherapyFetcher({
+        url: therapiesURL,
+        store: therapiesStore,
+        dependentStores: [therapyPriorityStore, therapyCompoundsStore, antibioticsStore],
         handleError,
-    );
+    });
     fetchPromises.push(therapiesFetcher.getData());
 
     // Diagnoses
     const diagnosesStore = new Store();
     const diagnosesURL = `${endpoints.guidelineBaseUrl}${endpoints.diagnoses}`;
-    const diagnosesFetcher = new DiagnosisFetcher(
-        diagnosesURL,
-        diagnosesStore,
-        undefined,
-        [diagnosisClassesStore, diagnosesBacteriaStore, bacteriaStore, therapiesStore],
+    const diagnosesFetcher = new DiagnosisFetcher({
+        url: diagnosesURL,
+        store: diagnosesStore,
+        dependentStores: [
+            diagnosisClassesStore,
+            diagnosesBacteriaStore,
+            bacteriaStore,
+            therapiesStore,
+        ],
         handleError,
-    );
+    });
     fetchPromises.push(diagnosesFetcher.getData());
 
     // Guidelines
     const guidelinesURL = `${endpoints.guidelineBaseUrl}${endpoints.guidelines}`;
-    const guidelineFetcher = new GuidelineFetcher(
-        guidelinesURL,
-        guidelineStore,
-        undefined,
-        [diagnosesStore],
-    );
+    const guidelineFetcher = new GuidelineFetcher({
+        url: guidelinesURL,
+        store: guidelineStore,
+        dependentStores: [diagnosesStore],
+    });
     fetchPromises.push(guidelineFetcher.getData());
 
     return Promise.all(fetchPromises);
