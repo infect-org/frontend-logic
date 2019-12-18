@@ -1,12 +1,11 @@
 import test from 'tape';
 import fetchMock from 'fetch-mock';
-import AntibioticsStore from './antibioticsStore';
-import SubstanceClass from './substanceClass';
-import SubstanceClassesStore from './substanceClassesStore';
-import AntibioticsFetcher from './antibioticsFetcher';
-
-// Fetch-mock does not reset itself if there's no global fetch
-const originalFetch = global.fetch;
+import AntibioticsStore from './antibioticsStore.js';
+import SubstanceClass from './substanceClass.js';
+import SubstanceClassesStore from './substanceClassesStore.js';
+import AntibioticsFetcher from './antibioticsFetcher.js';
+import RDACounterStore from '../rdaCounter/RDACounterStore.js';
+import rdaCounterTypes from '../rdaCounter/rdaCounterTypes.js';
 
 function setupData() {
     const apiData = [{
@@ -22,29 +21,36 @@ function setupData() {
         identifier: 'testId',
     }];
     const errors = [];
-    const errorHandler = err => errors.push(err);
+    const handleError = err => errors.push(err);
     const antibioticsStore = new AntibioticsStore();
     const substanceClassesStore = new SubstanceClassesStore();
+    substanceClassesStore.setFetchPromise(new Promise(resolve => resolve()));
+    const rdaCounterStore = new RDACounterStore(() => {});
+    rdaCounterStore.setFetchPromise(new Promise(resolve => resolve()));
+    rdaCounterStore.set({ antibioticIds: [1] });
     return {
         apiData,
-        errorHandler,
+        handleError,
         errors,
         antibioticsStore,
+        rdaCounterStore,
         substanceClassesStore,
     };
 }
 
-test('handles antibacteria data correctly', (t) => {
-    const { apiData, antibioticsStore, substanceClassesStore } = setupData();
+test('handles antibiotic data correctly', (t) => {
+    const {
+        apiData,
+        antibioticsStore,
+        substanceClassesStore,
+    } = setupData();
     fetchMock.mock('/test', apiData);
     substanceClassesStore.add(new SubstanceClass(5, 'testSC'));
-    const fetcher = new AntibioticsFetcher(
-        '/test',
-        antibioticsStore,
-        {},
-        [],
-        substanceClassesStore,
-    );
+    const fetcher = new AntibioticsFetcher({
+        url: '/test',
+        store: antibioticsStore,
+        dependentStores: [substanceClassesStore],
+    });
     fetcher.getData().then(() => {
         t.equals(antibioticsStore.get().size, 1);
         t.equals(antibioticsStore.getById(1).name, 'testAB');
@@ -52,7 +58,6 @@ test('handles antibacteria data correctly', (t) => {
         t.equals(antibioticsStore.getById(1).identifier, 'testId');
         t.equals(antibioticsStore.getById(1).substanceClass.id, 5);
         fetchMock.restore();
-        global.fetch = originalFetch;
         t.end();
     });
 });
@@ -62,27 +67,24 @@ test('handles antibiotics with missing substance correctly', (t) => {
     const {
         apiData,
         errors,
-        errorHandler,
+        handleError,
         antibioticsStore,
         substanceClassesStore,
     } = setupData();
     apiData[0].substance = [];
     fetchMock.mock('/test', apiData);
-    const fetcher = new AntibioticsFetcher(
-        '/test',
-        antibioticsStore,
-        {},
-        [],
-        substanceClassesStore,
-        errorHandler,
-    );
+    const fetcher = new AntibioticsFetcher({
+        url: '/test',
+        store: antibioticsStore,
+        dependentStores: [substanceClassesStore],
+        handleError,
+    });
     fetcher.getData().then(() => {
         t.is(errors.length, 1);
         t.is(errors[0].message.includes('has no substance data'), true);
         // Antibiotic should not be created
         t.is(antibioticsStore.getAsArray().length, 0);
         fetchMock.restore();
-        global.fetch = originalFetch;
         t.end();
     });
 });
@@ -91,28 +93,25 @@ test('handles antibiotics with multiple substances correctly', (t) => {
     const {
         apiData,
         errors,
-        errorHandler,
+        handleError,
         antibioticsStore,
         substanceClassesStore,
     } = setupData();
     apiData[0].substance.push({ substanceClass: { id: 6 } });
     fetchMock.mock('/test', apiData);
     substanceClassesStore.add(new SubstanceClass(5, 'testSC'));
-    const fetcher = new AntibioticsFetcher(
-        '/test',
-        antibioticsStore,
-        {},
-        [],
-        substanceClassesStore,
-        errorHandler,
-    );
+    const fetcher = new AntibioticsFetcher({
+        url: '/test',
+        store: antibioticsStore,
+        dependentStores: [substanceClassesStore],
+        handleError,
+    });
     fetcher.getData().then(() => {
         t.is(errors.length, 1);
         t.is(errors[0].message.includes('has more than one substance'), true);
         // Antibiotic should be created
         t.is(antibioticsStore.getAsArray().length, 1);
         fetchMock.restore();
-        global.fetch = originalFetch;
         t.end();
     });
 });
@@ -121,28 +120,25 @@ test('handles antibiotics with missing substanceClass data correctly', (t) => {
     const {
         apiData,
         errors,
-        errorHandler,
+        handleError,
         antibioticsStore,
         substanceClassesStore,
     } = setupData();
     apiData[0].substance[0] = {};
     fetchMock.mock('/test', apiData);
     substanceClassesStore.add(new SubstanceClass(5, 'testSC'));
-    const fetcher = new AntibioticsFetcher(
-        '/test',
-        antibioticsStore,
-        {},
-        [],
-        substanceClassesStore,
-        errorHandler,
-    );
+    const fetcher = new AntibioticsFetcher({
+        url: '/test',
+        store: antibioticsStore,
+        dependentStores: [substanceClassesStore],
+        handleError,
+    });
     fetcher.getData().then(() => {
         t.is(errors.length, 1);
         t.is(errors[0].message.includes('has invalid substanceClass data'), true);
         // Antibiotic should be created
         t.is(antibioticsStore.getAsArray().length, 0);
         fetchMock.restore();
-        global.fetch = originalFetch;
         t.end();
     });
 });
@@ -151,19 +147,17 @@ test('handles antibiotics with missing substanceClass correctly', (t) => {
     const {
         apiData,
         errors,
-        errorHandler,
+        handleError,
         antibioticsStore,
         substanceClassesStore,
     } = setupData();
     fetchMock.mock('/test', apiData);
-    const fetcher = new AntibioticsFetcher(
-        '/test',
-        antibioticsStore,
-        {},
-        [],
-        substanceClassesStore,
-        errorHandler,
-    );
+    const fetcher = new AntibioticsFetcher({
+        url: '/test',
+        store: antibioticsStore,
+        dependentStores: [substanceClassesStore],
+        handleError,
+    });
     fetcher.getData().then(() => {
         t.is(errors.length, 1);
         t.is(
@@ -173,10 +167,39 @@ test('handles antibiotics with missing substanceClass correctly', (t) => {
         // Antibiotic should not be created
         t.is(antibioticsStore.getAsArray().length, 0);
         fetchMock.restore();
-        global.fetch = originalFetch;
         t.end();
     });
 });
 
 
+
+test('ignores antibiotics without RDA data', (t) => {
+    const {
+        apiData,
+        handleError,
+        antibioticsStore,
+        substanceClassesStore,
+        rdaCounterStore,
+    } = setupData();
+    rdaCounterStore.hasItem = (type, id) => {
+        t.is(type, rdaCounterTypes.antibiotic);
+        if (id === 1) return false;
+        return true;
+    };
+    // Remove valid ID 1 from antibioticIds
+    rdaCounterStore.set({ antibioticIds: [] });
+    fetchMock.mock('/test', apiData);
+    const fetcher = new AntibioticsFetcher({
+        url: '/test',
+        store: antibioticsStore,
+        dependentStores: [substanceClassesStore, rdaCounterStore],
+        handleError,
+    });
+    fetcher.getData().then(() => {
+        // Item with id 1 was not added
+        t.is(antibioticsStore.getAsArray().length, 0);
+        fetchMock.restore();
+        t.end();
+    });
+});
 

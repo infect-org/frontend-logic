@@ -20,7 +20,7 @@ test('handles substanceClass data correctly', (t) => {
         },
     );
     const store = new SubstanceClassesStore();
-    const scf = new SubstanceClassesFetcher('/test', store);
+    const scf = new SubstanceClassesFetcher({ url: '/test', store });
     scf.getData();
     setTimeout(() => {
 
@@ -59,7 +59,7 @@ test('creates hierarchy', (t) => {
         },
     );
     const store = new SubstanceClassesStore();
-    const scf = new SubstanceClassesFetcher('/test', store);
+    const scf = new SubstanceClassesFetcher({ url: '/test', store });
     scf.getData();
     setTimeout(() => {
         t.equals(store.get().size, 4);

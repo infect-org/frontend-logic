@@ -8,4 +8,5 @@ export default Object.freeze({
     antibiotic: 'antibiotic',
     substanceClass: 'substanceClass',
     hospitalStatus: 'hospitalStatus',
+    animal: 'animal',
 });

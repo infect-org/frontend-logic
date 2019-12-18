@@ -1,5 +1,8 @@
+import debug from 'debug';
 import { computed, reaction } from 'mobx';
 import filterTypes from '../filters/filterTypes';
+
+const log = debug('infect:PopulationFilterUpdater');
 
 /**
  * Create headers for population filters that will be passed to ResistanceFetcher. Invoke
@@ -33,10 +36,12 @@ export default class PopulationFilterUpdater {
         const region = this.selectedFilters.getFiltersByType(filterTypes.region);
         const ageGroup = this.selectedFilters.getFiltersByType(filterTypes.ageGroup);
         const hospitalStatus = this.selectedFilters.getFiltersByType(filterTypes.hospitalStatus);
+        const animal = this.selectedFilters.getFiltersByType(filterTypes.animal);
         return {
             regionIds: region.map(filter => filter.value),
             ageGroupIds: ageGroup.map(filter => filter.value),
             hospitalStatusIds: hospitalStatus.map(filter => filter.value),
+            animalIds: animal.map(filter => filter.value),
         };
     }
 
@@ -47,6 +52,7 @@ export default class PopulationFilterUpdater {
     setupWatcher() {
         reaction(() => this.filterHeaders, async(data) => {
             try {
+                log('Selected filters changed, new headers are %o', data);
                 await this.resistancesFetcher.getDataForFilters(data);
             } catch (err) {
                 this.handleError(err);
