@@ -30,6 +30,9 @@ import RDACounterFetcher from './models/rdaCounter/RDACounterFetcher.js';
 import TenantConfigFetcher from './models/tenantConfig/TenantConfigFetcher.js';
 import TenantConfigStore from './models/tenantConfig/TenantConfigStore.js';
 import notificationSeverityLevels from './models/notifications/notificationSeverityLevels.js';
+import GuidelineSelectedFiltersBridge from
+    './models/guidelineSelectedFiltersBridge/GuidelineSelectedFiltersBridge.js';
+
 
 const log = debug('infect:App');
 
@@ -57,9 +60,16 @@ export default class InfectApp {
 
     notificationCenter = new NotificationCenter();
 
+
     // Counts amount of properties available on RDA (in unfiltered state for the current tenant)
     rdaCounterStore = new RDACounterStore(this.notificationCenter.handle
         .bind(this.notificationCenter));
+
+    guidelineRelatedFilters = new GuidelineSelectedFiltersBridge(
+        this.guidelines,
+        this.selectedFilters,
+        this.filterValues,
+    );
 
     /**
     * @param {Object} config        e.g. {
