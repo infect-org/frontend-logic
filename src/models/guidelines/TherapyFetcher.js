@@ -1,6 +1,7 @@
 import debug from 'debug';
 import Fetcher from '../../helpers/standardFetcher.js';
 import Therapy from './Therapy.js';
+import notificationSeverityLevels from '../notifications/notificationSeverityLevels.js';
 
 const log = debug('infect:TherapyFetcher');
 
@@ -9,12 +10,13 @@ export default class TherapyFetcher extends Fetcher {
     /**
      * Pass same params as for Fetcher, but add handleError function that gracefully handles non-
      * critical errors
-     * @param  {Function} handleError   Function that takes an Error instance as the only argument
-     *                                  (and displays it to the user)
+     * @param  {function} options.handleError   Function that takes an Error instance as the only
+     *                                          argument (and displays it to the user)
      */
-    constructor(...params) {
-        super(...params);
-        [,,,, this.handleError] = params;
+    constructor(options) {
+        super(options);
+        const { handleError } = options;
+        this.handleError = handleError;
         log('handleError set to %o', this.handleError);
     }
 
@@ -43,8 +45,10 @@ export default class TherapyFetcher extends Fetcher {
                     // the app's functionality
                     const antibiotic = antibioticsStore.getById(mapping.id_compound);
                     if (!antibiotic) {
-                        const antibioticMissingError = new Error(`Antibiotic ${mapping.id_compound} could not be found. The results displayed to you will therefore not be complete for therapy ${therapy.id}.`);
-                        this.handleError(antibioticMissingError);
+                        this.handleError({
+                            severity: notificationSeverityLevels.warning,
+                            message: `Antibiotic ${mapping.id_compound} could not be found. The results displayed to you will therefore not be complete for therapy ${therapy.id}.`,
+                        });
                         return undefined;
                     }
                     return {

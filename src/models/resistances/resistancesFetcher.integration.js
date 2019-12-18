@@ -1,14 +1,16 @@
 import test from 'tape';
 import fetchMock from 'fetch-mock';
 import ResistancesFetcher from './resistancesFetcher';
-import Store from '../../helpers/store';
+import Store from '../../helpers/Store.js';
 import Bacterium from '../bacteria/bacterium';
+import storeStatus from '../../helpers/storeStatus.js';
 
 // Fetch-mock does not reset itself if there's no global fetch
 const originalFetch = global.fetch;
 
 function setupStores() {
     const antibiotics = {
+        status: { identifier: storeStatus.ready },
         get() {
             return {
                 values() {
@@ -22,6 +24,7 @@ function setupStores() {
         },
     };
     const bacteria = {
+        status: { identifier: storeStatus.ready },
         get() {
             return {
                 values() {
@@ -60,11 +63,13 @@ test('handles resistance data correctly', async(t) => {
     });
     const { antibiotics, bacteria } = setupStores();
     const store = new Store([], () => 2);
-    const stores = {
-        antibiotics,
-        bacteria,
-    };
-    const fetcher = new ResistancesFetcher('/test', store, {}, [], stores, () => {});
+    const stores = [antibiotics, bacteria];
+    const fetcher = new ResistancesFetcher({
+        url: '/test',
+        store,
+        dependentStores: stores,
+        handleError: () => {},
+    });
     await fetcher.getData();
     t.equals(store.get().size, 1);
     const result = store.getById(2);
@@ -95,11 +100,12 @@ test('handles filter updates', async(t) => {
 
     const { antibiotics, bacteria } = setupStores();
     const store = new Store([], () => 2);
-    const stores = {
-        antibiotics,
-        bacteria,
-    };
-    const fetcher = new ResistancesFetcher('/test', store, {}, [], stores);
+    const stores = [antibiotics, bacteria];
+    const fetcher = new ResistancesFetcher({
+        url: '/test',
+        store,
+        dependentStores: stores,
+    });
 
     await fetcher.getData();
     t.equals(store.getById(2).values[0].value, 1);
@@ -144,27 +150,20 @@ test('handles missing antibiotics/bacteria gracefully', async(t) => {
 
     const { antibiotics, bacteria } = setupStores();
     const store = new Store([], () => 2);
-    const stores = {
-        antibiotics,
-        bacteria,
-    };
+    const stores = [antibiotics, bacteria];
 
-    const bacteriaFetcher = new ResistancesFetcher(
-        '/invalidBacterium',
+    const bacteriaFetcher = new ResistancesFetcher({
+        url: '/invalidBacterium',
         store,
-        {},
-        [],
-        stores,
+        dependentStores: stores,
         handleError,
-    );
-    const antibioticsFetcher = new ResistancesFetcher(
-        '/invalidAntibiotic',
+    });
+    const antibioticsFetcher = new ResistancesFetcher({
+        url: '/invalidAntibiotic',
         store,
-        {},
-        [],
-        stores,
+        dependentStores: stores,
         handleError,
-    );
+    });
 
     await bacteriaFetcher.getData();
     await antibioticsFetcher.getData();
@@ -176,6 +175,10 @@ test('handles missing antibiotics/bacteria gracefully', async(t) => {
 
 });
 
+/**
+ * Race condition may be given if user switches rda filters quickly; the latest data that is
+ * returned from the server will be displayed; this may not be the latest filter the user set.
+ */
 test('prevents race conditions', async(t) => {
 
     const regionfilterData = setupBodyData();
@@ -197,11 +200,12 @@ test('prevents race conditions', async(t) => {
 
     const { antibiotics, bacteria } = setupStores();
     const store = new Store([], () => 2);
-    const stores = {
-        antibiotics,
-        bacteria,
-    };
-    const fetcher = new ResistancesFetcher('/test', store, {}, [], stores);
+    const stores = [antibiotics, bacteria];
+    const fetcher = new ResistancesFetcher({
+        url: '/test',
+        store,
+        dependentStores: stores,
+    });
 
     const slowFetchPromise = fetcher.getData();
     fetcher.getDataForFilters({ region: [3, 6] });
