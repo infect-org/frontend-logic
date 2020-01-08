@@ -30,14 +30,15 @@ const setupData = () => {
             body: JSON.stringify([{ id: 31, name: 'In' }, { id: 32, name: 'Out' }]),
         });
 
-    const config = {
-        endpoints: {
-            apiPrefix: '/',
+    const getURL = (scope, endpoint) => {
+        if (scope !== 'coreData') return false;
+        const endpoints = {
             animals: 'animal',
             hospitalStatus: 'hospitalStatus',
             regions: 'region',
             ageGroups: 'ageGroup',
-        },
+        };
+        return `/${endpoints[endpoint]}`;
     };
 
     const filterValues = new PropertyMap();
@@ -46,7 +47,7 @@ const setupData = () => {
         filterValues.addConfiguration(entityConfig.entityType, entityConfig.config);
     });
 
-    return { filterValues, config, fetchMock };
+    return { filterValues, getURL, fetchMock };
 
 
 };
@@ -62,8 +63,8 @@ test('sets up filters as expected', (t) => {
             identifier: storeStatus.ready,
         },
     };
-    const { config, filterValues } = setupData();
-    const fetcher = setupPopulationFilters(config, filterValues, rdaCounterStore);
+    const { getURL, filterValues } = setupData();
+    const fetcher = setupPopulationFilters(getURL, filterValues, rdaCounterStore);
 
     fetcher.then(() => {
         const mapValueAndName = entry => `${entry.value}/${entry.niceValue}`;
@@ -101,8 +102,8 @@ test('uses available rdaCounter and removes entries without RDA data', (t) => {
             return true;
         },
     };
-    const { config, filterValues } = setupData();
-    const fetcher = setupPopulationFilters(config, filterValues, rdaCounterStore);
+    const { getURL, filterValues } = setupData();
+    const fetcher = setupPopulationFilters(getURL, filterValues, rdaCounterStore);
 
     fetcher.then(() => {
         const mapValueAndName = entry => `${entry.value}/${entry.niceValue}`;

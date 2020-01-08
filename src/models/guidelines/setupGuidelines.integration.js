@@ -55,9 +55,9 @@ function setupData() {
 
     const guidelineStore = new GuidelineStore();
 
-    const config = {
-        endpoints: {
-            guidelineBaseUrl: 'https://baseurl/',
+    const getURL = (scope, endpoint) => {
+        if (scope !== 'guideline') return false;
+        const endpoints = {
             diagnosisClass: 'diagnosisClass',
             therapyPriorities: 'therapyPriority',
             therapyCompounds: 'therapy_compound',
@@ -66,7 +66,8 @@ function setupData() {
             diagnoses: 'diagnosis',
             guidelines: 'guideline',
             therapies: 'therapy',
-        },
+        };
+        return `https://baseurl/${endpoints[endpoint]}`;
     };
 
     const handledErrors = [];
@@ -77,7 +78,7 @@ function setupData() {
     return {
         apiData,
         fetch,
-        config,
+        getURL,
         guidelineStore,
         antibioticsStore,
         antibioticsStorePromise,
@@ -92,33 +93,26 @@ function setupData() {
 
 
 
-test('fails if config data is invalid', async(t) => {
+test('fails if getURL is invalid', async(t) => {
 
-    // No config
+    // No getURL
     try {
         await setupGuidelines();
         t.fail();
     } catch (err) {
-        t.is(err.message.includes('Config or config.endpoints missing'), true);
+        t.is(err.message.includes('getURL missing or not a function'), true);
     }
 
-    // endpoints property missing in config
+    // getURL invalid (not a function)
     try {
         await setupGuidelines({});
         t.fail();
     } catch (err) {
-        t.is(err.message.includes('Config or config.endpoints missing'), true);
-    }
-
-    // Single/multiple endpoints missing
-    try {
-        await setupGuidelines({ endpoints: {} });
-        t.fail();
-    } catch (err) {
-        t.is(err.message.includes('Keys guidelineBaseUrl'), true);
+        t.is(err.message.includes('getURL missing or not a function'), true);
     }
 
     t.end();
+
 });
 
 
@@ -126,7 +120,7 @@ test('fails if config data is invalid', async(t) => {
 test('creates all models', async(t) => {
     const {
         fetch,
-        config,
+        getURL,
         antibioticsStore,
         antibioticsStorePromise,
         bacteriaStore,
@@ -137,7 +131,7 @@ test('creates all models', async(t) => {
     global.fetch = fetch;
 
     const promise = setupGuidelines(
-        config,
+        getURL,
         guidelineStore,
         bacteriaStore,
         antibioticsStore,
@@ -202,7 +196,7 @@ test('creates all models', async(t) => {
 test('fails if request fails', async(t) => {
     const {
         apiData,
-        config,
+        getURL,
         antibioticsStore,
         antibioticsStorePromise,
         bacteriaStore,
@@ -220,7 +214,7 @@ test('fails if request fails', async(t) => {
         .mock(badEndpoint, 407);
 
     const promise = setupGuidelines(
-        config,
+        getURL,
         guidelineStore,
         bacteriaStore,
         antibioticsStore,
@@ -252,7 +246,7 @@ test('fails if request fails', async(t) => {
 test('fails gently if bacteria or antibiotics are missing', async(t) => {
     const {
         fetch,
-        config,
+        getURL,
         antibioticsStore,
         antibioticsStorePromise,
         bacteriaStore,
@@ -265,7 +259,7 @@ test('fails gently if bacteria or antibiotics are missing', async(t) => {
     global.fetch = fetch;
 
     const promise = setupGuidelines(
-        config,
+        getURL,
         guidelineStore,
         bacteriaStore,
         antibioticsStore,

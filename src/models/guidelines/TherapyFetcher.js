@@ -45,6 +45,7 @@ export default class TherapyFetcher extends Fetcher {
                     // the app's functionality
                     const antibiotic = antibioticsStore.getById(mapping.id_compound);
                     if (!antibiotic) {
+                        log('All antibiotics are', antibioticsStore.getAsArray());
                         this.handleError({
                             severity: notificationSeverityLevels.warning,
                             message: `Antibiotic ${mapping.id_compound} could not be found. The results displayed to you will therefore not be complete for therapy ${therapy.id}.`,
