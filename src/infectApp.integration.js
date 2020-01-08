@@ -17,9 +17,8 @@ function getEndpoints() {
         regions: 'generics.region',
         ageGroups: 'generics.ageGroup',
         hospitalStatus: 'generics.hospitalStatus',
-        guidelineBaseUrl: 'https://api.infect.info/guideline/v1/',
         diagnosisClass: 'diagnosisClass',
-        counter: 'rda.data?functionName=infect-configuration',
+        counter: 'rda.configuration',
         therapyPriorities: 'therapyPriority',
         therapyCompounds: 'therapy_compound',
         diagnosisBacteria: 'diagnosis_bacterium',
@@ -28,7 +27,6 @@ function getEndpoints() {
         guidelines: 'guideline',
         therapies: 'therapy',
         config: 'config',
-        tenantConfig: 'tenant/v1/config',
     };
 }
 
@@ -45,7 +43,7 @@ function factorGetURLFunction(scopes, endpoints) {
 
     return (scope, endpoint) => {
         const url = `https://api.infect.info/${scopes[scope]}/${endpoints[endpoint]}`;
-        console.log('URL for %s/%s is %s', scope, endpoint, url);
+        // console.log('URL for %s/%s is %s', scope, endpoint, url);
         return url;
     };
 
@@ -65,7 +63,8 @@ function resetFetch() {
 }
 
 
-async function testInvalidApiCall(getURL, t) {
+
+async function testInvalidApiCall(getURL, t, invalidEndpointName) {
     const app = new InfectApp({ getURL });
     await app.initialize();
     // Errors are handled within app.initialize; initalize should does therefore not throw.
@@ -79,13 +78,16 @@ async function testInvalidApiCall(getURL, t) {
     ); */
     const containsCorrectError = app.notificationCenter.notifications
         .filter(notification => notification.message.includes('HTTP status 404'));
+    if (containsCorrectError.length !== 1) {
+        console.log(invalidEndpointName, app.notificationCenter.notifications.slice());
+    }
     t.is(containsCorrectError.length, 1);
 }
 
 
 
 
-test.skip('doesn\'t throw with valid config', (t) => {
+test('doesn\'t throw with valid config', (t) => {
     mockFetch();
     const getURL = factorGetURLFunction(getScopes(), getEndpoints());
     const app = new InfectApp({ getURL });
@@ -119,7 +121,11 @@ test('throws with any invalid config', (t) => {
             ...endpoints,
             [endpointName]: 'invalid-endpoint',
         };
-        return testInvalidApiCall(factorGetURLFunction(getScopes(), invalidEndpoints), t);
+        return testInvalidApiCall(
+            factorGetURLFunction(getScopes(), invalidEndpoints),
+            t,
+            endpointName,
+        );
     });
 
     Promise.all(promises).then(() => {
