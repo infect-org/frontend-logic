@@ -46,7 +46,6 @@ test('rdaCounter does not fail with valid data', async(t) => {
     const store = new RDACounterStore(handler);
     const fetcher = new RDACounterFetcher({ url: '/test', store, handleError: handler });
     await fetcher.getData();
-    console.log('nfs', notifications);
     t.is(notifications.length, 0);
     fetchMock.restore();
     t.end();

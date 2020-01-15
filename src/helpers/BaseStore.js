@@ -1,5 +1,5 @@
 import { observable, action, runInAction } from 'mobx';
-import storeStatus from './storeStatus';
+import storeStatus from './storeStatus.js';
 
 /**
  * Scaffold of a store; contains only the most relevant shared functions:

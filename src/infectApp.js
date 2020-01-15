@@ -20,6 +20,7 @@ import OffsetFilters from './models/filters/offsetFilters.js';
 import SelectedFilters from './models/filters/selectedFilters.js';
 import MostUsedFilters from './models/filters/mostUsedFilters.js';
 import PopulationFilterUpdater from './models/populationFilter/PopulationFilterUpdater.js';
+import setupAgeGroups from './models/populationFilter/setupAgeGroups.js';
 import setupPopulationFilters from './models/populationFilter/setupPopulationFilters.js';
 import NotificationCenter from './models/notifications/NotificationCenter.js';
 import updateDrawerFromGuidelines from './models/drawer/updateDrawerFromGuidelines.js';
@@ -32,6 +33,7 @@ import TenantConfigStore from './models/tenantConfig/TenantConfigStore.js';
 import notificationSeverityLevels from './models/notifications/notificationSeverityLevels.js';
 import GuidelineSelectedFiltersBridge from
     './models/guidelineSelectedFiltersBridge/GuidelineSelectedFiltersBridge.js';
+import Store from './helpers/store.js';
 
 
 
@@ -60,6 +62,10 @@ export default class InfectApp {
     mostUsedFilters = new MostUsedFilters(this.selectedFilters, this.filterValues);
 
     notificationCenter = new NotificationCenter();
+
+    // Age groups need to be stored so that we can retreive the from/to values when an
+    // age group is selected
+    ageGroupStore = new Store();
 
 
     // Counts amount of properties available on RDA (in unfiltered state for the current tenant)
@@ -104,8 +110,15 @@ export default class InfectApp {
             this.filterValues,
             this.rdaCounterStore,
         );
+
+        const ageGroupFilterPromise = setupAgeGroups(
+            this.tenantConfig,
+            this.filterValues,
+            this.ageGroupStore,
+            this.notificationCenter.handle.bind(this.notificationCenter),
+        );
         return Promise
-            .all([fetcherPromise, populationFilterPromise])
+            .all([fetcherPromise, populationFilterPromise, ageGroupFilterPromise])
             // Catch and display error; if we don't, app will fail half-way because we're async.
             .then(() => {
                 log('INFECT app successfully initialized');
@@ -201,6 +214,7 @@ export default class InfectApp {
         const updater = new PopulationFilterUpdater(
             resistanceFetcher,
             this.selectedFilters,
+            this.ageGroupStore,
             this.notificationCenter.handle.bind(this.notificationCenter),
         );
         updater.setup();

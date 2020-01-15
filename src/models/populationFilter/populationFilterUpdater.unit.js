@@ -1,7 +1,8 @@
 import test from 'tape';
-import { observable } from 'mobx';
+import { observable, transaction } from 'mobx';
 import filterTypes from '../filters/filterTypes.js';
 import PopulationFilterUpdater from './PopulationFilterUpdater.js';
+import Store from '../../helpers/Store.js';
 
 function setupData() {
 
@@ -13,6 +14,7 @@ function setupData() {
         },
     };
 
+    // Fake implementation of ResistancesFetcher
     const resistancesFetcherFilters = [];
     const resistancesFetcher = {
         getDataForFilters(filters) {
@@ -28,16 +30,16 @@ test('creates correct headers', (t) => {
     const updater = new PopulationFilterUpdater(resistancesFetcher, selectedFilters);
     updater.setup();
 
-    // Region
+    // Add region filter
     selectedFilters.filters.push({
         type: filterTypes.region,
         value: 5,
     });
     t.deepEqual(resistancesFetcherFilters, [{
         regionIds: [5],
-        ageGroupIds: [],
         hospitalStatusIds: [],
         animalIds: [],
+        ageGroupIntervals: [],
     }]);
 
     // Non-related filter: Should not update
@@ -47,8 +49,64 @@ test('creates correct headers', (t) => {
     });
     t.equal(resistancesFetcherFilters.length, 1);
 
+    // Remove filters
+    selectedFilters.filters.clear();
+    t.deepEqual(resistancesFetcherFilters.slice().pop(), {
+        regionIds: [],
+        hospitalStatusIds: [],
+        animalIds: [],
+        ageGroupIntervals: [],
+    });
+
     t.end();
 });
+
+
+test('creates correct headers for ageGroups', (t) => {
+    const { selectedFilters, resistancesFetcher, resistancesFetcherFilters } = setupData();
+    const ageGroupStore = new Store();
+    ageGroupStore.add({ id: 5, daysFrom: 1, daysTo: 7 });
+    ageGroupStore.add({ id: 7, daysFrom: 10, daysTo: 11 });
+
+    const updater = new PopulationFilterUpdater(resistancesFetcher, selectedFilters, ageGroupStore);
+    updater.setup();
+
+    // Add ageGroupFilters
+    selectedFilters.filters.push({
+        type: filterTypes.ageGroup,
+        value: 5,
+    });
+    t.deepEqual(resistancesFetcherFilters.slice().pop(), {
+        regionIds: [],
+        hospitalStatusIds: [],
+        animalIds: [],
+        ageGroupIntervals: [{ daysFrom: 1, daysTo: 7 }],
+    });
+
+    // Add additional filter
+    selectedFilters.filters.push({
+        type: filterTypes.ageGroup,
+        value: 7,
+    });
+    t.deepEqual(resistancesFetcherFilters.slice().pop(), {
+        regionIds: [],
+        hospitalStatusIds: [],
+        animalIds: [],
+        ageGroupIntervals: [{ daysFrom: 1, daysTo: 7 }, { daysFrom: 10, daysTo: 11 }],
+    });
+
+    // Remove ageGroupFilters
+    selectedFilters.filters.splice(0, 2);
+    t.deepEqual(resistancesFetcherFilters.slice().pop(), {
+        regionIds: [],
+        hospitalStatusIds: [],
+        animalIds: [],
+        ageGroupIntervals: [],
+    });
+
+    t.end();
+});
+
 
 test('handles errors through handleError', (t) => {
     const errors = [];
@@ -59,6 +117,7 @@ test('handles errors through handleError', (t) => {
     const updater = new PopulationFilterUpdater(
         resistancesFetcher,
         selectedFilters,
+        {},
         err => errors.push(err),
     );
     updater.setup();

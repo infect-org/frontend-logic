@@ -29,8 +29,8 @@ export default class PopulationFilterFetcher extends StandardFetcher {
         transaction(() => {
             data.forEach((filterEntry) => {
 
-                // If RDACounter was passed in but current animal is not part of RDA, don't add
-                // it to filters
+                // If RDACounter was passed in but current filter type (e.g. animal) is not part of
+                // RDA, don't add it to filters
                 if (this.rdaCounterType) {
                     if (!this.rdaCounterStore.hasItem(this.rdaCounterType, filterEntry.id)) {
                         log('Population filter %o is not part of RDA, skip it', filterEntry);

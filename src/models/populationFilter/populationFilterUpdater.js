@@ -13,9 +13,10 @@ export default class PopulationFilterUpdater {
 
     previousFilters = '';
 
-    constructor(resistancesFetcher, selectedFilters, handleError) {
+    constructor(resistancesFetcher, selectedFilters, ageGroupStore, handleError) {
         this.resistancesFetcher = resistancesFetcher;
         this.selectedFilters = selectedFilters;
+        this.ageGroupStore = ageGroupStore;
         this.handleError = handleError;
     }
 
@@ -34,15 +35,29 @@ export default class PopulationFilterUpdater {
      */
     @computed get filterHeaders() {
         const region = this.selectedFilters.getFiltersByType(filterTypes.region);
-        const ageGroup = this.selectedFilters.getFiltersByType(filterTypes.ageGroup);
         const hospitalStatus = this.selectedFilters.getFiltersByType(filterTypes.hospitalStatus);
         const animal = this.selectedFilters.getFiltersByType(filterTypes.animal);
-        return {
+        const filters = {
             regionIds: region.map(filter => filter.value),
-            ageGroupIds: ageGroup.map(filter => filter.value),
             hospitalStatusIds: hospitalStatus.map(filter => filter.value),
             animalIds: animal.map(filter => filter.value),
+            ageGroupIntervals: [],
         };
+
+        // Add daysFrom/daysTo for ageGroups, if user filtered by ageGroups
+        const ageGroupFilter = this.selectedFilters.getFiltersByType(filterTypes.ageGroup);
+        if (ageGroupFilter.length) {
+            const selectedAgeGroupIds = ageGroupFilter.map(({ value }) => value);
+            const ageGroupsFromStore = this.ageGroupStore.getAsArray()
+                .filter(item => selectedAgeGroupIds.includes(item.id));
+            const ageGroupIntervals = ageGroupsFromStore.map(({ daysTo, daysFrom }) => ({
+                daysTo,
+                daysFrom,
+            }));
+            ageGroupIntervals.forEach(interval => filters.ageGroupIntervals.push(interval));
+        }
+
+        return filters;
     }
 
     /**

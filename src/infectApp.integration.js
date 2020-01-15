@@ -15,7 +15,6 @@ function getEndpoints() {
         data: 'rda.data',
         substanceClasses: 'substance.substanceClass',
         regions: 'generics.region',
-        ageGroups: 'generics.ageGroup',
         hospitalStatus: 'generics.hospitalStatus',
         diagnosisClass: 'diagnosisClass',
         counter: 'rda.configuration',
