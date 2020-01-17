@@ -34,6 +34,7 @@ import GuidelineSelectedFiltersBridge from
     './models/guidelineSelectedFiltersBridge/GuidelineSelectedFiltersBridge.js';
 
 
+
 const log = debug('infect:App');
 
 export default class InfectApp {
@@ -72,14 +73,9 @@ export default class InfectApp {
     );
 
     /**
-    * @param {Object} config        e.g. {
-    *                                   endpoints: {
-    *                                       apiPrefix: '/'
-    *                                       bacteria: 'bacterium'
-    *                                       antibiotics: 'antibiotic'
-    *                                       resistances: 'resistance'
-    *                                   }
-    *                               }
+    * @param {object} config
+    * @param {function} config.getURL      Function that takes two arguments (scope and endpoint)
+    *                                      and returns corresponding URL
     */
     constructor(config) {
 
@@ -104,7 +100,7 @@ export default class InfectApp {
     initialize() {
         const fetcherPromise = this._setupFetchers();
         const populationFilterPromise = setupPopulationFilters(
-            this._config,
+            this._config.getURL,
             this.filterValues,
             this.rdaCounterStore,
         );
@@ -128,7 +124,7 @@ export default class InfectApp {
 
         // Substance classes (must be loaded first)
         const substanceClassesFetcher = new SubstanceClassesFetcher({
-            url: this._config.endpoints.apiPrefix + this._config.endpoints.substanceClasses,
+            url: this._config.getURL('coreData', 'substanceClasses'),
             store: this.substanceClasses,
         });
         const substanceClassesPromise = substanceClassesFetcher.getData();
@@ -137,7 +133,7 @@ export default class InfectApp {
 
         // Antibiotics (wait for substance classes)
         const antibioticsFetcher = new AntibioticsFetcher({
-            url: this._config.endpoints.apiPrefix + this._config.endpoints.antibiotics,
+            url: this._config.getURL('coreData', 'antibiotics'),
             store: this.antibiotics,
             options: { headers: { select: 'substance.*, substance.substanceClass.*' } },
             dependentStores: [this.substanceClasses, this.rdaCounterStore],
@@ -148,7 +144,7 @@ export default class InfectApp {
 
         // Bacteria
         const bacteriaFetcher = new BacteriaFetcher({
-            url: this._config.endpoints.apiPrefix + this._config.endpoints.bacteria,
+            url: this._config.getURL('coreData', 'bacteria'),
             store: this.bacteria,
             options: { headers: { select: 'shape.*' } },
             dependentStores: [this.rdaCounterStore],
@@ -158,7 +154,7 @@ export default class InfectApp {
 
         // Resistances (wait for antibiotics and bacteria)
         const resistanceFetcher = new ResistancesFetcher({
-            url: this._config.endpoints.apiPrefix + this._config.endpoints.resistances,
+            url: this._config.getURL('rda', 'data'),
             store: this.resistances,
             dependentStores: [this.antibiotics, this.bacteria],
             handleError: this.notificationCenter.handle.bind(this.notificationCenter),
@@ -171,7 +167,7 @@ export default class InfectApp {
         // Guidelines are important – but not crucial for INFECT to work. Handle errors nicely.
         // TODO: Make sure we are informed when they fail!
         const guidelinePromise = setupGuidelines(
-            this._config,
+            this._config.getURL,
             this.guidelines,
             this.bacteria,
             this.antibiotics,
@@ -185,7 +181,7 @@ export default class InfectApp {
         });
 
         const tenantConfigFetcher = new TenantConfigFetcher({
-            url: `${this._config.endpoints.apiPrefix}${this._config.endpoints.tenantConfig}`,
+            url: this._config.getURL('tenant', 'config'),
             store: this.tenantConfig,
             // Handle errors gracefully, as there should always be a fallback for all values/flags
             // in tenantConfig
@@ -195,7 +191,7 @@ export default class InfectApp {
 
 
         const rdaCounterFetcher = new RDACounterFetcher({
-            url: `${this._config.endpoints.apiPrefix}${this._config.endpoints.rdaCounter}`,
+            url: this._config.getURL('rda', 'counter'),
             store: this.rdaCounterStore,
             handleError: this.notificationCenter.handle.bind(this.notificationCenter),
         });
