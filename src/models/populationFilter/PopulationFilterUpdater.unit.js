@@ -1,5 +1,5 @@
 import test from 'tape';
-import { observable, transaction } from 'mobx';
+import { observable } from 'mobx';
 import filterTypes from '../filters/filterTypes.js';
 import PopulationFilterUpdater from './PopulationFilterUpdater.js';
 import Store from '../../helpers/Store.js';
