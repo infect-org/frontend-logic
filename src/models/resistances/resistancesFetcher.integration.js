@@ -46,7 +46,7 @@ function setupBodyData() {
         values: [{
             bacteriumId: 5,
             compoundId: 4,
-            sampleCount: 100,
+            modelCount: 100,
             resistantPercent: 100,
             confidenceInterval: {
                 lowerBound: 75,

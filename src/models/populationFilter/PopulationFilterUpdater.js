@@ -35,11 +35,11 @@ export default class PopulationFilterUpdater {
      */
     @computed get filterHeaders() {
         const region = this.selectedFilters.getFiltersByType(filterTypes.region);
-        const hospitalStatus = this.selectedFilters.getFiltersByType(filterTypes.hospitalStatus);
+        const patientSetting = this.selectedFilters.getFiltersByType(filterTypes.hospitalStatus);
         const animal = this.selectedFilters.getFiltersByType(filterTypes.animal);
         const filters = {
             regionIds: region.map(filter => filter.value),
-            hospitalStatusIds: hospitalStatus.map(filter => filter.value),
+            patientSettingIds: patientSetting.map(filter => filter.value),
             animalIds: animal.map(filter => filter.value),
             ageGroupIntervals: [],
         };

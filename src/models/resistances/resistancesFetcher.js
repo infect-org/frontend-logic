@@ -103,7 +103,7 @@ export default class ResistancesFetcher extends Fetcher {
             const resistanceValues = [{
                 type: 'import',
                 value: resistance.resistantPercent / 100,
-                sampleSize: resistance.sampleCount || 0,
+                sampleSize: resistance.modelCount || 0,
                 confidenceInterval: [
                     resistance.confidenceInterval.lowerBound / 100,
                     resistance.confidenceInterval.upperBound / 100,

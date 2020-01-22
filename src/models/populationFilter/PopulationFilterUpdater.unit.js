@@ -30,6 +30,7 @@ test('creates correct headers', (t) => {
     const updater = new PopulationFilterUpdater(resistancesFetcher, selectedFilters);
     updater.setup();
 
+
     // Add region filter
     selectedFilters.filters.push({
         type: filterTypes.region,
@@ -37,23 +38,42 @@ test('creates correct headers', (t) => {
     });
     t.deepEqual(resistancesFetcherFilters, [{
         regionIds: [5],
-        hospitalStatusIds: [],
+        patientSettingIds: [],
         animalIds: [],
         ageGroupIntervals: [],
     }]);
+
+
+    // Add other filters (hospitalStatus/patientSetting and animal)
+    selectedFilters.filters.push({
+        type: filterTypes.hospitalStatus,
+        value: 4,
+    });
+    selectedFilters.filters.push({
+        type: filterTypes.animal,
+        value: 3,
+    });
+    t.deepEqual(resistancesFetcherFilters.slice().pop(), {
+        regionIds: [5],
+        patientSettingIds: [4],
+        animalIds: [3],
+        ageGroupIntervals: [],
+    });
+
 
     // Non-related filter: Should not update
     selectedFilters.filters.push({
         type: 'somethingElse',
         value: 5,
     });
-    t.equal(resistancesFetcherFilters.length, 1);
+    // Was called 3 times (for all relevant filter changes above)
+    t.equal(resistancesFetcherFilters.length, 3);
 
     // Remove filters
     selectedFilters.filters.clear();
     t.deepEqual(resistancesFetcherFilters.slice().pop(), {
         regionIds: [],
-        hospitalStatusIds: [],
+        patientSettingIds: [],
         animalIds: [],
         ageGroupIntervals: [],
     });
@@ -78,7 +98,7 @@ test('creates correct headers for ageGroups', (t) => {
     });
     t.deepEqual(resistancesFetcherFilters.slice().pop(), {
         regionIds: [],
-        hospitalStatusIds: [],
+        patientSettingIds: [],
         animalIds: [],
         ageGroupIntervals: [{ daysFrom: 1, daysTo: 7 }],
     });
@@ -90,7 +110,7 @@ test('creates correct headers for ageGroups', (t) => {
     });
     t.deepEqual(resistancesFetcherFilters.slice().pop(), {
         regionIds: [],
-        hospitalStatusIds: [],
+        patientSettingIds: [],
         animalIds: [],
         ageGroupIntervals: [{ daysFrom: 1, daysTo: 7 }, { daysFrom: 10, daysTo: 11 }],
     });
@@ -99,7 +119,7 @@ test('creates correct headers for ageGroups', (t) => {
     selectedFilters.filters.splice(0, 2);
     t.deepEqual(resistancesFetcherFilters.slice().pop(), {
         regionIds: [],
-        hospitalStatusIds: [],
+        patientSettingIds: [],
         animalIds: [],
         ageGroupIntervals: [],
     });
