@@ -33,7 +33,7 @@ import TenantConfigStore from './models/tenantConfig/TenantConfigStore.js';
 import notificationSeverityLevels from './models/notifications/notificationSeverityLevels.js';
 import GuidelineSelectedFiltersBridge from
     './models/guidelineSelectedFiltersBridge/GuidelineSelectedFiltersBridge.js';
-import Store from './helpers/store.js';
+import Store from './helpers/Store.js';
 
 
 
