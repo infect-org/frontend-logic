@@ -33,7 +33,7 @@ function getScopes() {
     return {
         tenant: 'tenant/v1',
         coreData: 'core-data/v1',
-        rda: 'rda/v1',
+        rda: 'rda/v2',
         guideline: 'guideline/v1',
     };
 }

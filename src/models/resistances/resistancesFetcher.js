@@ -78,14 +78,14 @@ export default class ResistancesFetcher extends Fetcher {
         let counter = 0;
         data.values.forEach((resistance) => {
 
-            const bacterium = bacteria.find(item => item.id === resistance.bacteriumId);
-            const antibiotic = antibiotics.find(item => item.id === resistance.compoundId);
+            const bacterium = bacteria.find(item => item.id === resistance.microorganismId);
+            const antibiotic = antibiotics.find(item => item.id === resistance.compoundSubstanceId);
 
             // Missing bacterium or antibiotic is not crucial; display error but continue
             if (!antibiotic) {
                 this.handleError({
                     severity: notificationSeverityLevels.warning,
-                    message: `ResistancesFetcher: Antibiotic with ID ${resistance.compoundId} missing, resistance ${JSON.stringify(resistance)} cannot be displayed.`,
+                    message: `ResistancesFetcher: Antibiotic with ID ${resistance.compoundSubstanceId} missing, resistance ${JSON.stringify(resistance)} cannot be displayed.`,
                 });
                 console.error('Antibiotic for resistance %o missing; antibiotics are %o', resistance, antibiotics);
                 return;
@@ -94,7 +94,7 @@ export default class ResistancesFetcher extends Fetcher {
             if (!bacterium) {
                 this.handleError({
                     severity: notificationSeverityLevels.warning,
-                    message: `ResistancesFetcher: Bacterium with ID ${resistance.bacteriumId} missing, resistance ${JSON.stringify(resistance)} cannot be displayed.`,
+                    message: `ResistancesFetcher: Bacterium with ID ${resistance.microorganismId} missing, resistance ${JSON.stringify(resistance)} cannot be displayed.`,
                 });
                 console.error('Bacterium for resistance %o missing; bacteria are %o', resistance, bacteria);
                 return;
@@ -109,12 +109,23 @@ export default class ResistancesFetcher extends Fetcher {
                     resistance.confidenceInterval.upperBound / 100,
                 ],
             }];
-            const resistanceObject = new Resistance(resistanceValues, antibiotic, bacterium);
+
+            // Creating a Resistance may fail if e.g. values are not valid; make sure we handle
+            // errors gracefully but ignore the current resistance.
+            let resistanceObject;
+            try {
+                resistanceObject = new Resistance(resistanceValues, antibiotic, bacterium);
+            } catch (err) {
+                this.handleError({
+                    severity: notificationSeverityLevels.warning,
+                    message: `Resistance for ${antibiotic.name} and ${bacterium.name} cannot be displayed: ${err.message}.`,
+                });
+                return;
+            }
 
             // Duplicate resistance
             if (this.store.hasWithId(resistanceObject)) {
-                console.warn(`ResistanceFetcher: Resistance ${JSON.stringify(resistance)} is
-                    a duplicate; an entry for the same bacterium and antibiotic does exist.`);
+                console.warn(`ResistanceFetcher: Resistance ${JSON.stringify(resistance)} is a duplicate; an entry for the same bacterium and antibiotic does exist.`);
                 return;
             }
 

@@ -44,8 +44,8 @@ function setupBodyData() {
     return {
         justSomeProperty: true,
         values: [{
-            bacteriumId: 5,
-            compoundId: 4,
+            microorganismId: 5,
+            compoundSubstanceId: 4,
             modelCount: 100,
             resistantPercent: 100,
             confidenceInterval: {
@@ -122,19 +122,20 @@ test('handles filter updates', async(t) => {
 
 });
 
-test('handles missing antibiotics/bacteria gracefully', async(t) => {
+test('handles missing antibiotics/bacteria and invalid resistances gracefully', async(t) => {
 
     const recordedErrors = [];
     const handleError = err => recordedErrors.push(err);
 
-    // Create API endpoint that returns a resistance with invalid compoundId and bacteriumId
+    // Create API endpoint that returns a resistance with invalid compoundSubstanceId and
+    // microorganismId
     fetchMock
         .mock('/invalidBacterium', {
             status: 200,
             body: {
                 values: [{
-                    bacteriumId: -1,
-                    compoundId: 4,
+                    microorganismId: -1,
+                    compoundSubstanceId: 4,
                 }],
             },
         })
@@ -142,8 +143,24 @@ test('handles missing antibiotics/bacteria gracefully', async(t) => {
             status: 200,
             body: {
                 values: [{
-                    bacteriumId: 5,
-                    compoundId: -1,
+                    microorganismId: 5,
+                    compoundSubstanceId: -1,
+                }],
+            },
+        })
+        .mock('/invalidResistance', {
+            status: 200,
+            body: {
+                values: [{
+                    microorganismId: 5,
+                    compoundSubstanceId: 4,
+                    modelCount: 100,
+                    resistantPercent: 100,
+                    confidenceInterval: {
+                        lowerBound: 75,
+                        // confidenceInterval does not embrace resistantPercent – should throw
+                        upperBound: 90,
+                    },
                 }],
             },
         });
@@ -164,13 +181,21 @@ test('handles missing antibiotics/bacteria gracefully', async(t) => {
         dependentStores: stores,
         handleError,
     });
+    const invalidResistanceFetcher = new ResistancesFetcher({
+        url: '/invalidResistance',
+        store,
+        dependentStores: stores,
+        handleError,
+    });
 
     await bacteriaFetcher.getData();
     await antibioticsFetcher.getData();
+    await invalidResistanceFetcher.getData();
 
-    t.is(recordedErrors.length, 2);
+    t.is(recordedErrors.length, 3);
     t.is(recordedErrors[0].message.includes('Bacterium with ID -1 missing'), true);
     t.is(recordedErrors[1].message.includes('Antibiotic with ID -1 missing'), true);
+    t.is(recordedErrors[2].message.includes('Resistance for amoxicillin name and acinetobacter sp. cannot be displayed'), true);
     t.end();
 
 });

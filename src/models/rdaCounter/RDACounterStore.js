@@ -1,10 +1,11 @@
+import { observable } from 'mobx';
 import BaseStore from '../../helpers/BaseStore.js';
 import rdaCounterTypes from './rdaCounterTypes.js';
 import notificationSeverityLevels from '../notifications/notificationSeverityLevels.js';
 
 export default class RDACounterStore extends BaseStore {
 
-    data = {};
+    @observable data = new Map();
 
     constructor(handleException) {
         super();
@@ -16,22 +17,30 @@ export default class RDACounterStore extends BaseStore {
      * @param {Object.<string,number[]>} data    IDs that are present in unfiltered RDA data set
      *                                           and their type (e.g. bacterium)
      */
-    set(data) {
-        Object.values(rdaCounterTypes).forEach((type) => {
+    set(field, validIds) {
 
-            // Check if data is valid for every rdaCounterType
-            if (!data[type] || !Array.isArray(data[type])) {
-                this.handleException({
-                    severity: notificationSeverityLevels.warning,
-                    message: `RDACounterStore: Got different data than expected. Expected field ${type} of type array, is ${typeof data[type]} (${data[type]}) instead; the whole response is ${JSON.stringify(data)}.`,
-                });
-                return;
-            }
+        if (!Array.isArray(validIds)) {
+            // If data is not an array for given field, just ignore it. Use a warning as
+            // INFECT will still work correctly (but display unnecessary information)
+            this.handleException({
+                severity: notificationSeverityLevels.warning,
+                message: `RDACounterStore: RDA counter data for field ${field} should be an array, is ${JSON.stringify(validIds)} instead.`,
+            });
+            return;
+        }
 
-            // Add data only if valid
-            this.data[type] = data[type];
+        // Unknown field
+        if (!Object.values(rdaCounterTypes).includes(field)) {
+            // If field is invalid, just discard it; INFECTD will still work
+            this.handleException({
+                severity: notificationSeverityLevels.warning,
+                message: `RDACounterStore: RDA counter field ${field} is not known; use any of ${Object.values(rdaCounterTypes).join(', ')} instead.`,
+            });
+            return;
+        }
 
-        });
+        this.data[field] = validIds;
+
     }
 
     /**

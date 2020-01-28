@@ -27,7 +27,7 @@ export default class {
 				throw new Error(`ResistanceValue: Confidence interval numbers must be between 0 and 1, lower bound must be smaller than upper bound.`);
 			} 
 			if (lower > value || upper < value) {
-				throw new Error(`ResistanceValue: Confidence interval must embrace the resistance value.`);
+				throw new Error(`ResistanceValue: Confidence interval must embrace the resistance value; resistance is ${value}, lower confidence interval is ${lower} upper is ${upper}.`);
 			}
 		}
 
