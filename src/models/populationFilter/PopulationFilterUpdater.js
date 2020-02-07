@@ -13,11 +13,25 @@ export default class PopulationFilterUpdater {
 
     previousFilters = '';
 
-    constructor(resistancesFetcher, selectedFilters, ageGroupStore, handleError) {
+    /**
+     * @param {ResistancesFetcher} resistancesFetcher
+     * @param {PropertyMap} selectedFilters
+     * @param {Store} ageGroupStore
+     * @param {function} handleError
+     * @param {boolean} showPreviewData     If true, use preview data (instead of regular data set)
+     */
+    constructor(
+        resistancesFetcher,
+        selectedFilters,
+        ageGroupStore,
+        handleError,
+        showPreviewData,
+    ) {
         this.resistancesFetcher = resistancesFetcher;
         this.selectedFilters = selectedFilters;
         this.ageGroupStore = ageGroupStore;
         this.handleError = handleError;
+        this.showPreviewData = showPreviewData;
     }
 
     /**
@@ -37,11 +51,15 @@ export default class PopulationFilterUpdater {
         const region = this.selectedFilters.getFiltersByType(filterTypes.region);
         const patientSetting = this.selectedFilters.getFiltersByType(filterTypes.hospitalStatus);
         const animal = this.selectedFilters.getFiltersByType(filterTypes.animal);
+        const preview = this.showPreviewData ? {
+            dataVersionStatusIdentifier: ['preview', 'active'],
+        } : {};
         const filters = {
             regionIds: region.map(filter => filter.value),
             patientSettingIds: patientSetting.map(filter => filter.value),
             animalIds: animal.map(filter => filter.value),
             ageGroupIntervals: [],
+            ...preview,
         };
 
         // Add daysFrom/daysTo for ageGroups, if user filtered by ageGroups

@@ -82,6 +82,9 @@ test('creates correct headers', (t) => {
 });
 
 
+// ageGroups comes from the tenantConfig endpoint and is therefore – other than all other filters –
+// tenant specific. Also, ageGroups are converted to a range of days. Therefore, we test ageGroups
+// separately.
 test('creates correct headers for ageGroups', (t) => {
     const { selectedFilters, resistancesFetcher, resistancesFetcherFilters } = setupData();
     const ageGroupStore = new Store();
@@ -126,6 +129,34 @@ test('creates correct headers for ageGroups', (t) => {
 
     t.end();
 });
+
+
+
+test('uses preview data if corresponding constructor argument is used', (t) => {
+
+    const { selectedFilters, resistancesFetcher } = setupData();
+    const updater = new PopulationFilterUpdater(
+        resistancesFetcher,
+        selectedFilters,
+        undefined,
+        () => {},
+        true,
+    );
+    updater.setup();
+
+    t.deepEqual(updater.filterHeaders, {
+        regionIds: [],
+        patientSettingIds: [],
+        animalIds: [],
+        ageGroupIntervals: [],
+        dataVersionStatusIdentifier: ['preview', 'active'],
+    });
+
+    t.end();
+
+});
+
+
 
 
 test('handles errors through handleError', (t) => {

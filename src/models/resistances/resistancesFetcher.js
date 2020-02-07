@@ -41,6 +41,12 @@ export default class ResistancesFetcher extends Fetcher {
         await super.getData(...params);
     }
 
+    /**
+     * Gets filtered data for a set of filters
+     * @param {object.<string, *[]>} filters   Filters; key is the filterName, values is an array
+     *                                         of selected filters for the filterName
+     * @return {Promise}
+     */
     async getDataForFilters(filters) {
         // Store original URL
         if (!this.baseUrl) this.baseUrl = this.url;

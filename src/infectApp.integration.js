@@ -97,9 +97,23 @@ test('doesn\'t throw with valid config', (t) => {
         t.end();
         resetFetch();
     });
-
-
 });
+
+
+
+test('does not fail if preview data parameter is set', (t) => {
+    mockFetch();
+    const getURL = factorGetURLFunction(getScopes(), getEndpoints());
+    const app = new InfectApp({ getURL, showPreviewData: true });
+    app.initialize().then(() => {
+        // Errors are handled by notification center and not re-thrown. Let's check if there were
+        // any issues
+        t.is(app.notificationCenter.notifications.length, 0);
+        t.end();
+        resetFetch();
+    });
+});
+
 
 
 test('throws with any invalid config', (t) => {
