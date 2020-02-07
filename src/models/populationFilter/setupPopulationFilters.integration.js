@@ -85,6 +85,7 @@ test('uses available rdaCounter and removes entries without RDA data', (t) => {
         hasItem: (type, id) => {
             if (type === rdaCounterTypes.animal && id === 2) return false;
             if (type === rdaCounterTypes.region && id === 12) return false;
+            if (type === rdaCounterTypes.patientSetting && id === 32) return false;
             return true;
         },
     };
@@ -100,6 +101,10 @@ test('uses available rdaCounter and removes entries without RDA data', (t) => {
         t.deepEqual(
             filterValues.getValuesForProperty('region', 'id').map(mapValueAndName),
             ['11/CH-West'],
+        );
+        t.deepEqual(
+            filterValues.getValuesForProperty('hospitalStatus', 'id').map(mapValueAndName),
+            ['31/In'],
         );
         fetchMock.restore();
         t.end();

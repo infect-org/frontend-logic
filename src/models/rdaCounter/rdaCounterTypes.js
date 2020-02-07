@@ -8,4 +8,5 @@ export default Object.freeze({
     region: 'regionIds',
     ageGroup: 'ageGroupIds',
     animal: 'animalIds',
+    patientSetting: 'patientSettingIds',
 });

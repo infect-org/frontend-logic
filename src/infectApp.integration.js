@@ -41,7 +41,7 @@ function getScopes() {
 function factorGetURLFunction(scopes, endpoints) {
 
     return (scope, endpoint) => {
-        const url = `https://api.infect.info/${scopes[scope]}/${endpoints[endpoint]}`;
+        const url = `https://api.beta.infect.info/${scopes[scope]}/${endpoints[endpoint]}`;
         // console.log('URL for %s/%s is %s', scope, endpoint, url);
         return url;
     };
