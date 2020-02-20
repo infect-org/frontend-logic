@@ -44,9 +44,7 @@ export default function() {
             id: {
                 translation: 'Name'
                 // Get name from the whole entity
-                , valueTranslations: (name, entity) => {
-                    return entity.identifier.replace('-', '–').replace('>=', '≥');
-                }
+                , valueTranslations: (name, entity) => entity.label,
             }
         }
     }, {

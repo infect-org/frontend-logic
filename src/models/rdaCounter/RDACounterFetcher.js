@@ -1,6 +1,7 @@
 import debug from 'debug';
 import Fetcher from '../../helpers/standardFetcher.js';
 import notificationSeverityLevels from '../notifications/notificationSeverityLevels.js';
+import rdaCounterTypes from './rdaCounterTypes.js';
 
 const log = debug('infect:RDACounterFetcher.js');
 
@@ -21,28 +22,28 @@ export default class ResistancesFetcher extends Fetcher {
     * @param {Array} data       Data as gotten from server
     */
     handleData(data) {
-        if (typeof data !== 'object' || data === null || data.constructor !== Object) {
-            // If we cannot filter, unnecessary antibiotics, bacteria etc. might be visible –
-            // this is not fatal and should be handled gracefully.
+
+        if (!data || typeof data !== 'object' || data.constructor !== Object) {
+            // Use warning, as INFECT will still work if RDACounter is missing or wrong
             this.handleException({
                 severity: notificationSeverityLevels.warning,
-                message: `RDACounterFetcher: Data returned is not valid, you might see more data than expected. Data should be an object, but is ${typeof data} (${data}.)`,
+                message: `RDACounterStore: Expected object parameter, got ${JSON.stringify(data)} instead.`,
             });
             return;
         }
 
-        // Map properties (as needed) and pass them to the store
-        const dataForStore = {
-            ageGroupIds: data.ageGroupIds,
-            regionIds: data.regionIds,
-            bacteriumIds: data.bacteriumIds,
-            antibioticIds: data.compoundIds,
-            animalIds: data.animalIds,
-        };
+        Object.entries(data).forEach(([key, value]) => {
 
-        log('Pass data %o to store', dataForStore);
+            // API also returns some fields that we should ignore (e.g. timings, counters). Remove
+            // them here.
+            if (!Object.values(rdaCounterTypes).includes(key)) {
+                log('Ignore %o/%o, is not part of valid types %o', key, value, rdaCounterTypes);
+                return;
+            }
 
-        this.store.set(dataForStore);
+            log('Pass data %o/%o to store', key, value);
+            this.store.set(key, value);
+        });
 
     }
 

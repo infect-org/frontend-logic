@@ -3,9 +3,10 @@
  * property names.
  */
 export default Object.freeze({
-    bacterium: 'bacteriumIds',
-    antibiotic: 'antibioticIds',
+    bacterium: 'microorganismIds',
+    antibiotic: 'compoundSubstanceIds',
     region: 'regionIds',
     ageGroup: 'ageGroupIds',
     animal: 'animalIds',
+    patientSetting: 'patientSettingIds',
 });

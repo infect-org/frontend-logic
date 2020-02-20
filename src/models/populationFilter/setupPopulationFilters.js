@@ -28,27 +28,16 @@ export default function(getURL, filterValues, rdaCounterStore) {
     const fetchAnimals = animalsFetcher.getData();
 
 
-    const ageGroupFetcher = new PopulationFilterFetcher({
-        url: getURL(filterScope, 'ageGroups'),
-        // Just pass in any store – is not used, but necessary to work
-        store: new Store(),
-        dependentStores: [rdaCounterStore],
-        filterValues,
-        rdaCounterType: rdaCounterTypes.ageGroup,
-        filterType: filterTypes.ageGroup,
-    });
-    const fetchAgeGroups = ageGroupFetcher.getData();
-
-
-    const hospitalStatusFetcher = new PopulationFilterFetcher({
+    const patientSettingFetcher = new PopulationFilterFetcher({
         url: getURL(filterScope, 'hospitalStatus'),
         // Just pass in any store – is not used, but necessary to work
         store: new Store(),
         dependentStores: [rdaCounterStore],
         filterValues,
+        rdaCounterType: rdaCounterTypes.patientSetting,
         filterType: filterTypes.hospitalStatus,
     });
-    const fetchHospitalStatus = hospitalStatusFetcher.getData();
+    const fetchPatientSetting = patientSettingFetcher.getData();
 
 
     const regionFetcher = new PopulationFilterFetcher({
@@ -63,6 +52,6 @@ export default function(getURL, filterValues, rdaCounterStore) {
     const fetchRegions = regionFetcher.getData();
 
 
-    return Promise.all([fetchAnimals, fetchAgeGroups, fetchHospitalStatus, fetchRegions]);
+    return Promise.all([fetchAnimals, fetchPatientSetting, fetchRegions]);
 
 }

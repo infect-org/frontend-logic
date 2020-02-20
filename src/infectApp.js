@@ -20,6 +20,7 @@ import OffsetFilters from './models/filters/offsetFilters.js';
 import SelectedFilters from './models/filters/selectedFilters.js';
 import MostUsedFilters from './models/filters/mostUsedFilters.js';
 import PopulationFilterUpdater from './models/populationFilter/PopulationFilterUpdater.js';
+import setupAgeGroups from './models/populationFilter/setupAgeGroups.js';
 import setupPopulationFilters from './models/populationFilter/setupPopulationFilters.js';
 import NotificationCenter from './models/notifications/NotificationCenter.js';
 import updateDrawerFromGuidelines from './models/drawer/updateDrawerFromGuidelines.js';
@@ -32,6 +33,7 @@ import TenantConfigStore from './models/tenantConfig/TenantConfigStore.js';
 import notificationSeverityLevels from './models/notifications/notificationSeverityLevels.js';
 import GuidelineSelectedFiltersBridge from
     './models/guidelineSelectedFiltersBridge/GuidelineSelectedFiltersBridge.js';
+import Store from './helpers/Store.js';
 
 
 
@@ -61,6 +63,10 @@ export default class InfectApp {
 
     notificationCenter = new NotificationCenter();
 
+    // Age groups need to be stored so that we can retreive the from/to values when an
+    // age group is selected
+    ageGroupStore = new Store();
+
 
     // Counts amount of properties available on RDA (in unfiltered state for the current tenant)
     rdaCounterStore = new RDACounterStore(this.notificationCenter.handle
@@ -74,8 +80,10 @@ export default class InfectApp {
 
     /**
     * @param {object} config
-    * @param {function} config.getURL      Function that takes two arguments (scope and endpoint)
-    *                                      and returns corresponding URL
+    * @param {function} config.getURL           Function that takes two arguments (scope and
+    *                                           endpoint) and returns corresponding URL
+    * @param {boolean} config.showPreviewData   If true, preview data will be used (instead of the
+    *                                           regular current dataset)
     */
     constructor(config) {
 
@@ -104,8 +112,15 @@ export default class InfectApp {
             this.filterValues,
             this.rdaCounterStore,
         );
+
+        const ageGroupFilterPromise = setupAgeGroups(
+            this.tenantConfig,
+            this.filterValues,
+            this.ageGroupStore,
+            this.notificationCenter.handle.bind(this.notificationCenter),
+        );
         return Promise
-            .all([fetcherPromise, populationFilterPromise])
+            .all([fetcherPromise, populationFilterPromise, ageGroupFilterPromise])
             // Catch and display error; if we don't, app will fail half-way because we're async.
             .then(() => {
                 log('INFECT app successfully initialized');
@@ -152,6 +167,9 @@ export default class InfectApp {
         const bacteriaPromise = bacteriaFetcher.getData();
         log('Fetching data for bacteria.');
 
+
+
+
         // Resistances (wait for antibiotics and bacteria)
         const resistanceFetcher = new ResistancesFetcher({
             url: this._config.getURL('rda', 'data'),
@@ -159,9 +177,22 @@ export default class InfectApp {
             dependentStores: [this.antibiotics, this.bacteria],
             handleError: this.notificationCenter.handle.bind(this.notificationCenter),
         });
-        // Gets data for default filter switzerland-all
-        const resistancePromise = resistanceFetcher.getData();
+
+        const updater = new PopulationFilterUpdater(
+            resistanceFetcher,
+            this.selectedFilters,
+            this.ageGroupStore,
+            this.notificationCenter.handle.bind(this.notificationCenter),
+            this._config.showPreviewData,
+        );
+        updater.setup();
+
+        // Pass filterHeaders as we might filter even before the user interacted with the user
+        // interface (e.g. for preview data)
+        const resistancePromise = resistanceFetcher.getDataForFilters(updater.filterHeaders);
         log('Fetching data for resistances.');
+
+
 
 
         // Guidelines are important – but not crucial for INFECT to work. Handle errors nicely.
@@ -198,15 +229,8 @@ export default class InfectApp {
         const rdaCounterFetcherPromise = rdaCounterFetcher.getData();
 
 
-        const updater = new PopulationFilterUpdater(
-            resistanceFetcher,
-            this.selectedFilters,
-            this.notificationCenter.handle.bind(this.notificationCenter),
-        );
-        updater.setup();
-
-
         log('Fetchers setup done.');
+
 
         return Promise.all([
             substanceClassesPromise,

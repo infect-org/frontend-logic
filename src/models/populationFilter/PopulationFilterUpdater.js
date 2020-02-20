@@ -13,10 +13,25 @@ export default class PopulationFilterUpdater {
 
     previousFilters = '';
 
-    constructor(resistancesFetcher, selectedFilters, handleError) {
+    /**
+     * @param {ResistancesFetcher} resistancesFetcher
+     * @param {PropertyMap} selectedFilters
+     * @param {Store} ageGroupStore
+     * @param {function} handleError
+     * @param {boolean} showPreviewData     If true, use preview data (instead of regular data set)
+     */
+    constructor(
+        resistancesFetcher,
+        selectedFilters,
+        ageGroupStore,
+        handleError,
+        showPreviewData,
+    ) {
         this.resistancesFetcher = resistancesFetcher;
         this.selectedFilters = selectedFilters;
+        this.ageGroupStore = ageGroupStore;
         this.handleError = handleError;
+        this.showPreviewData = showPreviewData;
     }
 
     /**
@@ -34,15 +49,33 @@ export default class PopulationFilterUpdater {
      */
     @computed get filterHeaders() {
         const region = this.selectedFilters.getFiltersByType(filterTypes.region);
-        const ageGroup = this.selectedFilters.getFiltersByType(filterTypes.ageGroup);
-        const hospitalStatus = this.selectedFilters.getFiltersByType(filterTypes.hospitalStatus);
+        const patientSetting = this.selectedFilters.getFiltersByType(filterTypes.hospitalStatus);
         const animal = this.selectedFilters.getFiltersByType(filterTypes.animal);
-        return {
+        const preview = this.showPreviewData ? {
+            dataVersionStatusIdentifier: ['preview', 'active'],
+        } : {};
+        const filters = {
             regionIds: region.map(filter => filter.value),
-            ageGroupIds: ageGroup.map(filter => filter.value),
-            hospitalStatusIds: hospitalStatus.map(filter => filter.value),
+            patientSettingIds: patientSetting.map(filter => filter.value),
             animalIds: animal.map(filter => filter.value),
+            ageGroupIntervals: [],
+            ...preview,
         };
+
+        // Add daysFrom/daysTo for ageGroups, if user filtered by ageGroups
+        const ageGroupFilter = this.selectedFilters.getFiltersByType(filterTypes.ageGroup);
+        if (ageGroupFilter.length) {
+            const selectedAgeGroupIds = ageGroupFilter.map(({ value }) => value);
+            const ageGroupsFromStore = this.ageGroupStore.getAsArray()
+                .filter(item => selectedAgeGroupIds.includes(item.id));
+            const ageGroupIntervals = ageGroupsFromStore.map(({ daysTo, daysFrom }) => ({
+                daysTo,
+                daysFrom,
+            }));
+            ageGroupIntervals.forEach(interval => filters.ageGroupIntervals.push(interval));
+        }
+
+        return filters;
     }
 
     /**

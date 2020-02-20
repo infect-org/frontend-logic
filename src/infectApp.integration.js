@@ -15,7 +15,6 @@ function getEndpoints() {
         data: 'rda.data',
         substanceClasses: 'substance.substanceClass',
         regions: 'generics.region',
-        ageGroups: 'generics.ageGroup',
         hospitalStatus: 'generics.hospitalStatus',
         diagnosisClass: 'diagnosisClass',
         counter: 'rda.configuration',
@@ -34,7 +33,7 @@ function getScopes() {
     return {
         tenant: 'tenant/v1',
         coreData: 'core-data/v1',
-        rda: 'rda/v1',
+        rda: 'rda/v2',
         guideline: 'guideline/v1',
     };
 }
@@ -42,7 +41,7 @@ function getScopes() {
 function factorGetURLFunction(scopes, endpoints) {
 
     return (scope, endpoint) => {
-        const url = `https://api.infect.info/${scopes[scope]}/${endpoints[endpoint]}`;
+        const url = `https://api.beta.infect.info/${scopes[scope]}/${endpoints[endpoint]}`;
         // console.log('URL for %s/%s is %s', scope, endpoint, url);
         return url;
     };
@@ -98,9 +97,23 @@ test('doesn\'t throw with valid config', (t) => {
         t.end();
         resetFetch();
     });
-
-
 });
+
+
+
+test('does not fail if preview data parameter is set', (t) => {
+    mockFetch();
+    const getURL = factorGetURLFunction(getScopes(), getEndpoints());
+    const app = new InfectApp({ getURL, showPreviewData: true });
+    app.initialize().then(() => {
+        // Errors are handled by notification center and not re-thrown. Let's check if there were
+        // any issues
+        t.is(app.notificationCenter.notifications.length, 0);
+        t.end();
+        resetFetch();
+    });
+});
+
 
 
 test('throws with any invalid config', (t) => {

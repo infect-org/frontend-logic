@@ -5,7 +5,6 @@ import PropertyMap from '../propertyMap/propertyMap.js';
 import getFilterConfig from '../filters/getFilterConfig.js';
 import storeStatus from '../../helpers/storeStatus.js';
 import rdaCounterTypes from '../rdaCounter/rdaCounterTypes.js';
-import filterTypes from '../filters/filterTypes.js';
 
 const setupData = () => {
 
@@ -18,13 +17,6 @@ const setupData = () => {
             status: 200,
             body: JSON.stringify([{ id: 11, name: 'CH-West' }, { id: 12, name: 'CH-South' }]),
         })
-        .mock('/ageGroup', {
-            status: 200,
-            body: JSON.stringify([
-                { id: 21, identifier: 'Old' },
-                { id: 22, identifier: 'Very Old' },
-            ]),
-        })
         .mock('/hospitalStatus', {
             status: 200,
             body: JSON.stringify([{ id: 31, name: 'In' }, { id: 32, name: 'Out' }]),
@@ -36,7 +28,6 @@ const setupData = () => {
             animals: 'animal',
             hospitalStatus: 'hospitalStatus',
             regions: 'region',
-            ageGroups: 'ageGroup',
         };
         return `/${endpoints[endpoint]}`;
     };
@@ -77,10 +68,6 @@ test('sets up filters as expected', (t) => {
             ['11/CH-West', '12/CH-South'],
         );
         t.deepEqual(
-            filterValues.getValuesForProperty('ageGroup', 'id').map(mapValueAndName),
-            ['21/Old', '22/Very Old'],
-        );
-        t.deepEqual(
             filterValues.getValuesForProperty('hospitalStatus', 'id').map(mapValueAndName),
             ['31/In', '32/Out'],
         );
@@ -98,7 +85,7 @@ test('uses available rdaCounter and removes entries without RDA data', (t) => {
         hasItem: (type, id) => {
             if (type === rdaCounterTypes.animal && id === 2) return false;
             if (type === rdaCounterTypes.region && id === 12) return false;
-            if (type === rdaCounterTypes.ageGroup && id === 22) return false;
+            if (type === rdaCounterTypes.patientSetting && id === 32) return false;
             return true;
         },
     };
@@ -116,8 +103,8 @@ test('uses available rdaCounter and removes entries without RDA data', (t) => {
             ['11/CH-West'],
         );
         t.deepEqual(
-            filterValues.getValuesForProperty(filterTypes.ageGroup, 'id').map(mapValueAndName),
-            ['21/Old'],
+            filterValues.getValuesForProperty('hospitalStatus', 'id').map(mapValueAndName),
+            ['31/In'],
         );
         fetchMock.restore();
         t.end();
