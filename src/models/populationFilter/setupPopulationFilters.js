@@ -3,10 +3,21 @@ import Store from '../../helpers/Store.js';
 import rdaCounterTypes from '../rdaCounter/rdaCounterTypes.js';
 import filterTypes from '../filters/filterTypes';
 
-export default function(config, filterValues, rdaCounterStore) {
+/**
+ * Sets up fetchers and stores for population filters. Depending on the tenant's data available
+ * on RDA, some filter values (e.g. cows as animals for INFECT by anresis) may not be displayed
+ * as filters; choosing them would lead to an empty matrix.
+ * @param {function} getURL            Function that returns URL for a given scope and endpoint
+ * @param {PropertyMap} filterValues   Structure that holds all valid filter values
+ * @param {RDACounterStore} rdaCounterStore
+ */
+export default function(getURL, filterValues, rdaCounterStore) {
+
+    // Scope for getURL
+    const filterScope = 'coreData';
 
     const animalsFetcher = new PopulationFilterFetcher({
-        url: config.endpoints.apiPrefix + config.endpoints.animals,
+        url: getURL(filterScope, 'animals'),
         // Just pass in any store – is not used, but necessary to work
         store: new Store(),
         dependentStores: [rdaCounterStore],
@@ -17,31 +28,20 @@ export default function(config, filterValues, rdaCounterStore) {
     const fetchAnimals = animalsFetcher.getData();
 
 
-    const ageGroupFetcher = new PopulationFilterFetcher({
-        url: config.endpoints.apiPrefix + config.endpoints.ageGroups,
+    const patientSettingFetcher = new PopulationFilterFetcher({
+        url: getURL(filterScope, 'hospitalStatus'),
         // Just pass in any store – is not used, but necessary to work
         store: new Store(),
         dependentStores: [rdaCounterStore],
         filterValues,
-        rdaCounterType: rdaCounterTypes.ageGroup,
-        filterType: filterTypes.ageGroup,
-    });
-    const fetchAgeGroups = ageGroupFetcher.getData();
-
-
-    const hospitalStatusFetcher = new PopulationFilterFetcher({
-        url: config.endpoints.apiPrefix + config.endpoints.hospitalStatus,
-        // Just pass in any store – is not used, but necessary to work
-        store: new Store(),
-        dependentStores: [rdaCounterStore],
-        filterValues,
+        rdaCounterType: rdaCounterTypes.patientSetting,
         filterType: filterTypes.hospitalStatus,
     });
-    const fetchHospitalStatus = hospitalStatusFetcher.getData();
+    const fetchPatientSetting = patientSettingFetcher.getData();
 
 
     const regionFetcher = new PopulationFilterFetcher({
-        url: config.endpoints.apiPrefix + config.endpoints.regions,
+        url: getURL(filterScope, 'regions'),
         // Just pass in any store – is not used, but necessary to work
         store: new Store(),
         dependentStores: [rdaCounterStore],
@@ -52,6 +52,6 @@ export default function(config, filterValues, rdaCounterStore) {
     const fetchRegions = regionFetcher.getData();
 
 
-    return Promise.all([fetchAnimals, fetchAgeGroups, fetchHospitalStatus, fetchRegions]);
+    return Promise.all([fetchAnimals, fetchPatientSetting, fetchRegions]);
 
 }

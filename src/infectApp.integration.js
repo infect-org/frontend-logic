@@ -6,32 +6,48 @@ import InfectApp from './infectApp';
 
 // Test main app against the real API (to test integration/keep things simple
 
-
-function getConfig() {
-    const config = {
-        endpoints: {
-            apiPrefix: 'https://rda.infect.info/',
-            bacteria: 'pathogen.bacterium',
-            antibiotics: 'substance.compound',
-            resistances: 'rda.data',
-            substanceClasses: 'substance.substanceClass',
-            regions: 'generics.region',
-            ageGroups: 'generics.ageGroup',
-            hospitalStatus: 'generics.hospitalStatus',
-            guidelineBaseUrl: 'https://api.infect.info/guideline/v1/',
-            diagnosisClass: 'diagnosisClass',
-            rdaCounter: 'rda.data?functionName=infect-configuration',
-            therapyPriorities: 'therapyPriority',
-            therapyCompounds: 'therapy_compound',
-            diagnosisBacteria: 'diagnosis_bacterium',
-            diagnoses: 'diagnosis',
-            guidelines: 'guideline',
-            therapies: 'therapy',
-            tenantConfig: 'tenant/v1/config',
-        },
+// Returns endpoint object; this allows us to modify endpoints before we pass them to the factory
+// function that creates the getURL method
+function getEndpoints() {
+    return {
+        bacteria: 'pathogen.bacterium',
+        antibiotics: 'substance.compound',
+        data: 'rda.data',
+        substanceClasses: 'substance.substanceClass',
+        regions: 'generics.region',
+        hospitalStatus: 'generics.hospitalStatus',
+        diagnosisClass: 'diagnosisClass',
+        counter: 'rda.configuration',
+        therapyPriorities: 'therapyPriority',
+        therapyCompounds: 'therapy_compound',
+        diagnosisBacteria: 'diagnosis_bacterium',
+        animals: 'generics.animal',
+        diagnoses: 'diagnosis',
+        guidelines: 'guideline',
+        therapies: 'therapy',
+        config: 'config',
     };
-    return config;
 }
+
+function getScopes() {
+    return {
+        tenant: 'tenant/v1',
+        coreData: 'core-data/v1',
+        rda: 'rda/v2',
+        guideline: 'guideline/v1',
+    };
+}
+
+function factorGetURLFunction(scopes, endpoints) {
+
+    return (scope, endpoint) => {
+        const url = `https://api.beta.infect.info/${scopes[scope]}/${endpoints[endpoint]}`;
+        // console.log('URL for %s/%s is %s', scope, endpoint, url);
+        return url;
+    };
+
+}
+
 
 let originalFetch;
 function mockFetch() {
@@ -45,8 +61,10 @@ function resetFetch() {
     fetchMock.restore();
 }
 
-async function testInvalidApiCall(config, t) {
-    const app = new InfectApp(config);
+
+
+async function testInvalidApiCall(getURL, t, invalidEndpointName) {
+    const app = new InfectApp({ getURL });
     await app.initialize();
     // Errors are handled within app.initialize; initalize should does therefore not throw.
     // Depending on the endpoint, multiple errors may be given; if e.g. substance classes cannot
@@ -59,17 +77,19 @@ async function testInvalidApiCall(config, t) {
     ); */
     const containsCorrectError = app.notificationCenter.notifications
         .filter(notification => notification.message.includes('HTTP status 404'));
+    if (containsCorrectError.length !== 1) {
+        console.log(invalidEndpointName, app.notificationCenter.notifications.slice());
+    }
     t.is(containsCorrectError.length, 1);
 }
 
 
 
 
-// TODO: DESKIP!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-test.skip('doesn\'t throw with valid config', (t) => {
+test('doesn\'t throw with valid config', (t) => {
     mockFetch();
-    const app = new InfectApp(getConfig());
+    const getURL = factorGetURLFunction(getScopes(), getEndpoints());
+    const app = new InfectApp({ getURL });
     app.initialize().then(() => {
         // Errors are handled by notification center and not re-thrown. Let's check if there were
         // any issues
@@ -77,12 +97,26 @@ test.skip('doesn\'t throw with valid config', (t) => {
         t.end();
         resetFetch();
     });
-
-
 });
 
 
-test.skip('throws with any invalid config', (t) => {
+
+test('does not fail if preview data parameter is set', (t) => {
+    mockFetch();
+    const getURL = factorGetURLFunction(getScopes(), getEndpoints());
+    const app = new InfectApp({ getURL, showPreviewData: true });
+    app.initialize().then(() => {
+        // Errors are handled by notification center and not re-thrown. Let's check if there were
+        // any issues
+        t.is(app.notificationCenter.notifications.length, 0);
+        t.end();
+        resetFetch();
+    });
+});
+
+
+
+test('throws with any invalid config', (t) => {
 
     mockFetch();
 
@@ -91,19 +125,20 @@ test.skip('throws with any invalid config', (t) => {
     const originalConsoleError = console.error;
     console.error = () => {};
 
-    // Only test fields that are called in intialize.
-    // TODO: Use all config fields available so that test automatically fails when new endpoints
-    // are added. Await new config structure.
-    const relevantFields = ['bacteria', 'antibiotics', 'resistances', 'substanceClasses',
-        'regions', 'ageGroups', 'hospitalStatus', 'diagnosisClass',
-        'therapyPriorities', 'therapyCompounds', 'diagnosisBacteria', 'diagnoses', 'therapies'];
+    const endpoints = getEndpoints();
 
     // Create a promise for every bad endpoint; execute one promise after another, at the end
     // restore everything and end test.
-    const promises = relevantFields.map((field) => {
-        const invalidConfig = getConfig();
-        invalidConfig.endpoints[field] += '-nope!';
-        return testInvalidApiCall(invalidConfig, t);
+    const promises = Object.keys(endpoints).map((endpointName) => {
+        const invalidEndpoints = {
+            ...endpoints,
+            [endpointName]: 'invalid-endpoint',
+        };
+        return testInvalidApiCall(
+            factorGetURLFunction(getScopes(), invalidEndpoints),
+            t,
+            endpointName,
+        );
     });
 
     Promise.all(promises).then(() => {
@@ -116,15 +151,16 @@ test.skip('throws with any invalid config', (t) => {
 
 
 
-test.skip('errors with guidelines are handled internally', async(t) => {
+test('errors with guidelines are handled internally', async(t) => {
 
     mockFetch();
 
     // Fake 404 on guidelines
-    const config = getConfig();
-    config.endpoints.guidelines = 'invalidURL';
+    const scopes = getScopes();
+    scopes.guideline = 'invalid-endpoint';
 
-    const app = new InfectApp(config);
+    const getURL = factorGetURLFunction(scopes, getEndpoints());
+    const app = new InfectApp({ getURL });
     try {
         await app.initialize();
         const { notifications } = app.notificationCenter;
@@ -141,10 +177,10 @@ test.skip('errors with guidelines are handled internally', async(t) => {
 
 });
 
+
 test('exposes guidelineSelectedFiltersBridge', (t) => {
     mockFetch();
-    const config = getConfig();
-    const app = new InfectApp(config);
+    const app = new InfectApp(factorGetURLFunction(getEndpoints()));
     t.is(typeof app.guidelineRelatedFilters, 'object');
     t.doesNotThrow(() => app.guidelineRelatedFilters.selectFiltersRelatedToSelectedDiagnosis());
     t.end();

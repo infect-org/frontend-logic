@@ -13,8 +13,8 @@ const setupData = () => {
         shards: 'some',
         ageGroupIds: [1],
         regionIds: [2],
-        bacteriumIds: [3],
-        compoundIds: [4],
+        microorganismIds: [3],
+        compoundSubstanceIds: [4],
         animalIds: [5],
     };
     return { notifications, handler, response };
@@ -24,6 +24,7 @@ test('failed rda fetcher fails gracefully', (t) => {
     const { notifications, handler } = setupData();
     fetchMock.mock('/test', {
         status: 200,
+        // Rendpoint returns invalid data (array instead of an object)
         body: '["notAnObject"]',
     });
     const store = new RDACounterStore(handler);
@@ -31,7 +32,7 @@ test('failed rda fetcher fails gracefully', (t) => {
     fetcher.getData().then(() => {
         t.is(notifications.length, 1);
         t.is(notifications[0].severity, notificationSeverityLevels.warning);
-        t.is(notifications[0].message.includes('you might see more data than expected'), true);
+        t.is(notifications[0].message.includes('Expected object parameter'), true);
         fetchMock.restore();
         t.end();
     });
@@ -46,7 +47,6 @@ test('rdaCounter does not fail with valid data', async(t) => {
     const store = new RDACounterStore(handler);
     const fetcher = new RDACounterFetcher({ url: '/test', store, handleError: handler });
     await fetcher.getData();
-    console.log('nfs', notifications);
     t.is(notifications.length, 0);
     fetchMock.restore();
     t.end();
@@ -54,15 +54,12 @@ test('rdaCounter does not fail with valid data', async(t) => {
 
 test('store fails gracefully with invalid data', (t) => {
     // Check if it fails on any invalid endpoint
-    const calls = [
-        'bacteriumIds',
-        'compoundIds',
-        'regionIds',
-        'ageGroupIds',
-        'animalIds',
-    ].map((type) => {
+    const allEndpoints = setupData().response;
+    // Get all endpoints that we are actually using
+    const endpoints = Object.keys(allEndpoints).filter(item => item !== 'shards');
+    const calls = endpoints.map((type) => {
         const { response, notifications, handler } = setupData();
-        // Create bad data for current type
+        // Create bad data for current type (string instead of an array)
         response[type] = 'notAnArray';
         fetchMock.mock(`/${type}`, {
             status: 200,
@@ -71,7 +68,7 @@ test('store fails gracefully with invalid data', (t) => {
         const store = new RDACounterStore(handler);
         const fetcher = new RDACounterFetcher({ url: `/${type}`, store, handleError: handler });
         return fetcher.getData().then(() => {
-            t.is(notifications[0].message.includes('of type array'), true);
+            t.is(notifications[0].message.includes('should be an array'), true);
             t.is(notifications[0].severity, notificationSeverityLevels.warning);
             fetchMock.restore();
         }, () => {

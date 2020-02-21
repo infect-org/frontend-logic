@@ -8,9 +8,8 @@ import DiagnosisClassFetcher from './DiagnosisClassFetcher.js';
 /**
  * Gets guidelines and all their related data (therapies, diagnoses etc.) from server and returns
  * the ready guidelineStore.
- * @param  {Object} config                  Config that contains API URLs
- * @param  {Object} config.endpoints        Object with API URLs. See below for all keys that are
- *                                          needed
+ * @param  {Function} getURL                Function that returns URL for provided scope
+ *                                          ('guideline') and endpoint (e.g. 'diagnoses')
  * @param  {BacteriaStore} bacteriaStore    Bacteria store; needed to resolve inducing bacteria
  *                                          for Diagnosis
  * @param  {AntibioticsStore} antibioticsStore    Antibiotics store; needed to resolve recommended
@@ -24,32 +23,19 @@ import DiagnosisClassFetcher from './DiagnosisClassFetcher.js';
  *                                          GuidelineStore
  */
 export default async function setupGuidelines(
-    config,
+    getURL,
     guidelineStore,
     bacteriaStore,
     antibioticsStore,
     handleError,
 ) {
 
-    if (!config || !config.endpoints) {
-        throw new Error(`setupGuidelines: Config or config.endpoints missing; is ${JSON.stringify(config)}.`);
+    if (!getURL || typeof getURL !== 'function') {
+        throw new Error(`setupGuidelines: getURL missing or not a function; is ${JSON.stringify(getURL)}.`);
     }
-    const { endpoints } = config;
 
-    const urlKeys = [
-        'guidelineBaseUrl',
-        'diagnosisClass',
-        'therapyPriorities',
-        'therapyCompounds',
-        'diagnosisBacteria',
-        'diagnoses',
-        'guidelines',
-        'therapies',
-    ];
-    const notAllAvailable = urlKeys.filter(key => !Object.keys(endpoints).includes(key));
-    if (notAllAvailable.length) {
-        throw new Error(`setupGuidelines: Keys ${notAllAvailable.join(', ')} missing in config.endpoints.`);
-    }
+    // Scope for getURL function
+    const guidelineScope = 'guideline';
 
     // Store all fetch promises
     const fetchPromises = [];
@@ -57,45 +43,40 @@ export default async function setupGuidelines(
 
     // Diagnosis classes
     const diagnosisClassesStore = new Store();
-    const diagnosisClassesURL = `${endpoints.guidelineBaseUrl}${endpoints.diagnosisClass}`;
     const diagnosisClassesFetcher = new DiagnosisClassFetcher({
-        url: diagnosisClassesURL,
+        url: getURL(guidelineScope, 'diagnosisClass'),
         store: diagnosisClassesStore,
     });
     fetchPromises.push(diagnosisClassesFetcher.getData());
 
     // Therapy priority
     const therapyPriorityStore = new Store();
-    const therapyPriorityURL = `${endpoints.guidelineBaseUrl}${endpoints.therapyPriorities}`;
     const therapyPriorityFetcher = new Fetcher({
-        url: therapyPriorityURL,
+        url: getURL(guidelineScope, 'therapyPriorities'),
         store: therapyPriorityStore,
     });
     fetchPromises.push(therapyPriorityFetcher.getData());
 
     // Therapy compound
     const therapyCompoundsStore = new Store();
-    const therapyCompoundsURL = `${endpoints.guidelineBaseUrl}${endpoints.therapyCompounds}`;
     const therapyCompoundsFetcher = new Fetcher({
-        url: therapyCompoundsURL,
+        url: getURL(guidelineScope, 'therapyCompounds'),
         store: therapyCompoundsStore,
     });
     fetchPromises.push(therapyCompoundsFetcher.getData());
 
     // Diagnoses bacteria mapping
     const diagnosesBacteriaStore = new Store();
-    const diagnosesBacteriaURL = `${endpoints.guidelineBaseUrl}${endpoints.diagnosisBacteria}`;
     const diagnosesBacteriaFetcher = new Fetcher({
-        url: diagnosesBacteriaURL,
+        url: getURL(guidelineScope, 'diagnosisBacteria'),
         store: diagnosesBacteriaStore,
     });
     fetchPromises.push(diagnosesBacteriaFetcher.getData());
 
     // Therapy
     const therapiesStore = new Store();
-    const therapiesURL = `${endpoints.guidelineBaseUrl}${endpoints.therapies}`;
     const therapiesFetcher = new TherapyFetcher({
-        url: therapiesURL,
+        url: getURL(guidelineScope, 'therapies'),
         store: therapiesStore,
         dependentStores: [therapyPriorityStore, therapyCompoundsStore, antibioticsStore],
         handleError,
@@ -104,9 +85,8 @@ export default async function setupGuidelines(
 
     // Diagnoses
     const diagnosesStore = new Store();
-    const diagnosesURL = `${endpoints.guidelineBaseUrl}${endpoints.diagnoses}`;
     const diagnosesFetcher = new DiagnosisFetcher({
-        url: diagnosesURL,
+        url: getURL(guidelineScope, 'diagnoses'),
         store: diagnosesStore,
         dependentStores: [
             diagnosisClassesStore,
@@ -119,9 +99,8 @@ export default async function setupGuidelines(
     fetchPromises.push(diagnosesFetcher.getData());
 
     // Guidelines
-    const guidelinesURL = `${endpoints.guidelineBaseUrl}${endpoints.guidelines}`;
     const guidelineFetcher = new GuidelineFetcher({
-        url: guidelinesURL,
+        url: getURL(guidelineScope, 'guidelines'),
         store: guidelineStore,
         dependentStores: [diagnosesStore],
     });

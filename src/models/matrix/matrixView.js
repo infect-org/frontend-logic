@@ -414,8 +414,12 @@ class MatrixView {
             this.bacteriumLabelColumnWidth - this.antibioticLabelRowHeight;
         const whitespace = (numberOfAntibiotics + numberOfSubstanceClassChanges) * this.space;
         // Radius: Don't go below 0, always be an int.
-        this.defaultRadius = Math.max(Math.floor((availableSpace - whitespace) /
-            numberOfAntibiotics / 2), 1);
+        let radius = Math.floor((availableSpace - whitespace) / numberOfAntibiotics / 2);
+        radius = Math.max(radius, 1);
+        // Make sure bubbles don't grow too large – even if there is a lot of matrix space
+        // available. Necessary to prevent huge bubbles with small data sets, e.g. VET)
+        radius = Math.min(radius, 25);
+        this.defaultRadius = radius;
         log(
             'Available space: %d. Whitespace: %d. Default radius %d.',
             availableSpace,

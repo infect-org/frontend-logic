@@ -41,6 +41,12 @@ export default class ResistancesFetcher extends Fetcher {
         await super.getData(...params);
     }
 
+    /**
+     * Gets filtered data for a set of filters
+     * @param {object.<string, *[]>} filters   Filters; key is the filterName, values is an array
+     *                                         of selected filters for the filterName
+     * @return {Promise}
+     */
     async getDataForFilters(filters) {
         // Store original URL
         if (!this.baseUrl) this.baseUrl = this.url;
@@ -78,14 +84,14 @@ export default class ResistancesFetcher extends Fetcher {
         let counter = 0;
         data.values.forEach((resistance) => {
 
-            const bacterium = bacteria.find(item => item.id === resistance.bacteriumId);
-            const antibiotic = antibiotics.find(item => item.id === resistance.compoundId);
+            const bacterium = bacteria.find(item => item.id === resistance.microorganismId);
+            const antibiotic = antibiotics.find(item => item.id === resistance.compoundSubstanceId);
 
             // Missing bacterium or antibiotic is not crucial; display error but continue
             if (!antibiotic) {
                 this.handleError({
                     severity: notificationSeverityLevels.warning,
-                    message: `ResistancesFetcher: Antibiotic with ID ${resistance.compoundId} missing, resistance ${JSON.stringify(resistance)} cannot be displayed.`,
+                    message: `ResistancesFetcher: Antibiotic with ID ${resistance.compoundSubstanceId} missing, resistance ${JSON.stringify(resistance)} cannot be displayed.`,
                 });
                 console.error('Antibiotic for resistance %o missing; antibiotics are %o', resistance, antibiotics);
                 return;
@@ -94,7 +100,7 @@ export default class ResistancesFetcher extends Fetcher {
             if (!bacterium) {
                 this.handleError({
                     severity: notificationSeverityLevels.warning,
-                    message: `ResistancesFetcher: Bacterium with ID ${resistance.bacteriumId} missing, resistance ${JSON.stringify(resistance)} cannot be displayed.`,
+                    message: `ResistancesFetcher: Bacterium with ID ${resistance.microorganismId} missing, resistance ${JSON.stringify(resistance)} cannot be displayed.`,
                 });
                 console.error('Bacterium for resistance %o missing; bacteria are %o', resistance, bacteria);
                 return;
@@ -103,18 +109,29 @@ export default class ResistancesFetcher extends Fetcher {
             const resistanceValues = [{
                 type: 'import',
                 value: resistance.resistantPercent / 100,
-                sampleSize: resistance.sampleCount || 0,
+                sampleSize: resistance.modelCount || 0,
                 confidenceInterval: [
                     resistance.confidenceInterval.lowerBound / 100,
                     resistance.confidenceInterval.upperBound / 100,
                 ],
             }];
-            const resistanceObject = new Resistance(resistanceValues, antibiotic, bacterium);
+
+            // Creating a Resistance may fail if e.g. values are not valid; make sure we handle
+            // errors gracefully but ignore the current resistance.
+            let resistanceObject;
+            try {
+                resistanceObject = new Resistance(resistanceValues, antibiotic, bacterium);
+            } catch (err) {
+                this.handleError({
+                    severity: notificationSeverityLevels.warning,
+                    message: `Resistance for ${antibiotic.name} and ${bacterium.name} cannot be displayed: ${err.message}.`,
+                });
+                return;
+            }
 
             // Duplicate resistance
             if (this.store.hasWithId(resistanceObject)) {
-                console.warn(`ResistanceFetcher: Resistance ${JSON.stringify(resistance)} is
-                    a duplicate; an entry for the same bacterium and antibiotic does exist.`);
+                console.warn(`ResistanceFetcher: Resistance ${JSON.stringify(resistance)} is a duplicate; an entry for the same bacterium and antibiotic does exist.`);
                 return;
             }
 
