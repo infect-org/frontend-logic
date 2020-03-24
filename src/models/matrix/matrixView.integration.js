@@ -181,6 +181,16 @@ test('returns height of visible bacteria', (t) => {
 });
 
 
+test('bacterium knows if it has resistances', (t) => {
+    const { resistances, bacteria, matrix } = createValidSet();
+    bacteria.forEach(bact => matrix.addBacterium(bact));
+    t.equal(matrix.sortedBacteria[0].hasResistanceData, false);
+    resistances.forEach(resistance => matrix.addResistance(resistance));
+    t.equal(matrix.sortedBacteria[0].hasResistanceData, true);
+    t.end();
+});
+
+
 /*test('only returns visible bacteria for sortedVisibleBacteria', (t) => {
 	const set = createValidSet();
 	const {matrix} = set;
