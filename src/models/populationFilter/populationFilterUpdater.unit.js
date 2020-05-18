@@ -140,7 +140,7 @@ test('uses preview data if corresponding constructor argument is used', (t) => {
         selectedFilters,
         undefined,
         () => {},
-        true,
+        ['preview', 'active'],
     );
     updater.setup();
 

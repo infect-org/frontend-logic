@@ -112,3 +112,25 @@ test('hasItem does not fail if data is missing', async(t) => {
     t.end();
 });
 
+test('adds data version filters', async(t) => {
+    const { handler, response } = setupData();
+    fetchMock.mock(/\/test.*/, {
+        status: 200,
+        body: JSON.stringify(response),
+    });
+    const store = new RDACounterStore(handler);
+    const fetcher = new RDACounterFetcher({
+        url: '/test',
+        store,
+        handleError: handler,
+        dataVersionStatusIdentifiers: ['a', 'b'],
+    });
+    await fetcher.getData();
+    const calledURL = fetchMock.lastCall()[0];
+    // There is no regionId data: Error is handled gracefully, hasItem returns false
+    t.is(calledURL, '/test?filter={%22dataVersionStatusIdentifiers%22:[%22a%22,%22b%22]}');
+    fetchMock.restore();
+    t.end();
+});
+
+

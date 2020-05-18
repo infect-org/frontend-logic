@@ -80,10 +80,12 @@ export default class InfectApp {
 
     /**
     * @param {object} config
-    * @param {function} config.getURL           Function that takes two arguments (scope and
-    *                                           endpoint) and returns corresponding URL
-    * @param {boolean} config.showPreviewData   If true, preview data will be used (instead of the
-    *                                           regular current dataset)
+    * @param {function} config.getURL            Function that takes two arguments (scope and
+    *                                            endpoint) and returns corresponding URL
+    * @param {boolean} config.previewGuidelines  If true, preview data will be used for guidelines
+    * @param {string[]} config.dataVersionStatusIdentifiers       Array with all identifiers that
+    *                                            should be loaded from RDA, e.g.
+    *                                            ['preview', 'active'].
     */
     constructor(config) {
 
@@ -183,7 +185,7 @@ export default class InfectApp {
             this.selectedFilters,
             this.ageGroupStore,
             this.notificationCenter.handle.bind(this.notificationCenter),
-            this._config.showPreviewData,
+            this._config.dataVersionStatusIdentifiers,
         );
         updater.setup();
 
@@ -225,6 +227,7 @@ export default class InfectApp {
             url: this._config.getURL('rda', 'counter'),
             store: this.rdaCounterStore,
             handleError: this.notificationCenter.handle.bind(this.notificationCenter),
+            dataVersionStatusIdentifiers: this.dataVersionStatusIdentifiers,
         });
         const rdaCounterFetcherPromise = rdaCounterFetcher.getData();
 
