@@ -17,7 +17,7 @@ export default class ResistancesFetcher extends Fetcher {
         // added at run time
         const { dataVersionStatusIdentifiers } = options;
         const url = dataVersionStatusIdentifiers && dataVersionStatusIdentifiers.length ?
-            `${options.url}?filter=${JSON.stringify({ dataVersionStatusIdentifiers })}` :
+            `${options.url}?filter=${JSON.stringify({ dataVersionStatusIdentifier: dataVersionStatusIdentifiers })}` :
             options.url;
         super({ ...options, url });
         const { handleError } = options;

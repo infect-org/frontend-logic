@@ -227,7 +227,7 @@ export default class InfectApp {
             url: this._config.getURL('rda', 'counter'),
             store: this.rdaCounterStore,
             handleError: this.notificationCenter.handle.bind(this.notificationCenter),
-            dataVersionStatusIdentifiers: this.dataVersionStatusIdentifiers,
+            dataVersionStatusIdentifiers: this._config.dataVersionStatusIdentifiers,
         });
         const rdaCounterFetcherPromise = rdaCounterFetcher.getData();
 
