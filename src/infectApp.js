@@ -1,7 +1,7 @@
 /**
 * The main application that sets everything up and brings it together
 */
-import { when, observable, transaction } from 'mobx';
+import { when, observable, transaction, reaction } from 'mobx';
 import debug from 'debug';
 import storeStatus from './helpers/storeStatus.js';
 import AntibioticsStore from './models/antibiotics/antibioticsStore.js';
@@ -247,7 +247,24 @@ export default class InfectApp {
 
 
     _setupOffsetFilters() {
+        // Default offset filters to 20 (infect by anresis)
         this.offsetFilters.setFilter('sampleSize', 'min', 20);
+        // Update sample size offset filter from tenantConfig when it is set
+        reaction(
+            () => {
+                const frontendConfig = this.tenantConfig.getConfig('frontend');
+                if (frontendConfig &&
+                    frontendConfig.userInterface &&
+                    typeof frontendConfig.userInterface.sampleCountDefaultValue === 'number'
+                ) {
+                    return frontendConfig.userInterface.sampleCountDefaultValue;
+                }
+                return undefined;
+            },
+            (sampleCountDefaultValue) => {
+                this.offsetFilters.setFilter('sampleSize', 'min', sampleCountDefaultValue);
+            },
+        );
         this.offsetFilters.setFilter('susceptibility', 'min', 0);
     }
 
