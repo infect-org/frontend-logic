@@ -18,20 +18,22 @@ export default class PopulationFilterUpdater {
      * @param {PropertyMap} selectedFilters
      * @param {Store} ageGroupStore
      * @param {function} handleError
-     * @param {boolean} showPreviewData     If true, use preview data (instead of regular data set)
+     * @param {string[]} dataVersionStatusIdentifiers    Array with all identifiers that
+    *                                                    should be loaded from RDA, e.g.
+    *                                                    ['preview', 'active'].
      */
     constructor(
         resistancesFetcher,
         selectedFilters,
         ageGroupStore,
         handleError,
-        showPreviewData,
+        dataVersionStatusIdentifiers,
     ) {
         this.resistancesFetcher = resistancesFetcher;
         this.selectedFilters = selectedFilters;
         this.ageGroupStore = ageGroupStore;
         this.handleError = handleError;
-        this.showPreviewData = showPreviewData;
+        this.dataVersionStatusIdentifiers = dataVersionStatusIdentifiers;
     }
 
     /**
@@ -51,15 +53,17 @@ export default class PopulationFilterUpdater {
         const region = this.selectedFilters.getFiltersByType(filterTypes.region);
         const patientSetting = this.selectedFilters.getFiltersByType(filterTypes.hospitalStatus);
         const animal = this.selectedFilters.getFiltersByType(filterTypes.animal);
-        const preview = this.showPreviewData ? {
-            dataVersionStatusIdentifier: ['preview', 'active'],
-        } : {};
+        // If dataVersionStatusIdentifiers is set, pass the values to the endpoint
+        const dataVersionConfig = {};
+        if (this.dataVersionStatusIdentifiers && this.dataVersionStatusIdentifiers.length) {
+            dataVersionConfig.dataVersionStatusIdentifier = this.dataVersionStatusIdentifiers;
+        }
         const filters = {
             regionIds: region.map(filter => filter.value),
             patientSettingIds: patientSetting.map(filter => filter.value),
             animalIds: animal.map(filter => filter.value),
             ageGroupIntervals: [],
-            ...preview,
+            ...dataVersionConfig,
         };
 
         // Add daysFrom/daysTo for ageGroups, if user filtered by ageGroups

@@ -12,7 +12,14 @@ export default class ResistancesFetcher extends Fetcher {
     * @param {function} handleException   Exception handler
     */
     constructor(options) {
-        super(options);
+        // Add dataVersionStatusIdentifiers to URL; do it here because we also need to add those
+        // filters to the RDA data call (through PopulationFilterUpdater) where they need to be
+        // added at run time
+        const { dataVersionStatusIdentifiers } = options;
+        const url = dataVersionStatusIdentifiers && dataVersionStatusIdentifiers.length ?
+            `${options.url}?filter=${JSON.stringify({ dataVersionStatusIdentifier: dataVersionStatusIdentifiers })}` :
+            options.url;
+        super({ ...options, url });
         const { handleError } = options;
         this.handleException = handleError;
     }

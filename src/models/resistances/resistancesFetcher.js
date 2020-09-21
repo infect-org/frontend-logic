@@ -1,4 +1,3 @@
-import { transaction } from 'mobx';
 import debug from 'debug';
 import Fetcher from '../../helpers/standardFetcher.js';
 import Resistance from './resistance.js';
@@ -52,6 +51,7 @@ export default class ResistancesFetcher extends Fetcher {
         if (!this.baseUrl) this.baseUrl = this.url;
         this.url = `${this.baseUrl}?filter=${JSON.stringify(filters)}`;
         await this.getData();
+        log('Data for filters gotten');
     }
 
 
