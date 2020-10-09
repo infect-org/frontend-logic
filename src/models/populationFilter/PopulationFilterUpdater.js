@@ -53,6 +53,7 @@ export default class PopulationFilterUpdater {
         const region = this.selectedFilters.getFiltersByType(filterTypes.region);
         const patientSetting = this.selectedFilters.getFiltersByType(filterTypes.hospitalStatus);
         const animal = this.selectedFilters.getFiltersByType(filterTypes.animal);
+        const sampleSource = this.selectedFilters.getFiltersByType(filterTypes.sampleSource);
         // If dataVersionStatusIdentifiers is set, pass the values to the endpoint
         const dataVersionConfig = {};
         if (this.dataVersionStatusIdentifiers && this.dataVersionStatusIdentifiers.length) {
@@ -62,6 +63,7 @@ export default class PopulationFilterUpdater {
             regionIds: region.map(filter => filter.value),
             patientSettingIds: patientSetting.map(filter => filter.value),
             animalIds: animal.map(filter => filter.value),
+            sampleSourceIds: sampleSource.map(filter => filter.value),
             ageGroupIntervals: [],
             ...dataVersionConfig,
         };

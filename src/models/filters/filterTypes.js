@@ -9,4 +9,5 @@ export default Object.freeze({
     substanceClass: 'substanceClass',
     hospitalStatus: 'hospitalStatus',
     animal: 'animal',
+    sampleSource: 'sampleSource',
 });

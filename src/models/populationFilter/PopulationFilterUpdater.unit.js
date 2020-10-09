@@ -41,6 +41,7 @@ test('creates correct headers', (t) => {
         patientSettingIds: [],
         animalIds: [],
         ageGroupIntervals: [],
+        sampleSourceIds: [],
     }]);
 
 
@@ -53,11 +54,16 @@ test('creates correct headers', (t) => {
         type: filterTypes.animal,
         value: 3,
     });
+    selectedFilters.filters.push({
+        type: filterTypes.sampleSource,
+        value: 7,
+    });
     t.deepEqual(resistancesFetcherFilters.slice().pop(), {
         regionIds: [5],
         patientSettingIds: [4],
         animalIds: [3],
         ageGroupIntervals: [],
+        sampleSourceIds: [7],
     });
 
 
@@ -67,7 +73,7 @@ test('creates correct headers', (t) => {
         value: 5,
     });
     // Was called 3 times (for all relevant filter changes above)
-    t.equal(resistancesFetcherFilters.length, 3);
+    t.equal(resistancesFetcherFilters.length, 4);
 
     // Remove filters
     selectedFilters.filters.clear();
@@ -76,6 +82,7 @@ test('creates correct headers', (t) => {
         patientSettingIds: [],
         animalIds: [],
         ageGroupIntervals: [],
+        sampleSourceIds: [],
     });
 
     t.end();
@@ -99,33 +106,27 @@ test('creates correct headers for ageGroups', (t) => {
         type: filterTypes.ageGroup,
         value: 5,
     });
-    t.deepEqual(resistancesFetcherFilters.slice().pop(), {
-        regionIds: [],
-        patientSettingIds: [],
-        animalIds: [],
-        ageGroupIntervals: [{ daysFrom: 1, daysTo: 7 }],
-    });
+    t.deepEqual(
+        resistancesFetcherFilters.slice().pop().ageGroupIntervals,
+        [{ daysFrom: 1, daysTo: 7 }],
+    );
 
     // Add additional filter
     selectedFilters.filters.push({
         type: filterTypes.ageGroup,
         value: 7,
     });
-    t.deepEqual(resistancesFetcherFilters.slice().pop(), {
-        regionIds: [],
-        patientSettingIds: [],
-        animalIds: [],
-        ageGroupIntervals: [{ daysFrom: 1, daysTo: 7 }, { daysFrom: 10, daysTo: 11 }],
-    });
+    t.deepEqual(
+        resistancesFetcherFilters.slice().pop().ageGroupIntervals,
+        [{ daysFrom: 1, daysTo: 7 }, { daysFrom: 10, daysTo: 11 }],
+    );
 
     // Remove ageGroupFilters
     selectedFilters.filters.splice(0, 2);
-    t.deepEqual(resistancesFetcherFilters.slice().pop(), {
-        regionIds: [],
-        patientSettingIds: [],
-        animalIds: [],
-        ageGroupIntervals: [],
-    });
+    t.deepEqual(
+        resistancesFetcherFilters.slice().pop().ageGroupIntervals,
+        [],
+    );
 
     t.end();
 });
@@ -144,13 +145,7 @@ test('uses preview data if corresponding constructor argument is used', (t) => {
     );
     updater.setup();
 
-    t.deepEqual(updater.filterHeaders, {
-        regionIds: [],
-        patientSettingIds: [],
-        animalIds: [],
-        ageGroupIntervals: [],
-        dataVersionStatusIdentifier: ['preview', 'active'],
-    });
+    t.deepEqual(updater.filterHeaders.dataVersionStatusIdentifier, ['preview', 'active']);
 
     t.end();
 
