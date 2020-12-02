@@ -10,9 +10,9 @@ function setupData() {
 	const bacterium = new Bacterium(4, 'testB');
 	const antibiotic = new Antibiotic(4, 'testA', substanceClass);
 	const resistance = new Resistance([
-		{ type: 'class', sampleSize: 50, value: 0.3 }
-		, { type: 'import', sampleSize: 40, value: 0.7 }
-		, { type: 'default', sampleSize: 20, value: 0.1, confidenceInterval: [0.05, 0.4] }
+		{ type: 'quantitativeMHK', sampleSize: 50, value: 0.3 }
+		, { type: 'qualitative', sampleSize: 40, value: 0.7 }
+		, { type: 'qualitative', sampleSize: 20, value: 0.1, confidenceInterval: [0.05, 0.4] }
 	], antibiotic, bacterium);
 	return {
 		substanceClass
@@ -38,6 +38,6 @@ test('passes data to resistance values', (t) => {
 
 test('sorts by precision', (t) => {
 	const { resistance } = setupData();
-	t.deepEqual(resistance.getValuesByPrecision().map((val) => val.value), [0.7, 0.3, 0.1]);
+	t.deepEqual(resistance.getValuesByPrecision().map((val) => val.value), [0.7, 0.1, 0.3]);
 	t.end();
 });

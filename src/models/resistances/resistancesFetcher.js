@@ -40,6 +40,7 @@ export default class ResistancesFetcher extends Fetcher {
         await super.getData(...params);
     }
 
+
     /**
      * Gets filtered data for a set of filters
      * @param {object.<string, *[]>} filters   Filters; key is the filterName, values is an array
@@ -71,8 +72,20 @@ export default class ResistancesFetcher extends Fetcher {
 
         this.store.clear();
 
+
+        // TODO VET 2020: Remove the block
         const bacteria = Array.from(this.stores.bacteria.get().values());
         const antibiotics = Array.from(this.stores.antibiotics.get().values());
+        const quantitativeData = {
+            compoundSubstanceId: antibiotics.find(item => item.name === 'Penicillin G').id,
+            mhk90: 0.06,
+            microorganismId: bacteria.find(item => item.name === 'Achromobacter spp.').id,
+            modelCount: 2170,
+        };
+        console.log(quantitativeData);
+        // data.values.push(quantitativeData);
+        // END TODO
+
 
 
         // Values missing: There's nothing we could add
@@ -82,65 +95,97 @@ export default class ResistancesFetcher extends Fetcher {
         }
 
         let counter = 0;
-        data.values.forEach((resistance) => {
+        data.values.forEach((resistanceData) => {
+            counter++;
 
-            const bacterium = bacteria.find(item => item.id === resistance.microorganismId);
-            const antibiotic = antibiotics.find(item => item.id === resistance.compoundSubstanceId);
+            let resistance;
 
-            // Missing bacterium or antibiotic is not crucial; display error but continue
-            if (!antibiotic) {
-                this.handleError({
-                    severity: notificationSeverityLevels.warning,
-                    message: `ResistancesFetcher: Antibiotic with ID ${resistance.compoundSubstanceId} missing, resistance ${JSON.stringify(resistance)} cannot be displayed.`,
-                });
-                console.error('Antibiotic for resistance %o missing; antibiotics are %o', resistance, antibiotics);
-                return;
+            // If resistance has a resistanctPercent parameter, it's a qualitative data point. 
+            // Handle it.
+            if (resistanceData.resistantPercent !== undefined) {
+                resistance = this.handleQualitativeData(resistanceData);
+            } else {
+                resistance = this.handleQuantitativeData(resistanceData);
             }
 
-            if (!bacterium) {
-                this.handleError({
-                    severity: notificationSeverityLevels.warning,
-                    message: `ResistancesFetcher: Bacterium with ID ${resistance.microorganismId} missing, resistance ${JSON.stringify(resistance)} cannot be displayed.`,
-                });
-                console.error('Bacterium for resistance %o missing; bacteria are %o', resistance, bacteria);
-                return;
-            }
-
-            const resistanceValues = [{
-                type: 'import',
-                value: resistance.resistantPercent / 100,
-                sampleSize: resistance.modelCount || 0,
-                confidenceInterval: [
-                    resistance.confidenceInterval.lowerBound / 100,
-                    resistance.confidenceInterval.upperBound / 100,
-                ],
-            }];
-
-            // Creating a Resistance may fail if e.g. values are not valid; make sure we handle
-            // errors gracefully but ignore the current resistance.
-            let resistanceObject;
-            try {
-                resistanceObject = new Resistance(resistanceValues, antibiotic, bacterium);
-            } catch (err) {
-                this.handleError({
-                    severity: notificationSeverityLevels.warning,
-                    message: `Resistance for ${antibiotic.name} and ${bacterium.name} cannot be displayed: ${err.message}.`,
-                });
-                return;
-            }
-
-            // Duplicate resistance
-            if (this.store.hasWithId(resistanceObject)) {
-                console.warn(`ResistanceFetcher: Resistance ${JSON.stringify(resistance)} is a duplicate; an entry for the same bacterium and antibiotic does exist.`);
-                return;
-            }
-
-            this.store.add(resistanceObject);
-            counter += 1;
+            // If handler fails, do not add failed data to store
+            if (!resistance) return;
+            this.store.add(resistance);
 
         });
 
+
         log(`Added ${counter} resistances.`);
+    }
+
+
+    /**
+     * Handles a qualitative resistance (with a percent based susceptibility that was calculated
+     * based on breakpoints. Quantitiative resistances do not have known breakpoints.
+     * @param {object} resistance       Resistance from server
+     */
+    handleQualitativeData(resistance) {
+
+        const bacteria = Array.from(this.stores.bacteria.get().values());
+        const antibiotics = Array.from(this.stores.antibiotics.get().values());
+
+        const bacterium = bacteria.find(item => item.id === resistance.microorganismId);
+        const antibiotic = antibiotics.find(item => item.id === resistance.compoundSubstanceId);
+
+        // Missing bacterium or antibiotic is not crucial; display error but continue
+        if (!antibiotic) {
+            this.handleError({
+                severity: notificationSeverityLevels.warning,
+                message: `ResistancesFetcher: Antibiotic with ID ${resistance.compoundSubstanceId} missing, resistance ${JSON.stringify(resistance)} cannot be displayed.`,
+            });
+            console.error('Antibiotic for resistance %o missing; antibiotics are %o', resistance, antibiotics);
+            return;
+        }
+
+        if (!bacterium) {
+            this.handleError({
+                severity: notificationSeverityLevels.warning,
+                message: `ResistancesFetcher: Bacterium with ID ${resistance.microorganismId} missing, resistance ${JSON.stringify(resistance)} cannot be displayed.`,
+            });
+            console.error('Bacterium for resistance %o missing; bacteria are %o', resistance, bacteria);
+            return;
+        }
+
+        const resistanceValues = [{
+            type: 'qualitative',
+            value: resistance.resistantPercent / 100,
+            sampleSize: resistance.modelCount || 0,
+            confidenceInterval: [
+                resistance.confidenceInterval.lowerBound / 100,
+                resistance.confidenceInterval.upperBound / 100,
+            ],
+        }];
+
+        // Creating a Resistance may fail if e.g. values are not valid; make sure we handle
+        // errors gracefully but ignore the current resistance.
+        let resistanceObject;
+        try {
+            resistanceObject = new Resistance(resistanceValues, antibiotic, bacterium);
+        } catch (err) {
+            this.handleError({
+                severity: notificationSeverityLevels.warning,
+                message: `Resistance for ${antibiotic.name} and ${bacterium.name} cannot be displayed: ${err.message}.`,
+            });
+            return;
+        }
+
+        // Duplicate resistance
+        if (this.store.hasWithId(resistanceObject)) {
+            console.warn(`ResistanceFetcher: Resistance ${JSON.stringify(resistance)} is a duplicate; an entry for the same bacterium and antibiotic does exist.`);
+            return;
+        }
+
+        return resistanceObject;
+
+    }
+
+    handleQuantitativeData() {
+        console.log('QUALITATIVE');
     }
 
 }

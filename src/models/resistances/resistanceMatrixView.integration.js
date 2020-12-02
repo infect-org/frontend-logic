@@ -8,7 +8,7 @@ import OffsetFilters from '../filters/offsetFilters';
 
 function setupData(sampleSize = 1000, value = 1, matrix = {}) {
 	const resistance = new Resistance(
-		[{ type: 'import', sampleSize: sampleSize, value: value }]
+		[{ type: 'qualitative', sampleSize: sampleSize, value: value }]
 		, new Antibiotic(5, 'testAB', new SubstanceClass(1, 'testSC'))
 		, new Bacterium(4, 'testBact')
 	);
@@ -22,7 +22,7 @@ function setupData(sampleSize = 1000, value = 1, matrix = {}) {
 
 test('returns most precise value', (t) => {
 	const { resistanceMatrixView } = setupData();
-	t.equals(resistanceMatrixView.mostPreciseValue.type.identifier, 'importResistance');
+	t.equals(resistanceMatrixView.mostPreciseValue.type.identifier, 'qualitative');
 	t.end(); 
 });
 
