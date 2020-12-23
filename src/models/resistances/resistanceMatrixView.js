@@ -60,15 +60,13 @@ export default class ResistanceMatrixView {
 			, l: lightness
 		});
 		return backgroundColor;
-		// return `#${backgroundColor.toHex()}`;
 	}
 
 	@computed get fontColor() {
-		const fontColor = color(this.backgroundColor);
+		const fontColor = this.backgroundColor.clone();
 		fontColor.darken(50);
 		fontColor.saturate(20);
 		return fontColor;
-		//return `#${fontColor.toHex()}`;
 	}
 
 	@computed get xPosition() {
