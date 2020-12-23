@@ -57,7 +57,7 @@ test('calculates colors', (t) => {
 	// Check if backgroundColor was not modified by fontColor (this happened bevore …)
 	t.deepEquals(resistanceMatrixView1.backgroundColor.toRgb(), backgroundExpectation);
 	t.deepEquals(resistanceMatrixView2.backgroundColor.toRgb(), { r: 224, g: 170, b: 108, a: 1 });
-	t.deepEquals(resistanceMatrixView2.fontColor.toRgb(), { r: 71, g: 41, b: 6, a: 1 });
+	t.deepEquals(resistanceMatrixView2.fontColor.toRgb(), { r: 71, g: 40, b: 6, a: 1 });
 	t.end();
 });
 
