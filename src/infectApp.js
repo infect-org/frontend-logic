@@ -1,7 +1,7 @@
 /**
 * The main application that sets everything up and brings it together
 */
-import { when, observable, transaction, reaction } from 'mobx';
+import { when, observable, transaction, reaction, configure } from 'mobx';
 import debug from 'debug';
 import storeStatus from './helpers/storeStatus.js';
 import AntibioticsStore from './models/antibiotics/antibioticsStore.js';
@@ -36,6 +36,11 @@ import GuidelineSelectedFiltersBridge from
 import Store from './helpers/Store.js';
 
 
+configure({
+    // IE11 and React Native don't like proxies
+    useProxies: 'never',
+    enforceActions: 'always',
+});
 
 const log = debug('infect:App');
 
