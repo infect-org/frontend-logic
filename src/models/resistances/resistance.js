@@ -1,4 +1,4 @@
-import { observable, action } from 'mobx';
+import { observable, action, makeObservable } from 'mobx';
 import ResistanceValue from './resistanceValue';
 
 export default class Resistance {
@@ -7,7 +7,7 @@ export default class Resistance {
     * Values for different resistanceTypes. Only values must be observable, antibiotics and
     * bacteria are not going to change.
     */
-    @observable values = [];
+    values = [];
 
     /**
     * @param {Array} values             Array of values, each an object with properties type,
@@ -16,6 +16,11 @@ export default class Resistance {
     * @param {Bacterium} bacterium      Bacterium
     */
     constructor(values, antibiotic, bacterium) {
+        makeObservable(this, {
+            values: observable,
+            addResistanceValue: action
+        });
+
         if (!Array.isArray(values)) {
             throw new Error('Resistance: First argument must be an Array of resistance values');
         }
@@ -30,7 +35,7 @@ export default class Resistance {
      * Adds a value
      * @private
      */
-    @action addResistanceValue(resistanceValue) {
+    addResistanceValue(resistanceValue) {
         this.values.push(new ResistanceValue(
             resistanceValue.type,
             resistanceValue.value,

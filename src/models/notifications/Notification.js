@@ -1,4 +1,4 @@
-import { observable } from 'mobx';
+import { observable, makeObservable } from 'mobx';
 
 /**
  * Notification model; needed to make hide property observable.
@@ -8,7 +8,7 @@ export default class Notification {
     /**
      * Hide property can be set to true by views (React components) if message was hidden by user
      */
-    @observable hide = false;
+    hide = false;
 
     /**
      * @param {Object} notification
@@ -17,8 +17,12 @@ export default class Notification {
      * @param {Error} [notification.error]
      */
     constructor(notification) {
-        this.message = notification.message;
-        this.error = notification.error;
-        this.severity = notification.severity;
+     makeObservable(this, {
+      hide: observable
+     });
+
+     this.message = notification.message;
+     this.error = notification.error;
+     this.severity = notification.severity;
     }
 }

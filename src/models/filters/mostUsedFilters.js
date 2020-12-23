@@ -1,4 +1,4 @@
-import { action, observable, reaction } from 'mobx';
+import { action, observable, reaction, makeObservable } from 'mobx';
 
 /**
 * Watches selectedFilters, creates a top score. 
@@ -9,13 +9,17 @@ export default class MostUsedFilters {
 	/**
 	* Contains objects with count and filter. Filter is a filterValue. 
 	*/
-	@observable.shallow mostUsedFilters = [];
+	mostUsedFilters = [];
 
 	constructor(selectedFilters) {
-		// All filters available. Empty while data is being loaded.
-		this._selectedFilters = selectedFilters;
-		this._setupSelectedFiltersWatcher();
-	}
+        makeObservable(this, {
+            mostUsedFilters: observable.shallow
+        });
+
+        // All filters available. Empty while data is being loaded.
+        this._selectedFilters = selectedFilters;
+        this._setupSelectedFiltersWatcher();
+    }
 
 	/**
 	* Whenever selected filters change, add all selected filters to mostUsedFilters or update

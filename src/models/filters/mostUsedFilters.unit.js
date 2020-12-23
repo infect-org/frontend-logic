@@ -1,20 +1,30 @@
 import test from 'tape';
 import MostUsedFilters from './mostUsedFilters';
-import { observable, action } from 'mobx';
+import { observable, action, makeObservable } from 'mobx';
 
 function setupData() {
 	class SelectedFilters {
-		@observable filterChanges = 0;
-		@observable originalFilters = [];
-		@action addFilter(filter) {
+        filterChanges = 0;
+        originalFilters = [];
+
+        constructor() {
+            makeObservable(this, {
+                filterChanges: observable,
+                originalFilters: observable,
+                addFilter: action,
+                removeFilter: action
+            });
+        }
+
+        addFilter(filter) {
 			this.filterChanges++;
 			this.originalFilters.push(filter);
 		}
-		@action removeFilter(filter) {
+        removeFilter(filter) {
 			this.originalFilters.splice(this.originalFilters.indexOf(filter), 1);
 			this.filterChanges++;
 		}
-	}
+    }
 	return {
 		SelectedFilters
 	};

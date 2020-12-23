@@ -1,7 +1,7 @@
 /**
 * The main application that sets everything up and brings it together
 */
-import { when, observable, transaction, reaction, configure } from 'mobx';
+import { when, observable, transaction, reaction, configure, makeObservable } from 'mobx';
 import debug from 'debug';
 import storeStatus from './helpers/storeStatus.js';
 import AntibioticsStore from './models/antibiotics/antibioticsStore.js';
@@ -46,7 +46,7 @@ const log = debug('infect:App');
 
 export default class InfectApp {
 
-    @observable views = {
+    views = {
         matrix: new MatrixView(),
         drawer: new DrawerViewModel(),
     };
@@ -93,6 +93,9 @@ export default class InfectApp {
     *                                            ['preview', 'active'].
     */
     constructor(config) {
+        makeObservable(this, {
+            views: observable
+        });
 
         this._config = config;
 
@@ -104,7 +107,6 @@ export default class InfectApp {
         this.views.matrix.setupDataWatchers(this.antibiotics, this.bacteria, this.resistances);
 
         updateDrawerFromGuidelines(this.guidelines, this.views.drawer, this.notificationCenter);
-
     }
 
 

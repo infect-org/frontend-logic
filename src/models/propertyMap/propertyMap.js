@@ -1,5 +1,5 @@
 import SearchableMap from './searchableMap';
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 import debug from 'debug';
 import Fuse from 'fuse.js';
 const log = debug ('infect:PropertyMap');
@@ -18,25 +18,28 @@ export default class PropertyMap {
 	* easily found.
 	*/
 	constructor() {
+        makeObservable(this, {
+            propertyValues: computed
+        });
 
-		// Objects with properties: name, niceName and entityType; e.g.
-		// {
-		//   name: 'gram', // This is the property on the bacterium we'll be filtering for
-		//   niceName: 'Gram',
-		//   entityType: 'bacterium'
-		// }
-		this._properties = new SearchableMap();
-		// Objects with property values: value, niceValue and property (link to a property in 
-		// this._properties), e.g. 
-		// {
-		//   name: 'gram+', // This is the value we'll be filtering for
-		//   niceName: 'Gram +'
-		//   property: { see property above }
-		// }
-		this._propertyValues = new SearchableMap();
-		this._configurations = {};
+        // Objects with properties: name, niceName and entityType; e.g.
+        // {
+        //   name: 'gram', // This is the property on the bacterium we'll be filtering for
+        //   niceName: 'Gram',
+        //   entityType: 'bacterium'
+        // }
+        this._properties = new SearchableMap();
+        // Objects with property values: value, niceValue and property (link to a property in 
+        // this._properties), e.g. 
+        // {
+        //   name: 'gram+', // This is the value we'll be filtering for
+        //   niceName: 'Gram +'
+        //   property: { see property above }
+        // }
+        this._propertyValues = new SearchableMap();
+        this._configurations = {};
 
-		this._fuseOptions = {
+        this._fuseOptions = {
 			shouldSort: true
 			, threshold: 0.3
 			, tokenize: true
@@ -46,11 +49,10 @@ export default class PropertyMap {
 				, { name: 'property.niceName', weight: 0.3 }
 			]
 		};
+    }
 
-	}
 
-
-	@computed get propertyValues() {
+	get propertyValues() {
 		return this._propertyValues;
 	}
 

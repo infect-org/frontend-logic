@@ -1,17 +1,33 @@
 import test from 'tape';
-import { observable, action } from 'mobx';
+import { observable, action, makeObservable } from 'mobx';
 import updateDrawerFromGuidelines from './updateDrawerFromGuidelines.js';
 
 function setupData() {
     class GuidelineStore {
-        @observable selectedGuideline;
-        @action setSelectedGuideline(guideline) {
+        selectedGuideline;
+
+        constructor() {
+            makeObservable(this, {
+                selectedGuideline: observable,
+                setSelectedGuideline: action
+            });
+        }
+
+        setSelectedGuideline(guideline) {
             this.selectedGuideline = guideline;
         }
     }
     class Guideline {
-        @observable selectedDiagnosis;
-        @action setSelectedDiagnosis(diagnosis) {
+        selectedDiagnosis;
+
+        constructor() {
+            makeObservable(this, {
+                selectedDiagnosis: observable,
+                setSelectedDiagnosis: action
+            });
+        }
+
+        setSelectedDiagnosis(diagnosis) {
             this.selectedDiagnosis = diagnosis;
         }
     }

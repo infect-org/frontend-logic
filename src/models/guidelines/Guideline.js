@@ -1,4 +1,4 @@
-import { observable, action } from 'mobx';
+import { observable, action, makeObservable } from 'mobx';
 import debug from 'debug';
 
 const log = debug('infect:Guideline');
@@ -13,7 +13,7 @@ export default class Guideline {
      * Holds the diagnosis that the user selected; matrix is highlighted correspondingly, diagnosis
      * might be displayed in drawer.
      */
-    @observable selectedDiagnosis;
+    selectedDiagnosis;
 
     /**
      * @param {Object} param
@@ -31,6 +31,10 @@ export default class Guideline {
         markdownDisclaimer = '',
         contactEmail,
     } = {}) {
+        makeObservable(this, {
+            selectedDiagnosis: observable,
+            selectDiagnosis: action
+        });
 
         if (typeof id !== 'number') {
             throw new Error(`Guideline: Constructor argument id must be a number, is ${id}.`);
@@ -53,7 +57,7 @@ export default class Guideline {
      * Update selected diagnosis
      * @param  {Diagnosis} [diagnosis]  Diagnosis to select
      */
-    @action selectDiagnosis(diagnosis) {
+    selectDiagnosis(diagnosis) {
         // Check if diagnosis is part of this.diagnoses
         if (diagnosis !== undefined && !this.diagnoses.includes(diagnosis)) {
             throw new Error(`Guideline: Selected diagnosis ${JSON.stringify(diagnosis)} is not part of this guideline's diagnoses.`);

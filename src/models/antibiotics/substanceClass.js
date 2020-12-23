@@ -1,33 +1,38 @@
-import { computed, observable, action } from 'mobx';
+import { computed, observable, action, makeObservable } from 'mobx';
 import debug from 'debug';
 const log = debug('infect:SubstanceClass');
 
 class SubstanceClass {
 
-	@observable _used = false;
+	_used = false;
 
 	constructor(id, name, parent, properties = {}) {
+        makeObservable(this, {
+            _used: observable,
+            setUsed: action,
+            used: computed
+        });
 
-		const debugData = { id, name, parent, properties };
-		log('Create SubstanceClass for data %o', debugData);
+        const debugData = { id, name, parent, properties };
+        log('Create SubstanceClass for data %o', debugData);
 
-		if (id === undefined) throw new Error(`SubstanceClass: Constructor argument 'id' must be 
+        if (id === undefined) throw new Error(`SubstanceClass: Constructor argument 'id' must be 
 			set, is undefined for ${ JSON.stringify(debugData )}.`);
-		if (typeof name !== 'string') throw new Error(`SubstanceClass: Argument 'name' must be
+        if (typeof name !== 'string') throw new Error(`SubstanceClass: Argument 'name' must be
 			a string, is ${ typeof name }. Arguments are ${ JSON.stringify(debugData )}.`);
-		if (parent && !(parent instanceof SubstanceClass)) throw new Error(`SubstanceClass: parent 
+        if (parent && !(parent instanceof SubstanceClass)) throw new Error(`SubstanceClass: parent 
 			must be an instance of SubstanceClass, is %O`, parent);
 
-		this.id = id;
-		this.name = name;
-		// Parent property shall not be set if not available (and not .parent = undefined)
-		if (parent) this.parent = parent;
+        this.id = id;
+        this.name = name;
+        // Parent property shall not be set if not available (and not .parent = undefined)
+        if (parent) this.parent = parent;
 
-		// Expanded is true by default
-		this.expanded = true;
+        // Expanded is true by default
+        this.expanded = true;
 
-		// Is the color property valid?
-		if (properties.hasOwnProperty('color')) {
+        // Is the color property valid?
+        if (properties.hasOwnProperty('color')) {
 			const color = properties.color;
 			if (typeof color !== 'string') throw new Error(`SubstanceClassComponent: Color must be a string, is ${ typeof color }.`);
 			const split = color.split(/\s*\/\s*/);
@@ -43,12 +48,11 @@ class SubstanceClass {
 		}
 
 
-		// Store properties
-		Object.keys(properties).forEach((key) => {
+        // Store properties
+        Object.keys(properties).forEach((key) => {
 			this[key] = properties[key];
 		});
-
-	}
+    }
 
 	/**
 	* Returns all parent substance classes, youngest (child) first.
@@ -62,11 +66,11 @@ class SubstanceClass {
 		return classes.slice(1);
 	}
 
-	@action setUsed(used) {
+	setUsed(used) {
 		this._used = used;
 	}
 
-	@computed get used() {
+	get used() {
 		return this._used;
 	}
 

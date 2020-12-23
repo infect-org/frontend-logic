@@ -1,4 +1,4 @@
-import { observable, action } from 'mobx';
+import { action, makeObservable, observable } from 'mobx';
 import BaseStore from '../../helpers/BaseStore.js';
 
 /**
@@ -6,8 +6,18 @@ import BaseStore from '../../helpers/BaseStore.js';
  */
 export default class TenantConfigStore extends BaseStore {
 
-    @observable featureFlags = new Map();
-    @observable config = new Map();
+    featureFlags = new Map();
+    config = new Map();
+
+    constructor(...params) {
+        super(...params);
+        makeObservable({
+            featureFlags: observable,
+            config: observable,
+            validateAndSetFeatureFlags: action,
+            validateAndSetConfig: action,
+        });
+    }
 
     setData(data) {
         if (!data || typeof data !== 'object' || data === null || data.constructor !== Object) {
@@ -23,7 +33,7 @@ export default class TenantConfigStore extends BaseStore {
      *                          of objects with properties identifier (string) and enabled (boolean)
      * @private
      */
-    @action validateAndSetFeatureFlags(data) {
+    validateAndSetFeatureFlags(data) {
         if (!Array.isArray(data.featureFlags)) {
             throw new Error(`TenantConfigStore: Property futureFlags on tenantConfig must be an array, is ${JSON.stringify(data.featureFlags)}`);
         }
@@ -42,7 +52,7 @@ export default class TenantConfigStore extends BaseStore {
      *                          of objects with properties identifier (string) and config (any)
      * @private
      */
-    @action validateAndSetConfig(data) {
+    validateAndSetConfig(data) {
         if (!Array.isArray(data.configuration)) {
             throw new Error(`TenantConfigStore: Expected data.configuration to be an array, but is ${JSON.stringify(data.configuration)}`);
         }

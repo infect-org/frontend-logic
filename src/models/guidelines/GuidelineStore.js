@@ -1,5 +1,5 @@
 import debug from 'debug';
-import { observable, action } from 'mobx';
+import { observable, action, makeObservable } from 'mobx';
 import Store from '../../helpers/Store.js';
 import searchDiagnoses from './searchDiagnoses.js';
 
@@ -10,13 +10,22 @@ const log = debug('infect:GuidelineStore');
  */
 export default class GuidelineStore extends Store {
 
-    @observable selectedGuideline;
+    selectedGuideline = null;
+
+    constructor(...params) {
+        super(...params);
+        makeObservable({
+            selectedGuideline: observable,
+            add: action,
+            selectGuideline: action,
+        });
+    }
 
     /**
      * Adds a guideline to the store; automatically sets this.selectedGuideline to first guideline
      * added
      */
-    @action add(guideline, ...params) {
+    add(guideline, ...params) {
         log('Add guideline %o', guideline);
         super.add(guideline, ...params);
         if (!this.selectedGuideline) this.selectedGuideline = guideline;
@@ -26,7 +35,7 @@ export default class GuidelineStore extends Store {
      * Updates the currently selected guideline
      * @param {Guideline} [selectedGuideline]
      */
-    @action selectGuideline(selectedGuideline) {
+    selectGuideline(selectedGuideline) {
         this.selectedGuideline = selectedGuideline;
     }
 

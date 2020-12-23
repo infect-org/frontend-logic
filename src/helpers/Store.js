@@ -1,4 +1,4 @@
-import { observable, action } from 'mobx';
+import { observable, action, makeObservable } from 'mobx';
 import BaseStore from './BaseStore.js';
 
 /**
@@ -22,6 +22,13 @@ export default class Store extends BaseStore {
     */
     constructor(values = [], idGeneratorFunction) {
         super();
+
+        makeObservable(this, {
+            clear: action,
+            add: action,
+            remove: action
+        });
+
         this._idGeneratorFunction = idGeneratorFunction;
 
         // If values are passed, add them
@@ -49,7 +56,7 @@ export default class Store extends BaseStore {
     /**
     * Needed for resistances that need to be cleared when new data is loaded.
     */
-    @action clear() {
+    clear() {
         this._items.clear();
     }
 
@@ -60,7 +67,7 @@ export default class Store extends BaseStore {
      *                              the same id. Defaults to false. If you try to overwrite an
      *                              existing item, an error is thrown.
      */
-    @action add(item, overwrite) {
+    add(item, overwrite) {
         const id = this._getItemId(item);
         if (id === undefined) {
             throw new Error(`Store: Field id is missing on item ${JSON.stringify(item)}.`);
@@ -82,7 +89,7 @@ export default class Store extends BaseStore {
      * Removes an item from store
      * @param  {*} item     The item you want to remove
      */
-    @action remove(item) {
+    remove(item) {
         const id = this._getItemId(item);
         this._items.delete(id);
     }

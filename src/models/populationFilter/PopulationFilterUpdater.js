@@ -1,5 +1,5 @@
 import debug from 'debug';
-import { computed, reaction } from 'mobx';
+import { computed, reaction, makeObservable } from 'mobx';
 import filterTypes from '../filters/filterTypes';
 
 const log = debug('infect:PopulationFilterUpdater');
@@ -29,6 +29,10 @@ export default class PopulationFilterUpdater {
         handleError,
         dataVersionStatusIdentifiers,
     ) {
+        makeObservable(this, {
+            filterHeaders: computed
+        });
+
         this.resistancesFetcher = resistancesFetcher;
         this.selectedFilters = selectedFilters;
         this.ageGroupStore = ageGroupStore;
@@ -49,7 +53,7 @@ export default class PopulationFilterUpdater {
      * @return {Object}         Filters for RDA call
      * @private
      */
-    @computed get filterHeaders() {
+    get filterHeaders() {
         const region = this.selectedFilters.getFiltersByType(filterTypes.region);
         const patientSetting = this.selectedFilters.getFiltersByType(filterTypes.hospitalStatus);
         const animal = this.selectedFilters.getFiltersByType(filterTypes.animal);

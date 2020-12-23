@@ -1,5 +1,5 @@
 import color from 'tinycolor2';
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 import debug from 'debug';
 import getRelativeValue from '../../helpers/getRelativeValue';
 
@@ -13,23 +13,34 @@ const log = debug('infect:ResistanceMatrixView');
 export default class ResistanceMatrixView {
 	
 	constructor(resistance, matrix) {
-		this._matrixView = matrix;
-		this.resistance = resistance;
-	}
+        makeObservable(this, {
+            visible: computed,
+            mostPreciseValue: computed,
+            radius: computed,
+            backgroundColor: computed,
+            fontColor: computed,
+            xPosition: computed,
+            yPosition: computed,
+            matchesOffsets: computed
+        });
+
+        this._matrixView = matrix;
+        this.resistance = resistance;
+    }
 
 	_getRelativeColorValue(value, min = 0, max = 1) {
 		return min + (max - min) * value;
 	}
 
-	@computed get visible() {
+	get visible() {
 		return !!(this.xPosition && this.yPosition);
 	}
 
-	@computed get mostPreciseValue() {
+	get mostPreciseValue() {
 		return this.resistance.getValuesByPrecision()[0];
 	}
 
-	@computed get radius() {
+	get radius() {
 		const min = this._matrixView.sampleSizeExtremes.min;
 		// Assume all sample sizes above 1000 are good enough, see
 		// https://github.com/infect-org/frontend/issues/45
@@ -45,7 +56,7 @@ export default class ResistanceMatrixView {
 		return radius;
 	}
 
-	@computed get backgroundColor() {
+	get backgroundColor() {
 		const bestValue = this.mostPreciseValue.value;
 		// Use log scale (values < 70% don't really matter) – differentiate well between
 		// 70 and 100
@@ -62,24 +73,24 @@ export default class ResistanceMatrixView {
 		return backgroundColor;
 	}
 
-	@computed get fontColor() {
+	get fontColor() {
 		const fontColor = this.backgroundColor.clone();
 		fontColor.darken(50);
 		fontColor.saturate(20);
 		return fontColor;
 	}
 
-	@computed get xPosition() {
+	get xPosition() {
 		const abView = this._matrixView.getAntibioticView(this.resistance.antibiotic);
 		return this._matrixView.xPositions.get(abView);
 	}
 
-	@computed get yPosition() {
+	get yPosition() {
 		const bactView = this._matrixView.getBacteriumView(this.resistance.bacterium);
 		return this._matrixView.yPositions.get(bactView);
 	}
 
-	@computed get matchesOffsets() {
+	get matchesOffsets() {
 		const offsets = this._matrixView.getOffsetFilters().filters;
 		const resistance = this.mostPreciseValue;
 		return resistance.sampleSize >= offsets.get('sampleSize').min &&

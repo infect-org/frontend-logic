@@ -1,4 +1,4 @@
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 import doFiltersMatch from '../filters/doFiltersMatch';
 
 /**
@@ -8,15 +8,19 @@ import doFiltersMatch from '../filters/doFiltersMatch';
 class AntibioticMatrixView {
 
 	constructor(antibiotic, matrixView) {
-		this.antibiotic = antibiotic;
-		this._matrixView = matrixView;
-	}
+        makeObservable(this, {
+            visible: computed
+        });
+
+        this.antibiotic = antibiotic;
+        this._matrixView = matrixView;
+    }
 
 	setDimensions(width, height) {
 		this._matrixView.setAntibioticLabelDimensions(this, width, height);
 	}
 
-	@computed get visible() {
+	get visible() {
 		const abFilters = this._matrixView.selectedFilters.getFiltersByType('antibiotic');
 		const abVisible = doFiltersMatch(this.antibiotic, abFilters);
 		if (!abVisible) return false;

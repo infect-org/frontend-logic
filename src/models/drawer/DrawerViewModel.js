@@ -1,5 +1,5 @@
 import debug from 'debug';
-import { observable, action, computed } from 'mobx';
+import { observable, action, computed, makeObservable } from 'mobx';
 import Guideline from '../guidelines/Guideline.js';
 
 const log = debug('infect:DrawerViewModel');
@@ -9,8 +9,7 @@ const log = debug('infect:DrawerViewModel');
  * and hold certain information (pharmacological data, guideline …)
  */
 export default class DrawerViewModel {
-
-    @observable isOpen = false;
+    isOpen = false;
 
     /**
      * We expose strings as selected contentType, because strings are easier to consume than our
@@ -25,12 +24,23 @@ export default class DrawerViewModel {
     /**
      * Holds content to be displayed in drawer. Must be an instance of the supported content types.
      */
-    @observable content;
+    content;
+
+    constructor() {
+        makeObservable(this, {
+            isOpen: observable,
+            content: observable,
+            open: action,
+            close: action,
+            setContent: action,
+            contentType: computed
+        });
+    }
 
     /**
      * Opens the drawer
      */
-    @action open() {
+    open() {
         log('Open drawer');
         this.isOpen = true;
     }
@@ -38,7 +48,7 @@ export default class DrawerViewModel {
     /**
      * Closes the drawer
      */
-    @action close() {
+    close() {
         log('Close drawer');
         this.isOpen = false;
     }
@@ -47,7 +57,7 @@ export default class DrawerViewModel {
      * Set content to be displayed in Drawer
      * @param {Guideline} content   Content to display in drawer; must be a Guideline (for now).
      */
-    @action setContent(content) {
+    setContent(content) {
         if (content !== undefined && !this.validContentTypes.has(content.constructor)) {
             const validClasses = Array.from(this.validContentTypes.keys())
                 .map(validClass => validClass.name)
@@ -67,10 +77,8 @@ export default class DrawerViewModel {
      * @return {String|undefined}     Type of content, e.g. 'guideline' or undefined if content
      *                                is not set.
      */
-    @computed get contentType() {
+    get contentType() {
         if (!this.content) return undefined;
         return this.validContentTypes.get(this.content.constructor);
     }
-
-
 }

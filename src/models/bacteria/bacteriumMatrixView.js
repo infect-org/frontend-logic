@@ -1,9 +1,14 @@
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 import doFiltersMatch from '../filters/doFiltersMatch';
 
 export default class BacteriumMatrixView {
 
     constructor(bacterium, matrix) {
+        makeObservable(this, {
+            visible: computed,
+            hasResistanceData: computed
+        });
+
         this.bacterium = bacterium;
         this._matrix = matrix;
     }
@@ -13,7 +18,7 @@ export default class BacteriumMatrixView {
         this._matrix.setBacteriumLabelWidth(this, width);
     }
 
-    @computed get visible() {
+    get visible() {
         const bacteriaFilters = this._matrix.selectedFilters.getFiltersByType('bacterium');
         const visible = doFiltersMatch(this.bacterium, bacteriaFilters);
         return visible;
@@ -25,7 +30,7 @@ export default class BacteriumMatrixView {
      * where poultry has completely different bacteria than cats.
      * @return {Boolean}       True if there is resistance data for current bacterium, else false
      */
-    @computed get hasResistanceData() {
+    get hasResistanceData() {
         return this._matrix.resistances
             .findIndex(({ resistance }) => resistance.bacterium === this.bacterium) > -1;
     }

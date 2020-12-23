@@ -1,14 +1,19 @@
-import { observable } from 'mobx';
+import { observable, makeObservable } from 'mobx';
 import BaseStore from '../../helpers/BaseStore.js';
 import rdaCounterTypes from './rdaCounterTypes.js';
 import notificationSeverityLevels from '../notifications/notificationSeverityLevels.js';
 
 export default class RDACounterStore extends BaseStore {
 
-    @observable data = new Map();
+    data = new Map();
 
     constructor(handleException) {
         super();
+
+        makeObservable(this, {
+            data: observable
+        });
+
         this.handleException = handleException;
     }
 

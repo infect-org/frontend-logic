@@ -1,4 +1,4 @@
-import { observable, action, runInAction } from 'mobx';
+import { observable, action, runInAction, makeObservable } from 'mobx';
 import storeStatus from './storeStatus.js';
 
 /**
@@ -8,17 +8,23 @@ import storeStatus from './storeStatus.js';
  * kind), RDACounterStore and TenantStore (that contain non-list-like data)
  */
 export default class BaseStore {
-
     // Use object so that we can add properties, e.g. an errorReason
-    @observable status = {
+    status = {
         identifier: storeStatus.initialized,
     };
+
+    constructor() {
+        makeObservable(this, {
+            status: observable,
+            setFetchPromise: action
+        });
+    }
 
     /**
     * Add promise that fetches the store's data. Needed e.g. for resistances to observe status
     * of antibiotics/bacteria and resolve when (and not before) they are ready.
     */
-    @action setFetchPromise(promise) {
+    setFetchPromise(promise) {
 
         if (!(promise instanceof Promise)) {
             throw new Error(`Store: Argument passed to setFetchPromise must be a Promise, is ${promise} instead.`);
@@ -37,5 +43,4 @@ export default class BaseStore {
             });
         });
     }
-
 }

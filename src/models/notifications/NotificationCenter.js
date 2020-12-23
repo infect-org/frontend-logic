@@ -1,4 +1,4 @@
-import { observable, action } from 'mobx';
+import { observable, action, makeObservable } from 'mobx';
 import debug from 'debug';
 import wrapNotification from './wrapNotification.js';
 import Notification from './Notification.js';
@@ -13,27 +13,32 @@ const log = debug('infect:NotificationCenter');
  * NotificationCenter.notifications.
  */
 export default class NotificationCenter {
+ /**
+  * Contains all notifications that handle() was called with
+  */
+ notifications = [];
 
-    /**
-     * Contains all notifications that handle() was called with
-     */
-    @observable notifications = [];
+ constructor() {
+  makeObservable(this, {
+   notifications: observable,
+   handle: action
+  });
+ }
 
-    /**
-     * Handles the notification
-     * @param {Error|Object} notification   If object, the following properties must be passed:
-     *                                      - {string} severity  One of this.severityLevels
-     *                                      - {string} message   The error message
-     */
-    @action handle(notification) {
-        const notificationModel = new Notification(wrapNotification(notification));
-        log('Handle message %o', notificationModel);
-        // Make sure errors are also propagated to online tools (that are mostly watching
-        // console.error for output)
-        if (notificationModel.severity !== notificationSeverityLevels.information) {
-            console.error('NotificationCenter handled error/warning %o', notification);
-        }
-        this.notifications.push(notificationModel);
-    }
-
+ /**
+  * Handles the notification
+  * @param {Error|Object} notification   If object, the following properties must be passed:
+  *                                      - {string} severity  One of this.severityLevels
+  *                                      - {string} message   The error message
+  */
+ handle(notification) {
+     const notificationModel = new Notification(wrapNotification(notification));
+     log('Handle message %o', notificationModel);
+     // Make sure errors are also propagated to online tools (that are mostly watching
+     // console.error for output)
+     if (notificationModel.severity !== notificationSeverityLevels.information) {
+         console.error('NotificationCenter handled error/warning %o', notification);
+     }
+     this.notifications.push(notificationModel);
+ }
 }

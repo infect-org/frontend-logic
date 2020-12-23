@@ -1,15 +1,20 @@
 import color from 'tinycolor2';
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 import doFiltersMatch from '../filters/doFiltersMatch';
 
 class SubstanceClassMatrixView {
 
 	constructor(substanceClass, matrixView) {
-		this.substanceClass = substanceClass;
-		this._matrixView = matrixView;
-	}
+        makeObservable(this, {
+            lineColor: computed,
+            xPosition: computed
+        });
 
-	@computed get lineColor() {
+        this.substanceClass = substanceClass;
+        this._matrixView = matrixView;
+    }
+
+	get lineColor() {
 		const parents = this.substanceClass.getParentSubstanceClasses().length;
 		const rank = parents;
 		const colorValue = color.fromRatio({
@@ -20,7 +25,7 @@ class SubstanceClassMatrixView {
 		return colorValue;
 	}
 
-	@computed get xPosition() {
+	get xPosition() {
 		return this._matrixView.xPositions.get(this);
 	}
 
