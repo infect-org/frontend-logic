@@ -36,6 +36,7 @@ export default class PopulationFilterFetcher extends StandardFetcher {
                 if (this.rdaCounterType) {
                     if (!this.rdaCounterStore.hasItem(this.rdaCounterType, filterEntry.id)) {
                         log('Population filter %o is not part of RDA, skip it', filterEntry);
+                        return;
                     }
                 }
 
