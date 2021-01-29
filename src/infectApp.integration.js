@@ -41,14 +41,6 @@ function getScopes() {
 
 function factorGetURLFunction(scopes, endpoints) {
     return (scope, endpoint) => {
-
-        // TODO: VET2020 Remove
-        if (scope === 'coreData' && endpoint === 'sampleSource') {
-            const url = `http://localhost:3000/mockApi/sampleSource.json`;
-            return url;
-        }
-        // END TODO
-
         const url = `https://api.beta.infect.info/${scopes[scope]}/${endpoints[endpoint]}`;
         // console.log('URL for %s/%s is %s', scope, endpoint, url);
         return url;
