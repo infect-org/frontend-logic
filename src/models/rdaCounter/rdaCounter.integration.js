@@ -128,7 +128,7 @@ test('adds data version filters', async(t) => {
     await fetcher.getData();
     const calledURL = fetchMock.lastCall()[0];
     // There is no regionId data: Error is handled gracefully, hasItem returns false
-    t.is(calledURL, '/test?filter={%22dataVersionStatusIdentifiers%22:[%22a%22,%22b%22]}');
+    t.is(calledURL, '/test?filter={%22dataVersionStatusIdentifier%22:[%22a%22,%22b%22]}');
     fetchMock.restore();
     t.end();
 });

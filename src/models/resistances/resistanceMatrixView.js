@@ -45,7 +45,6 @@ export default class ResistanceMatrixView {
 		return radius;
 	}
 
-
 	@computed get backgroundColor() {
 		const bestValue = this.mostPreciseValue.value;
 		// Use log scale (values < 70% don't really matter) – differentiate well between
@@ -55,14 +54,15 @@ export default class ResistanceMatrixView {
 		const hue = this._getRelativeColorValue(1 - logValue, 9, 98) / 360;
 		const saturation = this._getRelativeColorValue(1 - bestValue, 0.3, 1);
 		const lightness = this._getRelativeColorValue(bestValue, 0.4, 0.9);
-		return color.fromRatio({
+		const backgroundColor = color.fromRatio({
 			h: hue
 			, s: saturation
 			, l: lightness
 		});
+		return backgroundColor;
 	}
 
-	get fontColor() {
+	@computed get fontColor() {
 		const fontColor = this.backgroundColor.clone();
 		fontColor.darken(50);
 		fontColor.saturate(20);
