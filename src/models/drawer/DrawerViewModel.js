@@ -1,6 +1,7 @@
 import debug from 'debug';
 import { observable, action, computed } from 'mobx';
 import Guideline from '../guidelines/Guideline.js';
+import Resistance from '../resistances/resistance.js';
 
 const log = debug('infect:DrawerViewModel');
 
@@ -20,6 +21,7 @@ export default class DrawerViewModel {
      */
     validContentTypes = new Map([
         [Guideline, 'guideline'],
+        [Resistance, 'resistance'],
     ]);
 
     /**

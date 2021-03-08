@@ -2,6 +2,7 @@ import debug from 'debug';
 import Fetcher from '../../helpers/standardFetcher.js';
 import Resistance from './resistance.js';
 import notificationSeverityLevels from '../notifications/notificationSeverityLevels.js';
+import { values } from '../../../webpack.config.js';
 
 const log = debug('infect:ResistancesFetcher');
 
@@ -70,20 +71,27 @@ export default class ResistancesFetcher extends Fetcher {
             return;
         }
 
-        this.store.clear();
-
+        this.store.clear();        
 
         // TODO VET 2020: Remove the block
-        const bacteria = Array.from(this.stores.bacteria.get().values());
-        const antibiotics = Array.from(this.stores.antibiotics.get().values());
-        const quantitativeData = {
-            compoundSubstanceId: antibiotics.find(item => item.name === 'Penicillin G').id,
-            mhk90: 0.06,
-            microorganismId: bacteria.find(item => item.name === 'Achromobacter spp.').id,
-            modelCount: 2170,
-        };
-        console.log(quantitativeData);
-        // data.values.push(quantitativeData);
+        // Just adds some test data to see if things might work. ONLY use for frontend testing,
+        // not for unit/integration tests!
+
+        // const bacteria = Array.from(this.stores.bacteria.get().values());
+        // const antibiotics = Array.from(this.stores.antibiotics.get().values());
+        // const micData = {
+        //     compoundSubstanceId: antibiotics.find(item => item.name === 'Penicillin G').id,
+        //     microorganismId: bacteria.find(item => item.name === 'Achromobacter spp.').id,
+        //     resistanceMICCount: 4321,
+        // };
+        // data.values.push(micData);
+        // const discDiffusionData = {
+        //     compoundSubstanceId: antibiotics.find(item => item.name === 'Penicillin V').id,
+        //     microorganismId: bacteria.find(item => item.name === 'Achromobacter spp.').id,
+        //     resistanceDiscDiffusionCount: 1234,
+        // };
+        // data.values.push(discDiffusionData);
+
         // END TODO
 
 
@@ -94,20 +102,25 @@ export default class ResistancesFetcher extends Fetcher {
             return;
         }
 
+
+
+        // TODO: REMOVE for VET 2020
+        // FUCKING HELL: We have to rewrite modelCount to resistanceQualitativeCount
+        data.values.forEach((value) => {
+            if (value.modelCount) {
+                value.resistanceQualitativeCount = value.modelCount;
+                delete value.modelCount;
+            }
+        });
+        // END TODO
+
+
+
         let counter = 0;
         data.values.forEach((resistanceData) => {
             counter++;
 
-            let resistance;
-
-            // If resistance has a resistanctPercent parameter, it's a qualitative data point. 
-            // Handle it.
-            if (resistanceData.resistantPercent !== undefined) {
-                resistance = this.handleQualitativeData(resistanceData);
-            } else {
-                resistance = this.handleQuantitativeData(resistanceData);
-            }
-
+            const resistance = this.createResistance(resistanceData);
             // If handler fails, do not add failed data to store
             if (!resistance) return;
             this.store.add(resistance);
@@ -124,7 +137,7 @@ export default class ResistancesFetcher extends Fetcher {
      * based on breakpoints. Quantitiative resistances do not have known breakpoints.
      * @param {object} resistance       Resistance from server
      */
-    handleQualitativeData(resistance) {
+    createResistance(resistance) {
 
         const bacteria = Array.from(this.stores.bacteria.get().values());
         const antibiotics = Array.from(this.stores.antibiotics.get().values());
@@ -151,15 +164,7 @@ export default class ResistancesFetcher extends Fetcher {
             return;
         }
 
-        const resistanceValues = [{
-            type: 'qualitative',
-            value: resistance.resistantPercent / 100,
-            sampleSize: resistance.modelCount || 0,
-            confidenceInterval: [
-                resistance.confidenceInterval.lowerBound / 100,
-                resistance.confidenceInterval.upperBound / 100,
-            ],
-        }];
+        const resistanceValues = this.createResistanceValues(resistance);
 
         // Creating a Resistance may fail if e.g. values are not valid; make sure we handle
         // errors gracefully but ignore the current resistance.
@@ -184,8 +189,36 @@ export default class ResistancesFetcher extends Fetcher {
 
     }
 
-    handleQuantitativeData() {
-        console.log('QUALITATIVE');
+
+    createResistanceValues(resistanceData) {
+
+        const values = [];
+
+        if (resistanceData.resistanceQualitativeCount) {
+            values.push({
+                type: 'qualitative',
+                value: resistanceData.resistantPercent / 100,
+                sampleSize: resistanceData.resistanceQualitativeCount,
+                confidenceInterval: [
+                    resistanceData.confidenceInterval.lowerBound / 100,
+                    resistanceData.confidenceInterval.upperBound / 100,
+                ],
+            });
+        }
+        if (resistanceData.resistanceMICCount) {
+            values.push({
+                type: 'mic',
+                sampleSize: resistanceData.resistanceMICCount,
+            });
+        }
+        if (resistanceData.resistanceDiscDiffusionCount) {
+            values.push({
+                type: 'discDiffusion',
+                sampleSize: resistanceData.resistanceDiscDiffusionCount,
+            });
+        }
+
+        return values;
     }
 
 }

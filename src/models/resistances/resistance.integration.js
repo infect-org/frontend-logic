@@ -10,7 +10,7 @@ function setupData() {
 	const bacterium = new Bacterium(4, 'testB');
 	const antibiotic = new Antibiotic(4, 'testA', substanceClass);
 	const resistance = new Resistance([
-		{ type: 'quantitativeMHK', sampleSize: 50, value: 0.3 }
+		{ type: 'mic', sampleSize: 50, value: 0.3 }
 		, { type: 'qualitative', sampleSize: 40, value: 0.7 }
 		, { type: 'qualitative', sampleSize: 20, value: 0.1, confidenceInterval: [0.05, 0.4] }
 	], antibiotic, bacterium);

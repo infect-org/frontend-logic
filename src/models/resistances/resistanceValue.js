@@ -4,15 +4,13 @@ export default class {
 
 	/**
 	* @param {String} type				See resistanceTypes
-	* @param {Number} value				Value between 0 and 1
+	* @param {Number} value				Value between 0 and 1
 	* @param {Int} sampleSize			Sample Size
 	* @param {Array} confidenceInterval	95% confidence interval, if available: [lower, upper]
 	*/
 	constructor(type, value, sampleSize, confidenceInterval) {
 		if (!types[type]) throw new Error(`ResistanceValue: Type ${type} not known, use one of ${Object.keys(types).join(', ')}.`);
-		if (isNaN(parseFloat(value))) throw new Error(`ResistanceValue: Value passed is not a number.`);
-		value = parseFloat(value);
-		if (value < 0 || value > 1) throw new Error(`ResistanceValue: Value must be between 0 and 1, is ${value}.`);
+		if (value !== undefined && typeof value !== 'number') throw new Error(`ResistanceValue: value must either be undefined if it's unknown at the current time or a number; is ${value} instead.`);
 		if (sampleSize % 1 !== 0) throw new Error(`ResistanceValue: Sample size must be an integer`);
 
 		// Validate confidence interval

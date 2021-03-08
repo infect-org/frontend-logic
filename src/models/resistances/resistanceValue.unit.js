@@ -5,16 +5,14 @@ import resistanceTypes from './resistanceTypes';
 test('throws on invalid values', (t) => {
 	t.throws(() => new ResistanceValue(), /not known/);
 	t.throws(() => new ResistanceValue('invalid'), /not known/);
-	t.throws(() => new ResistanceValue('qualitative', -1), /between/);
-	t.throws(() => new ResistanceValue('qualitative', 1.3), /between/);
-	t.throws(() => new ResistanceValue('qualitative', 'text', /number/));
-	t.throws(() => new ResistanceValue('qualitative', 1, 1.5, /integer/));
-	t.throws(() => new ResistanceValue('qualitative', 1, 'text', /integer/));	
+	t.throws(() => new ResistanceValue('qualitative', 'text'), /number; is text/);
+	t.throws(() => new ResistanceValue('qualitative', 1, 1.5), /integer/);
+	t.throws(() => new ResistanceValue('qualitative', 1, 'text'), /integer/);
 	t.end();
 });
 
 test('stores type and value correctly', (t) => {
-	const resVal = new ResistanceValue('qualitative', '0.9', 5);
+	const resVal = new ResistanceValue('qualitative', 0.9, 5);
 	t.equal(resVal.value, 0.9);
 	t.equal(resVal.sampleSize, 5);
 	t.equal(resVal.type, resistanceTypes.qualitative);
