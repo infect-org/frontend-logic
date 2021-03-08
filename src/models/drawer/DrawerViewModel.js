@@ -47,7 +47,8 @@ export default class DrawerViewModel {
 
     /**
      * Set content to be displayed in Drawer
-     * @param {Guideline} content   Content to display in drawer; must be a Guideline (for now).
+     * @param {Guideline} content   Content to display in drawer; must be a Guideline or a
+     * Resistance (for now). Set to undefined to clear content and close drawer.
      */
     @action setContent(content) {
         if (content !== undefined && !this.validContentTypes.has(content.constructor)) {
