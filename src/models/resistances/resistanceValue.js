@@ -1,17 +1,25 @@
+import { observable, action } from 'mobx';
 import types from './resistanceTypes';
 
 export default class {
+
+	@observable quantitativeData = {};
 
 	/**
 	* @param {String} type				See resistanceTypes
 	* @param {Number} value				Value between 0 and 1
 	* @param {Int} sampleSize			Sample Size
 	* @param {Array} confidenceInterval	95% confidence interval, if available: [lower, upper]
+	* @param {Object} data				Any additional data whose properties will be attached to
+	*									ResistanceValue
 	*/
-	constructor(type, value, sampleSize, confidenceInterval) {
+	constructor(type, value, sampleSize, confidenceInterval, data) {
 		if (!types[type]) throw new Error(`ResistanceValue: Type ${type} not known, use one of ${Object.keys(types).join(', ')}.`);
 		if (value !== undefined && typeof value !== 'number') throw new Error(`ResistanceValue: value must either be undefined if it's unknown at the current time or a number; is ${value} instead.`);
 		if (sampleSize % 1 !== 0) throw new Error(`ResistanceValue: Sample size must be an integer`);
+		if (data && (typeof data !== 'object' || data === null)) {
+			throw new Error(`ResistanceValue: If data is passed, it must be an object; you passed ${JSON.stringify(data)} instead.`);
+		}
 
 		// Validate confidence interval
 		if (confidenceInterval) {
@@ -36,5 +44,41 @@ export default class {
 		if (confidenceInterval) {
 			this.confidenceInterval = confidenceInterval;
 		}
+		// Clone properties
+		Object.assign(this, data);
+
 	}
+
+    /**
+     * Adds quantititative data (MIC/discDiffusion) after resistance value was initialized
+     */
+	 @action setQuantitativeData(data) {
+
+        // Do a simple validation to get the most obvious errors; server should be trustworthy
+        // with its data structure
+        if (
+            !data ||
+            data.percentile !== 90 ||
+            typeof data.percentileValue !== 'number'
+        ) {
+            throw new Error(`Resistance: Quantitative data does not fulfill the expected base format, is ${JSON.stringify(data)}`);
+        }
+        if (
+            !data.slots ||
+            typeof data.slots.rangeMin !== 'number' ||
+            typeof data.slots.rangeMax !== 'number' ||
+            typeof data.slots.slotSize !== 'number' ||
+            !Array.isArray(data.slots.slots)
+        ) {
+            throw new Error(`Resistance: Quantitative data does not fulfill the expected slot format, is ${JSON.stringify(data.slots)}`);
+        }
+        if (
+            !data.slots.slots.every(item => typeof item.fromValue === 'number' &&
+                typeof item.toValue === 'number' && typeof item.sampleCount === 'number')
+        ) {
+            throw new Error(`Resistance: Quantitative slot entries do not fulfill the expected format, are ${JSON.stringify(data.slots.slots)}`);
+        }
+        this.quantitativeData = data;
+    }
+
 }

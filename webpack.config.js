@@ -11,7 +11,7 @@ const TapWebpackPlugin = require('tap-webpack-plugin');
 const basePath = 'src/js';
 const entries = walk('.')
     // Use the following line to test a single file
-    // .filter(name => /resistancesFetcher\.integration\.js/.test(name))
+    // .filter(name => /resistanceMatrixView\.integration\.js/.test(name))
     .filter(name => /\.(unit|integration)\.js$/.test(name))
     .filter(item => console.log(item) || true)
     .map(name => path.join(__dirname, name));

@@ -34,6 +34,7 @@ import notificationSeverityLevels from './models/notifications/notificationSever
 import GuidelineSelectedFiltersBridge from
     './models/guidelineSelectedFiltersBridge/GuidelineSelectedFiltersBridge.js';
 import Store from './helpers/Store.js';
+import getQuantitativeDataForActiveResistance from './models/resistances/getQuantitativeDataForActiveResistance';
 
 
 
@@ -45,7 +46,6 @@ export default class InfectApp {
         matrix: new MatrixView(),
         drawer: new DrawerViewModel(),
     };
-
 
     bacteria = new BacteriaStore();
     antibiotics = new AntibioticsStore();
@@ -99,6 +99,7 @@ export default class InfectApp {
         this.views.matrix.setupDataWatchers(this.antibiotics, this.bacteria, this.resistances);
 
         updateDrawerFromGuidelines(this.guidelines, this.views.drawer, this.notificationCenter);
+        getQuantitativeDataForActiveResistance(this.views.matrix);
 
     }
 

@@ -348,9 +348,6 @@ class MatrixView {
     }
 
 
-
-
-
     /**
     * Sets dimensions of the SVG whenever it is changed.
     * @param {BoundingClientRects} boundingBox

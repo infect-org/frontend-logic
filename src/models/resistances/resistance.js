@@ -1,5 +1,6 @@
-import { observable, action } from 'mobx';
+import { observable, action, computed } from 'mobx';
 import ResistanceValue from './resistanceValue';
+import resistanceTypes from './resistanceTypes.js';
 
 export default class Resistance {
 
@@ -36,6 +37,7 @@ export default class Resistance {
             resistanceValue.value,
             resistanceValue.sampleSize,
             resistanceValue.confidenceInterval,
+            resistanceValue.data,
         ));
     }
 

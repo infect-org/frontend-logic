@@ -56,6 +56,9 @@ function setupBodyData() {
                 lowerBound: 75,
                 upperBound: 100,
             },
+            resistant: 20,
+            intermediate: 30,
+            susceptible: 50,
         }],
     };
 }
@@ -82,6 +85,7 @@ test('handles resistance data correctly', async(t) => {
     t.equals(result.bacterium.name, 'Acinetobacter sp.');
     t.equals(result.values.length, 1);
     t.equals(result.values[0].sampleSize, 100);
+    t.equals(result.values[0].resistant, 20);
     t.equals(errors.length, 0);
     fetchMock.restore();
     t.end();

@@ -2,7 +2,6 @@ import debug from 'debug';
 import Fetcher from '../../helpers/standardFetcher.js';
 import Resistance from './resistance.js';
 import notificationSeverityLevels from '../notifications/notificationSeverityLevels.js';
-import { values } from '../../../webpack.config.js';
 
 const log = debug('infect:ResistancesFetcher');
 
@@ -77,20 +76,20 @@ export default class ResistancesFetcher extends Fetcher {
         // Just adds some test data to see if things might work. ONLY use for frontend testing,
         // not for unit/integration tests!
 
-        // const bacteria = Array.from(this.stores.bacteria.get().values());
-        // const antibiotics = Array.from(this.stores.antibiotics.get().values());
-        // const micData = {
-        //     compoundSubstanceId: antibiotics.find(item => item.name === 'Penicillin G').id,
-        //     microorganismId: bacteria.find(item => item.name === 'Achromobacter spp.').id,
-        //     resistanceMICCount: 4321,
-        // };
-        // data.values.push(micData);
-        // const discDiffusionData = {
-        //     compoundSubstanceId: antibiotics.find(item => item.name === 'Penicillin V').id,
-        //     microorganismId: bacteria.find(item => item.name === 'Achromobacter spp.').id,
-        //     resistanceDiscDiffusionCount: 1234,
-        // };
-        // data.values.push(discDiffusionData);
+        const bacteria = Array.from(this.stores.bacteria.get().values());
+        const antibiotics = Array.from(this.stores.antibiotics.get().values());
+        const micData = {
+            compoundSubstanceId: antibiotics.find(item => item.name === 'Penicillin G').id,
+            microorganismId: bacteria.find(item => item.name === 'Achromobacter spp.').id,
+            resistanceMICCount: 4321,
+        };
+        data.values.push(micData);
+        const discDiffusionData = {
+            compoundSubstanceId: antibiotics.find(item => item.name === 'Penicillin V').id,
+            microorganismId: bacteria.find(item => item.name === 'Achromobacter spp.').id,
+            resistanceDiscDiffusionCount: 1234,
+        };
+        data.values.push(discDiffusionData);
 
         // END TODO
 
@@ -203,6 +202,11 @@ export default class ResistancesFetcher extends Fetcher {
                     resistanceData.confidenceInterval.lowerBound / 100,
                     resistanceData.confidenceInterval.upperBound / 100,
                 ],
+                data: {
+                    resistant: resistanceData.resistant,
+                    susceptible: resistanceData.susceptible,
+                    intermediate: resistanceData.intermediate,
+                },
             });
         }
         if (resistanceData.resistanceMICCount) {
