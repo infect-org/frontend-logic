@@ -70,7 +70,7 @@ export default class ResistancesFetcher extends Fetcher {
             return;
         }
 
-        this.store.clear();        
+        this.store.clear();
 
         // TODO VET 2020: Remove the block
         // Just adds some test data to see if things might work. ONLY use for frontend testing,
@@ -90,6 +90,12 @@ export default class ResistancesFetcher extends Fetcher {
             resistanceDiscDiffusionCount: 1234,
         };
         data.values.push(discDiffusionData);
+
+        const first = data.values.find(item => (
+            item.compoundSubstanceId === 1 && item.microorganismId === 1
+        ));
+        first.resistanceDiscDiffusionCount = 231;
+        first.resistanceMICCount = 2131;
 
         // END TODO
 

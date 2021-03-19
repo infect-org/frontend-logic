@@ -35,7 +35,7 @@ import GuidelineSelectedFiltersBridge from
     './models/guidelineSelectedFiltersBridge/GuidelineSelectedFiltersBridge.js';
 import Store from './helpers/Store.js';
 import getQuantitativeDataForActiveResistance from './models/resistances/getQuantitativeDataForActiveResistance';
-
+import getQuantitativeDataForDrawer from './models/resistances/getQuantitativeDataForDrawer.js';
 
 
 const log = debug('infect:App');
@@ -100,6 +100,7 @@ export default class InfectApp {
 
         updateDrawerFromGuidelines(this.guidelines, this.views.drawer, this.notificationCenter);
         getQuantitativeDataForActiveResistance(this.views.matrix);
+        getQuantitativeDataForDrawer(this.views.drawer);
 
     }
 
