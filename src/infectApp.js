@@ -98,10 +98,6 @@ export default class InfectApp {
         this.views.matrix.setOffsetFilters(this.offsetFilters);
         this.views.matrix.setupDataWatchers(this.antibiotics, this.bacteria, this.resistances);
 
-        updateDrawerFromGuidelines(this.guidelines, this.views.drawer, this.notificationCenter);
-        getQuantitativeDataForActiveResistance(this.views.matrix);
-        getQuantitativeDataForDrawer(this.views.drawer);
-
     }
 
 
@@ -110,6 +106,11 @@ export default class InfectApp {
      * constructor.
      */
     initialize() {
+
+        updateDrawerFromGuidelines(this.guidelines, this.views.drawer, this.notificationCenter);
+        getQuantitativeDataForActiveResistance(this.views.matrix, this._config.getURL);
+        getQuantitativeDataForDrawer(this.views.drawer, this._config.getURL);
+
         const fetcherPromise = this._setupFetchers();
         const populationFilterPromise = setupPopulationFilters(
             this._config.getURL,

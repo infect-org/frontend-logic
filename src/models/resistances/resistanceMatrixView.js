@@ -118,4 +118,15 @@ export default class ResistanceMatrixView {
 		return values.get(mostPrecise.type)(mostPrecise);
 	}
 
+	/**
+	 * Returns the key of the most precise resistance type, as defined in resistanceTypes
+	 * @returns {string}
+	 */
+	@computed get mostPreciseResistanceTypeIdentifier() {
+		const types = Object.keys(resistanceTypes);
+		for (const resistanceType of types) {
+			if (this.mostPreciseValue.type === resistanceTypes[resistanceType]) return resistanceType;
+		}
+	}
+
 }

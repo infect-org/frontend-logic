@@ -13,12 +13,12 @@ const debounce = (callback) => {
  * Gets quantitative data for active resistance after a short debounce; watches
  * matrixView.activeResistance and initializes fetch.
  */
-export default (matrixView) => {
+export default (matrixView, getURL) => {
     autorun(() => {
         const { activeResistance } = matrixView;
         if (!activeResistance) return;
         if (!activeResistance.resistance) return;
-        debounce(() => getQuantitativeData(activeResistance.resistance));
+        debounce(() => getQuantitativeData(activeResistance.resistance, false, getURL));
     });
 };
 

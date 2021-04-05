@@ -130,3 +130,10 @@ test('returns display value', (t) => {
 
 	t.end();
 });
+
+
+test('returns most precise type\'s identifier', (t) => {
+	const { resistanceMatrixView } = setupData(1000, undefined, undefined, 'mic');
+	t.is(resistanceMatrixView.mostPreciseResistanceTypeIdentifier, 'mic');
+	t.end();
+});

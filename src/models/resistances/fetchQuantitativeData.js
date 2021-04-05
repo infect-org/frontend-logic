@@ -8,22 +8,33 @@ const log = debug('infect:fetchMICData');
  * computational its calculation causes)
  * TODO: Implement when API is ready
  */
-export default async(resistance, resistanceValue) => {
+export default async(resistance, resistanceValue, getURL) => {
 
-    /* const options = {
+    // For options, see StandardFetcher
+    const options = {
         cache: 'no-store',
         // Requests at Insel (Edge) are rejected with status 407. This might help:
         credentials: 'include',
     };
-    log('Options are %o', options);
 
-    const result = await fetchApi(url, options);
-    log('Got back data %o', result);
+    // URL structure: see https://github.com/infect-org/infect-frontend-logic/issues/24
+    // Example: https://beta.api.infect.info/rda/v2/rda.data?subRoutines=[%22DiscDiffusionPercentile%22]&filter={%22compoundSubstanceIds%22:[1],%22microorganismIds%22:[1]}
+    const subroutines = {
+        mic: 'MICPercentileSubRoutine',
+        discDiffusion: 'DiscDiffusionPercentile',
+    };
+    const url = `${getURL('rda', 'data')}?subRoutines=["${subroutines[resistanceValue.type.identifier]}"]&filter={"compoundSubstanceIds":[${resistance.antibiotic.id}],"microorganismIds":[${resistance.bacterium.id}]}`;
+    // const result = await fetchApi(url, options);
 
-    // Invalid HTTP Status
-    if (result.status !== 200) {
-        throw new Error(`StandardFetcher: Status ${result.status} is invalid.`);
-    } */
+
+    // log('Got back data %o', result);
+
+    // // Invalid HTTP Status
+    // if (result.status !== 200) {
+    //     throw new Error(`fetchQuantitativeData: Status ${result.status} is invalid.`);
+    // }
+
+    // return result;
 
 
     const micData = {
@@ -74,7 +85,6 @@ export default async(resistance, resistanceValue) => {
         }
     }
 
-    // console.log('got data', data);
     await new Promise(resolve => setTimeout(resolve, 100));
     return resistanceValue.type.identifier === 'mic' ? micData : ddData;
 

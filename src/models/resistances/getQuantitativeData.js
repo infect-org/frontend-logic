@@ -8,7 +8,7 @@ import fetchQuantitativeData from './fetchQuantitativeData.js';
  *                                          be fetched; needed for activeResistance in a matrix
  *                                          (that is displayed on hover)
  */
-export default async(resistance, onlyUseMostPrecise) => {
+export default async(resistance, onlyUseMostPrecise, getURL) => {
 
     const values = onlyUseMostPrecise ? resistance.getValuesByPrecision.slice(0, 1) :
         resistance.values;
@@ -19,7 +19,7 @@ export default async(resistance, onlyUseMostPrecise) => {
         const hasData = Object.keys(resistanceValue.quantitativeData).length > 0;
         if (!isQuantitative || hasData) return;
 
-        const data = await fetchQuantitativeData(resistance, resistanceValue);
+        const data = await fetchQuantitativeData(resistance, resistanceValue, getURL);
         resistanceValue.setQuantitativeData(data);
     });
 };
