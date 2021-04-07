@@ -4,7 +4,7 @@ import { fetchApi } from '../../helpers/api.js';
  * Fetches MIC data from server (MIC data is not returned by RDA on initial load due to the heavy
  * computational its calculation causes)
  */
-export default async(resistance, resistanceValue, getURL) => {
+export default async(resistance, resistanceValue, getURL, filterHeader) => {
 
     // For options, see StandardFetcher
     const options = {
@@ -19,7 +19,12 @@ export default async(resistance, resistanceValue, getURL) => {
         mic: 'MICPercentileSubRoutine',
         discDiffusion: 'DiscDiffusionPercentile',
     };
-    const url = `${getURL('rda', 'data')}?subRoutines=["${subroutines[resistanceValue.type.identifier]}"]&filter={"compoundSubstanceIds":[${resistance.antibiotic.id}],"microorganismIds":[${resistance.bacterium.id}]}`;
+    const filters = {
+        ...filterHeader,
+        compoundSubstanceIds: [resistance.antibiotic.id],
+        microorganismIds: [resistance.bacterium.id],
+    };
+    const url = `${getURL('rda', 'data')}?subRoutines=["${subroutines[resistanceValue.type.identifier]}"]&filter=${JSON.stringify(filters)}`;
     const result = await fetchApi(url, options);
 
     // Invalid HTTP Status

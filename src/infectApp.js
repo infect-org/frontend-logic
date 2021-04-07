@@ -35,7 +35,6 @@ import GuidelineSelectedFiltersBridge from
     './models/guidelineSelectedFiltersBridge/GuidelineSelectedFiltersBridge.js';
 import Store from './helpers/Store.js';
 import getQuantitativeDataForActiveResistance from './models/resistances/getQuantitativeDataForActiveResistance';
-import getQuantitativeDataForDrawer from './models/resistances/getQuantitativeDataForDrawer.js';
 
 
 const log = debug('infect:App');
@@ -108,8 +107,6 @@ export default class InfectApp {
     initialize() {
 
         updateDrawerFromGuidelines(this.guidelines, this.views.drawer, this.notificationCenter);
-        getQuantitativeDataForActiveResistance(this.views.matrix, this._config.getURL);
-        getQuantitativeDataForDrawer(this.views.drawer, this._config.getURL);
 
         const fetcherPromise = this._setupFetchers();
         const populationFilterPromise = setupPopulationFilters(
@@ -132,6 +129,7 @@ export default class InfectApp {
             }, (err) => {
                 this.notificationCenter.handle(err);
             });
+
     }
 
 
@@ -197,6 +195,13 @@ export default class InfectApp {
         const resistancePromise = resistanceFetcher.getDataForFilters(updater.filterHeaders);
         log('Fetching data for resistances.');
 
+        // Get quantitative data when needed
+        getQuantitativeDataForActiveResistance(
+            this.views.matrix,
+            this._config.getURL,
+            updater,
+            this.views.drawer,
+        );
 
 
 

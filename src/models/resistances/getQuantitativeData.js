@@ -3,23 +3,20 @@ import fetchQuantitativeData from './fetchQuantitativeData.js';
 
 /**
  * Fetches MIC or discDiffusion data for a given resistance (for all values) if it's not already set
- * @param {Resistance}
- * @param {boolean} onlyUseMostPrecise      True if only the most precise resistance value should
- *                                          be fetched; needed for activeResistance in a matrix
- *                                          (that is displayed on hover)
+ * @param {Resistance} resistance       Resistance to fetch data for
+ * @param {function} getURL             getURL function (see app)
+ * @param {*} filterHeader              Headers for the currently applied population filters
  */
-export default async(resistance, onlyUseMostPrecise, getURL) => {
+export default async(resistance, getURL, filterHeader) => {
 
-    const values = onlyUseMostPrecise ? resistance.getValuesByPrecision().slice(0, 1) :
-        resistance.values;
-
-    values.forEach(async(resistanceValue) => {
+    resistance.values.forEach(async(resistanceValue) => {
         const isQuantitative = [resistanceTypes.mic, resistanceTypes.discDiffusion]
             .includes(resistanceValue.type);
         const hasData = Object.keys(resistanceValue.quantitativeData).length > 0;
         if (!isQuantitative || hasData) return;
 
-        const data = await fetchQuantitativeData(resistance, resistanceValue, getURL);
+        const data = await fetchQuantitativeData(resistance, resistanceValue, getURL, filterHeader);
         resistanceValue.setQuantitativeData(data);
     });
+
 };
