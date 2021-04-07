@@ -109,13 +109,10 @@ test('returns display value', (t) => {
 	const micData = {
 		"percentile": 90,
 		"percentileValue": 45.6,
-		"slots": {
-			"rangeMin": 0,
-			"rangeMax": 53.9,
-			"slotSize": 2.156,
-			"slotCount": 25,
-			"slots": []
-		}
+		"rangeMin": 0,
+		"rangeMax": 53.9,
+		"slotCount": 25,
+		"slots": []
 	};
 	resistanceMatrixView1.resistance.values[0].setQuantitativeData(micData);
 	t.is(resistanceMatrixView1.displayValue, 45.6);

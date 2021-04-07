@@ -10,7 +10,7 @@ import fetchQuantitativeData from './fetchQuantitativeData.js';
  */
 export default async(resistance, onlyUseMostPrecise, getURL) => {
 
-    const values = onlyUseMostPrecise ? resistance.getValuesByPrecision.slice(0, 1) :
+    const values = onlyUseMostPrecise ? resistance.getValuesByPrecision().slice(0, 1) :
         resistance.values;
 
     values.forEach(async(resistanceValue) => {

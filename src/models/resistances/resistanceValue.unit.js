@@ -46,29 +46,25 @@ test('addds additional data as properties', (t) => {
 
 test('sets MIC data', (t) => {
 	const value = new ResistanceValue('mic', undefined, 5);
-	// Source: https://github.com/infect-org/infect-frontend-logic/issues/24
 	const data = {
 		"percentile": 90,
 		"percentileValue": 45.6,
-		"slots": {
-			"rangeMin": 0,
-			"rangeMax": 53.9,
-			"slotSize": 2.156,
-			"slotCount": 25,
-			"slots": [{
-				"fromValue": 0,
-				"toValue": 2.156,
-				"sampleCount": 0
-			}, {
-				"fromValue": 2.156,
-				"toValue": 4.312,
-				"sampleCount": 0
-			}, {
-				"fromValue": 4.312,
-				"toValue": 6.468,
-				"sampleCount": 0
-			}]
-		}
+		"rangeMin": 0,
+		"rangeMax": 53.9,
+		"slotCount": 25,
+		"slots": [{
+			"fromValue": 0,
+			"toValue": 2.156,
+			"sampleCount": 0
+		}, {
+			"fromValue": 2.156,
+			"toValue": 4.312,
+			"sampleCount": 0
+		}, {
+			"fromValue": 4.312,
+			"toValue": 6.468,
+			"sampleCount": 0
+		}]
 	}
 	value.setQuantitativeData(data);
 	// We cannot compare both objects, MobX fails with mic.slots.slots. Cannot convert it to regular

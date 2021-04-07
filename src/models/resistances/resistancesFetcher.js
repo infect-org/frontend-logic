@@ -72,33 +72,6 @@ export default class ResistancesFetcher extends Fetcher {
 
         this.store.clear();
 
-        // TODO VET 2020: Remove the block
-        // Just adds some test data to see if things might work. ONLY use for frontend testing,
-        // not for unit/integration tests!
-
-        const bacteria = Array.from(this.stores.bacteria.get().values());
-        const antibiotics = Array.from(this.stores.antibiotics.get().values());
-        const micData = {
-            compoundSubstanceId: antibiotics.find(item => item.name === 'Penicillin G').id,
-            microorganismId: bacteria.find(item => item.name === 'Achromobacter spp.').id,
-            resistanceMICCount: 4321,
-        };
-        data.values.push(micData);
-        const discDiffusionData = {
-            compoundSubstanceId: antibiotics.find(item => item.name === 'Penicillin V').id,
-            microorganismId: bacteria.find(item => item.name === 'Achromobacter spp.').id,
-            resistanceDiscDiffusionCount: 1234,
-        };
-        data.values.push(discDiffusionData);
-
-        const first = data.values.find(item => (
-            item.compoundSubstanceId === 1 && item.microorganismId === 1
-        ));
-        first.resistanceDiscDiffusionCount = 231;
-        first.resistanceMICCount = 2131;
-
-        // END TODO
-
 
 
         // Values missing: There's nothing we could add
@@ -106,19 +79,6 @@ export default class ResistancesFetcher extends Fetcher {
             log('Values missing for %o', data);
             return;
         }
-
-
-
-        // TODO: REMOVE for VET 2020
-        // FUCKING HELL: We have to rewrite modelCount to resistanceQualitativeCount
-        data.values.forEach((value) => {
-            if (value.modelCount) {
-                value.resistanceQualitativeCount = value.modelCount;
-                delete value.modelCount;
-            }
-        });
-        // END TODO
-
 
 
         let counter = 0;
