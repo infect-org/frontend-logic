@@ -34,7 +34,7 @@ import notificationSeverityLevels from './models/notifications/notificationSever
 import GuidelineSelectedFiltersBridge from
     './models/guidelineSelectedFiltersBridge/GuidelineSelectedFiltersBridge.js';
 import Store from './helpers/Store.js';
-
+import getQuantitativeDataForActiveResistance from './models/resistances/getQuantitativeDataForActiveResistance';
 
 
 const log = debug('infect:App');
@@ -45,7 +45,6 @@ export default class InfectApp {
         matrix: new MatrixView(),
         drawer: new DrawerViewModel(),
     };
-
 
     bacteria = new BacteriaStore();
     antibiotics = new AntibioticsStore();
@@ -98,8 +97,6 @@ export default class InfectApp {
         this.views.matrix.setOffsetFilters(this.offsetFilters);
         this.views.matrix.setupDataWatchers(this.antibiotics, this.bacteria, this.resistances);
 
-        updateDrawerFromGuidelines(this.guidelines, this.views.drawer, this.notificationCenter);
-
     }
 
 
@@ -108,6 +105,9 @@ export default class InfectApp {
      * constructor.
      */
     initialize() {
+
+        updateDrawerFromGuidelines(this.guidelines, this.views.drawer, this.notificationCenter);
+
         const fetcherPromise = this._setupFetchers();
         const populationFilterPromise = setupPopulationFilters(
             this._config.getURL,
@@ -129,6 +129,7 @@ export default class InfectApp {
             }, (err) => {
                 this.notificationCenter.handle(err);
             });
+
     }
 
 
@@ -194,6 +195,13 @@ export default class InfectApp {
         const resistancePromise = resistanceFetcher.getDataForFilters(updater.filterHeaders);
         log('Fetching data for resistances.');
 
+        // Get quantitative data when needed
+        getQuantitativeDataForActiveResistance(
+            this.views.matrix,
+            this._config.getURL,
+            updater,
+            this.views.drawer,
+        );
 
 
 

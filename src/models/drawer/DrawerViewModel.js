@@ -1,6 +1,7 @@
 import debug from 'debug';
 import { observable, action, computed } from 'mobx';
 import Guideline from '../guidelines/Guideline.js';
+import Resistance from '../resistances/resistance.js';
 
 const log = debug('infect:DrawerViewModel');
 
@@ -20,6 +21,7 @@ export default class DrawerViewModel {
      */
     validContentTypes = new Map([
         [Guideline, 'guideline'],
+        [Resistance, 'resistance'],
     ]);
 
     /**
@@ -45,7 +47,8 @@ export default class DrawerViewModel {
 
     /**
      * Set content to be displayed in Drawer
-     * @param {Guideline} content   Content to display in drawer; must be a Guideline (for now).
+     * @param {Guideline} content   Content to display in drawer; must be a Guideline or a
+     * Resistance (for now). Set to undefined to clear content and close drawer.
      */
     @action setContent(content) {
         if (content !== undefined && !this.validContentTypes.has(content.constructor)) {

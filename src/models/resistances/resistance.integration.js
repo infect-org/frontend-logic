@@ -10,9 +10,9 @@ function setupData() {
 	const bacterium = new Bacterium(4, 'testB');
 	const antibiotic = new Antibiotic(4, 'testA', substanceClass);
 	const resistance = new Resistance([
-		{ type: 'class', sampleSize: 50, value: 0.3 }
-		, { type: 'import', sampleSize: 40, value: 0.7 }
-		, { type: 'default', sampleSize: 20, value: 0.1, confidenceInterval: [0.05, 0.4] }
+		{ type: 'mic', sampleSize: 50, value: 0.3, data: { a: 1 } }
+		, { type: 'qualitative', sampleSize: 40, value: 0.7 }
+		, { type: 'qualitative', sampleSize: 20, value: 0.1, confidenceInterval: [0.05, 0.4] }
 	], antibiotic, bacterium);
 	return {
 		substanceClass
@@ -33,11 +33,14 @@ test('throws on invalid arguments', (t) => {
 test('passes data to resistance values', (t) => {
 	const { resistance } = setupData();
 	t.equals(resistance.getValuesByPrecision().length, 3);
+	t.equals(resistance.values[0].a, 1);
 	t.end();
 });
 
 test('sorts by precision', (t) => {
 	const { resistance } = setupData();
-	t.deepEqual(resistance.getValuesByPrecision().map((val) => val.value), [0.7, 0.3, 0.1]);
+	t.deepEqual(resistance.getValuesByPrecision().map((val) => val.value), [0.7, 0.1, 0.3]);
 	t.end();
 });
+
+

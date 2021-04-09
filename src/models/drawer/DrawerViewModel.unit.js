@@ -19,7 +19,7 @@ test('is closed by default; can open and close', (t) => {
 
 test('can update content', (t) => {
     const drawer = new DrawerViewModel();
-    t.throws(() => drawer.setContent('newType'), /only supports Guideline as content/);
+    t.throws(() => drawer.setContent('newType'), /only supports Guideline, Resistance as content/);
     const { guideline } = setupData();
     drawer.setContent(guideline);
     t.is(drawer.content, guideline);

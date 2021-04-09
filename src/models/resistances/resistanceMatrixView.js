@@ -2,6 +2,7 @@ import color from 'tinycolor2';
 import { computed } from 'mobx';
 import debug from 'debug';
 import getRelativeValue from '../../helpers/getRelativeValue';
+import resistanceTypes from './resistanceTypes.js';
 
 const log = debug('infect:ResistanceMatrixView');
 
@@ -46,14 +47,20 @@ export default class ResistanceMatrixView {
 	}
 
 	@computed get backgroundColor() {
-		const bestValue = this.mostPreciseValue.value;
+		const { type, value } = this.mostPreciseValue;
+
+		// if type is MIC or discDiffusion, use gray background
+		if (type === resistanceTypes.mic || type === resistanceTypes.discDiffusion) {
+			return color('#E1E0D5');
+		}
+
 		// Use log scale (values < 70% don't really matter) – differentiate well between
 		// 70 and 100
 		// Use number between 1 and 9 for log – returns number between 0 and 1
-		const logValue = Math.log10(bestValue * 9 + 1);
+		const logValue = Math.log10(value * 9 + 1);
 		const hue = this._getRelativeColorValue(1 - logValue, 9, 98) / 360;
-		const saturation = this._getRelativeColorValue(1 - bestValue, 0.3, 1);
-		const lightness = this._getRelativeColorValue(bestValue, 0.4, 0.9);
+		const saturation = this._getRelativeColorValue(1 - value, 0.3, 1);
+		const lightness = this._getRelativeColorValue(value, 0.4, 0.9);
 		const backgroundColor = color.fromRatio({
 			h: hue
 			, s: saturation
@@ -82,9 +89,44 @@ export default class ResistanceMatrixView {
 	@computed get matchesOffsets() {
 		const offsets = this._matrixView.getOffsetFilters().filters;
 		const resistance = this.mostPreciseValue;
-		return resistance.sampleSize >= offsets.get('sampleSize').min &&
-			resistance.value <= (1 - offsets.get('susceptibility').min);
+		const matchesSize = resistance.sampleSize >= offsets.get('sampleSize').min;
+		const matchesValue = resistance.value <= (1 - offsets.get('susceptibility').min);
+		const isInterpreted = this.mostPreciseValue.type === resistanceTypes.qualitative;
+		// DD and Mic do not contain value at the beginning (before hovering them); also, we
+		// can not use traidtional susceptibility offsets. They only need to match the sampleSize
+		// offset.
+		if (isInterpreted) return matchesSize && matchesValue;
+		else return matchesSize;
 	}
 
+	@computed get displayValue() {
+		// Return percent susceptible for qualitative data
+		const values = new Map([
+			[
+				resistanceTypes.qualitative,
+				({ value }) => Math.round((1 - value) * 100),
+			], [
+				resistanceTypes.mic,
+				resistanceValue => (resistanceValue.quantitativeData.percentileValue !== undefined ?
+					resistanceValue.quantitativeData.percentileValue : 'MIC'),
+			], [
+				resistanceTypes.discDiffusion,
+				() => 'DD',
+			],
+		]);
+		const mostPrecise = this.mostPreciseValue;
+		return values.get(mostPrecise.type)(mostPrecise);
+	}
+
+	/**
+	 * Returns the key of the most precise resistance type, as defined in resistanceTypes
+	 * @returns {string}
+	 */
+	@computed get mostPreciseResistanceTypeIdentifier() {
+		const types = Object.keys(resistanceTypes);
+		for (const resistanceType of types) {
+			if (this.mostPreciseValue.type === resistanceTypes[resistanceType]) return resistanceType;
+		}
+	}
 
 }

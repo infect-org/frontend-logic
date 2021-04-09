@@ -24,8 +24,8 @@ function createBacterium(name = 'testBact', id = Math.random()) {
 
 function createResistance(ab, bact, resistances) {
 	resistances = resistances || [
-		{type: 'class', value: 0.3, sampleSize: 50}
-		, {type: 'import', value: 0.4, sampleSize: 100}
+		{type: 'qualitative', value: 0.3, sampleSize: 50}
+		, {type: 'mic', sampleSize: 100}
 	];
 	return new Resistance(resistances, ab, bact);
 }
@@ -41,7 +41,7 @@ function createValidSet() {
 	const bact2 = createBacterium('a');
 	const res1 = createResistance(ab1, bact1);
 	const res2 = createResistance(ab1, bact2);
-	const res3 = createResistance(ab2, bact2, [{type: 'default', value: 1, sampleSize: 59}]);
+	const res3 = createResistance(ab2, bact2, [{type: 'mic', value: 1, sampleSize: 59}]);
 	const matrix = new MatrixView();
 
 	const abStore = new Store();
@@ -367,7 +367,8 @@ test('updates sample size extremes', (t) => {
 	set.matrix.setupDataWatchers(set.stores.antibiotics, set.stores.bacteria, set.stores.resistances);
 	set.resolveAllPromises();
 	setTimeout(() => {
-		t.deepEqual(matrix.sampleSizeExtremes, { min: 59, max: 100 });
+		// Only most precise (i.e. qualitative) value is used
+		t.deepEqual(matrix.sampleSizeExtremes, { min: 50, max: 59 });
 		t.end();
 	});
 });

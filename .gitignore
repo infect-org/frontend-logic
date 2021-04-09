@@ -28,3 +28,5 @@ config.js
 coverage
 
 ./testOutput
+
+.DS_Store
