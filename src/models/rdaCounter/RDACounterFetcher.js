@@ -8,7 +8,10 @@ const log = debug('infect:RDACounterFetcher.js');
 export default class ResistancesFetcher extends Fetcher {
 
     /**
-    * Fetches resistances from server, then updates ResistancesStore passed as an argument.
+    * Fetches amount of results for given filters from RDA. Is needed to
+    * a) hide rows/columns with no data for the unfiltered data set of the current tenant
+    * b) hide filters with no values for the current filter set (facets; e.g. animals for INFECT
+    *    for humans
     * @param {function} handleException   Exception handler
     */
     constructor(options) {
@@ -25,7 +28,7 @@ export default class ResistancesFetcher extends Fetcher {
     }
 
     /**
-    * Sets up ResistancesStore with data fetched from server.
+    * Sets up RDACounterStore with data fetched from server.
     * @param {Array} data       Data as gotten from server
     */
     handleData(data) {

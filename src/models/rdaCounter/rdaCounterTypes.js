@@ -9,4 +9,5 @@ export default Object.freeze({
     ageGroup: 'ageGroupIds',
     animal: 'animalIds',
     patientSetting: 'patientSettingIds',
+    sampleSource: 'sampleSourceIds',
 });

@@ -52,6 +52,18 @@ export default function(getURL, filterValues, rdaCounterStore) {
     const fetchRegions = regionFetcher.getData();
 
 
-    return Promise.all([fetchAnimals, fetchPatientSetting, fetchRegions]);
+    const sampleSourceFetcher = new PopulationFilterFetcher({
+        url: getURL(filterScope, 'sampleSource'),
+        // Just pass in any store – is not used, but necessary to work
+        store: new Store(),
+        dependentStores: [rdaCounterStore],
+        filterValues,
+        rdaCounterType: rdaCounterTypes.sampleSource,
+        filterType: filterTypes.sampleSource,
+    });
+    const fetchSampleSources = sampleSourceFetcher.getData();
+
+
+    return Promise.all([fetchAnimals, fetchPatientSetting, fetchRegions, fetchSampleSources]);
 
 }

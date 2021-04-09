@@ -1,6 +1,8 @@
+import filterTypes from '../filters/filterTypes.js';
+
 export default function() {
     return [{
-        entityType: 'antibiotic'
+        entityType: filterTypes.antibiotic
         , config: {
             name: {
                 translation: 'Name'
@@ -28,7 +30,7 @@ export default function() {
             }
         }
     }, {
-        entityType: 'region'
+        entityType: filterTypes.region
         , config: {
             // The property we need is id
             id: {
@@ -38,7 +40,7 @@ export default function() {
             }
         }
     }, {
-        entityType: 'ageGroup'
+        entityType: filterTypes.ageGroup
         , config: {
             // The property we need is id
             id: {
@@ -48,7 +50,7 @@ export default function() {
             }
         }
     }, {
-        entityType: 'hospitalStatus',
+        entityType: filterTypes.hospitalStatus,
         config: {
             // The property we need is id
             id: {
@@ -58,7 +60,7 @@ export default function() {
             },
         },
     }, {
-        entityType: 'animal',
+        entityType: filterTypes.animal,
         config: {
             // The property we need to add the filter is id
             id: {
@@ -68,7 +70,7 @@ export default function() {
             },
         },
     }, {
-        entityType: 'substanceClass'
+        entityType: filterTypes.substanceClass
         , config: {
             name: {
                 translation: 'Name'
@@ -76,7 +78,15 @@ export default function() {
             }
         }
     }, {
-        entityType: 'bacterium'
+        entityType: filterTypes.sampleSource,
+        config: {
+            id: {
+                translation: 'Name',
+                valueTranslations: (name, entity) => entity.name,
+            },
+        },
+    }, {
+        entityType: filterTypes.bacterium
         , config: {
             name: {
                 translation: 'Name'
