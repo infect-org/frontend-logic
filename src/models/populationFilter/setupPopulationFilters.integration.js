@@ -95,7 +95,7 @@ test('uses available rdaCounter and removes entries without RDA data', (t) => {
             if (type === rdaCounterTypes.animal && id === 2) return false;
             if (type === rdaCounterTypes.region && id === 12) return false;
             if (type === rdaCounterTypes.patientSetting && id === 32) return false;
-            if (type === rdaCounterTypes.sampleSource && id === 32) return false;
+            if (type === rdaCounterTypes.sampleSource && id === 42) return false;
             return true;
         },
     };

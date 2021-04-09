@@ -26,7 +26,7 @@ function getEndpoints() {
         guidelines: 'guideline',
         therapies: 'therapy',
         config: 'config',
-        sampleSource: 'sampleSource',
+        sampleSource: 'generics.sampleSource',
     };
 }
 
