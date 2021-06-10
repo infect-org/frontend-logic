@@ -63,6 +63,7 @@ export default class {
         ) {
             throw new Error(`Resistance: Quantitative data does not fulfill the expected base format, is ${JSON.stringify(data)}`);
         }
+		console.log('res', data);
         if (
             typeof data.rangeMin !== 'number' ||
             typeof data.rangeMax !== 'number' ||
@@ -71,23 +72,13 @@ export default class {
             throw new Error(`Resistance: Quantitative data does not fulfill the expected slot format, is ${JSON.stringify(data.slots)}`);
         }
         if (
-            !data.slots.every(item => typeof item.fromValue === 'number' &&
-                typeof item.toValue === 'number' && typeof item.sampleCount === 'number')
+            !data.slots.every(item => typeof item.value === 'number' &&
+                typeof item.sampleCount === 'number')
         ) {
-            throw new Error(`Resistance: Quantitative slot entries do not fulfill the expected format, are ${JSON.stringify(data.slots.slots)}`);
+            throw new Error(`Resistance: Quantitative slot entries do not fulfill the expected format, are ${JSON.stringify(data.slots)}`);
         }
 
-		// Fix Lina's API issues (counters with value 0 and multiple entries with fromValue and
-		// toValue 0)
-		const cleanData = {
-			...data,
-			slots: data.slots.filter((slot) => {
-				// if (slot.sampleCount === 0) console.log('Remove slot %o, sampleCount is 0', slot);
-				return slot.sampleCount !== 0;
-			}),
-		}
-
-        this.quantitativeData = cleanData;
+        this.quantitativeData = data;
     }
 
 }

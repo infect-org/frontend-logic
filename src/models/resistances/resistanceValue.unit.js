@@ -53,16 +53,13 @@ test('sets MIC data', (t) => {
 		"rangeMax": 53.9,
 		"slotCount": 25,
 		"slots": [{
-			"fromValue": 0,
-			"toValue": 2.156,
+			"value": 0,
 			"sampleCount": 0
 		}, {
-			"fromValue": 2.156,
-			"toValue": 4.312,
+			"value": 2.156,
 			"sampleCount": 0
 		}, {
-			"fromValue": 4.312,
-			"toValue": 6.468,
+			"value": 4.312,
 			"sampleCount": 0
 		}]
 	}
