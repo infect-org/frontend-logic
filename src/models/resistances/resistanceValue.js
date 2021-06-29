@@ -63,7 +63,6 @@ export default class {
         ) {
             throw new Error(`Resistance: Quantitative data does not fulfill the expected base format, is ${JSON.stringify(data)}`);
         }
-		console.log('res', data);
         if (
             typeof data.rangeMin !== 'number' ||
             typeof data.rangeMax !== 'number' ||
