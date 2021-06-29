@@ -1,7 +1,7 @@
 /**
 * The main application that sets everything up and brings it together
 */
-import { when, observable, transaction } from 'mobx';
+import { when, observable, transaction, reaction } from 'mobx';
 import debug from 'debug';
 import storeStatus from './helpers/storeStatus.js';
 import AntibioticsStore from './models/antibiotics/antibioticsStore.js';
@@ -34,7 +34,7 @@ import notificationSeverityLevels from './models/notifications/notificationSever
 import GuidelineSelectedFiltersBridge from
     './models/guidelineSelectedFiltersBridge/GuidelineSelectedFiltersBridge.js';
 import Store from './helpers/Store.js';
-
+import getQuantitativeDataForActiveResistance from './models/resistances/getQuantitativeDataForActiveResistance';
 
 
 const log = debug('infect:App');
@@ -45,7 +45,6 @@ export default class InfectApp {
         matrix: new MatrixView(),
         drawer: new DrawerViewModel(),
     };
-
 
     bacteria = new BacteriaStore();
     antibiotics = new AntibioticsStore();
@@ -80,10 +79,12 @@ export default class InfectApp {
 
     /**
     * @param {object} config
-    * @param {function} config.getURL           Function that takes two arguments (scope and
-    *                                           endpoint) and returns corresponding URL
-    * @param {boolean} config.showPreviewData   If true, preview data will be used (instead of the
-    *                                           regular current dataset)
+    * @param {function} config.getURL            Function that takes two arguments (scope and
+    *                                            endpoint) and returns corresponding URL
+    * @param {boolean} config.previewGuidelines  If true, preview data will be used for guidelines
+    * @param {string[]} config.dataVersionStatusIdentifiers       Array with all identifiers that
+    *                                            should be loaded from RDA, e.g.
+    *                                            ['preview', 'active'].
     */
     constructor(config) {
 
@@ -96,8 +97,6 @@ export default class InfectApp {
         this.views.matrix.setOffsetFilters(this.offsetFilters);
         this.views.matrix.setupDataWatchers(this.antibiotics, this.bacteria, this.resistances);
 
-        updateDrawerFromGuidelines(this.guidelines, this.views.drawer, this.notificationCenter);
-
     }
 
 
@@ -106,6 +105,9 @@ export default class InfectApp {
      * constructor.
      */
     initialize() {
+
+        updateDrawerFromGuidelines(this.guidelines, this.views.drawer, this.notificationCenter);
+
         const fetcherPromise = this._setupFetchers();
         const populationFilterPromise = setupPopulationFilters(
             this._config.getURL,
@@ -127,6 +129,7 @@ export default class InfectApp {
             }, (err) => {
                 this.notificationCenter.handle(err);
             });
+
     }
 
 
@@ -183,7 +186,7 @@ export default class InfectApp {
             this.selectedFilters,
             this.ageGroupStore,
             this.notificationCenter.handle.bind(this.notificationCenter),
-            this._config.showPreviewData,
+            this._config.dataVersionStatusIdentifiers,
         );
         updater.setup();
 
@@ -192,6 +195,13 @@ export default class InfectApp {
         const resistancePromise = resistanceFetcher.getDataForFilters(updater.filterHeaders);
         log('Fetching data for resistances.');
 
+        // Get quantitative data when needed
+        getQuantitativeDataForActiveResistance(
+            this.views.matrix,
+            this._config.getURL,
+            updater,
+            this.views.drawer,
+        );
 
 
 
@@ -225,6 +235,7 @@ export default class InfectApp {
             url: this._config.getURL('rda', 'counter'),
             store: this.rdaCounterStore,
             handleError: this.notificationCenter.handle.bind(this.notificationCenter),
+            dataVersionStatusIdentifiers: this._config.dataVersionStatusIdentifiers,
         });
         const rdaCounterFetcherPromise = rdaCounterFetcher.getData();
 
@@ -247,7 +258,24 @@ export default class InfectApp {
 
 
     _setupOffsetFilters() {
+        // Default offset filters to 20 (infect by anresis)
         this.offsetFilters.setFilter('sampleSize', 'min', 20);
+        // Update sample size offset filter from tenantConfig when it is set
+        reaction(
+            () => {
+                const frontendConfig = this.tenantConfig.getConfig('frontend');
+                if (frontendConfig &&
+                    frontendConfig.userInterface &&
+                    typeof frontendConfig.userInterface.sampleCountDefaultValue === 'number'
+                ) {
+                    return frontendConfig.userInterface.sampleCountDefaultValue;
+                }
+                return undefined;
+            },
+            (sampleCountDefaultValue) => {
+                this.offsetFilters.setFilter('sampleSize', 'min', sampleCountDefaultValue);
+            },
+        );
         this.offsetFilters.setFilter('susceptibility', 'min', 0);
     }
 

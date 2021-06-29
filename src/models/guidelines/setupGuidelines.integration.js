@@ -230,7 +230,7 @@ test('fails if request fails', async(t) => {
         await promise;
         t.fail('Promise should have been rejected');
     } catch (err) {
-        t.is(err.message.includes('API returned invalid HTTP status 407'), true);
+        t.is(err.message.includes('Calling https://baseurl/guideline returned invalid HTTP status 407'), true);
     }
 
     fetchMock.restore();

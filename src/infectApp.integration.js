@@ -26,6 +26,7 @@ function getEndpoints() {
         guidelines: 'guideline',
         therapies: 'therapy',
         config: 'config',
+        sampleSource: 'generics.sampleSource',
     };
 }
 
@@ -39,13 +40,11 @@ function getScopes() {
 }
 
 function factorGetURLFunction(scopes, endpoints) {
-
     return (scope, endpoint) => {
         const url = `https://api.beta.infect.info/${scopes[scope]}/${endpoints[endpoint]}`;
         // console.log('URL for %s/%s is %s', scope, endpoint, url);
         return url;
     };
-
 }
 
 
@@ -104,7 +103,11 @@ test('doesn\'t throw with valid config', (t) => {
 test('does not fail if preview data parameter is set', (t) => {
     mockFetch();
     const getURL = factorGetURLFunction(getScopes(), getEndpoints());
-    const app = new InfectApp({ getURL, showPreviewData: true });
+    const app = new InfectApp({
+        getURL,
+        previewGuidelines: true,
+        dataVersionStatusIdentifiers: ['active', 'preview'],
+    });
     app.initialize().then(() => {
         // Errors are handled by notification center and not re-thrown. Let's check if there were
         // any issues

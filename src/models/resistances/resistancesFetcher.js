@@ -1,4 +1,3 @@
-import { transaction } from 'mobx';
 import debug from 'debug';
 import Fetcher from '../../helpers/standardFetcher.js';
 import Resistance from './resistance.js';
@@ -41,6 +40,7 @@ export default class ResistancesFetcher extends Fetcher {
         await super.getData(...params);
     }
 
+
     /**
      * Gets filtered data for a set of filters
      * @param {object.<string, *[]>} filters   Filters; key is the filterName, values is an array
@@ -52,6 +52,7 @@ export default class ResistancesFetcher extends Fetcher {
         if (!this.baseUrl) this.baseUrl = this.url;
         this.url = `${this.baseUrl}?filter=${JSON.stringify(filters)}`;
         await this.getData();
+        log('Data for filters gotten');
     }
 
 
@@ -71,8 +72,6 @@ export default class ResistancesFetcher extends Fetcher {
 
         this.store.clear();
 
-        const bacteria = Array.from(this.stores.bacteria.get().values());
-        const antibiotics = Array.from(this.stores.antibiotics.get().values());
 
 
         // Values missing: There's nothing we could add
@@ -81,66 +80,115 @@ export default class ResistancesFetcher extends Fetcher {
             return;
         }
 
+
         let counter = 0;
-        data.values.forEach((resistance) => {
+        data.values.forEach((resistanceData) => {
+            counter++;
 
-            const bacterium = bacteria.find(item => item.id === resistance.microorganismId);
-            const antibiotic = antibiotics.find(item => item.id === resistance.compoundSubstanceId);
-
-            // Missing bacterium or antibiotic is not crucial; display error but continue
-            if (!antibiotic) {
-                this.handleError({
-                    severity: notificationSeverityLevels.warning,
-                    message: `ResistancesFetcher: Antibiotic with ID ${resistance.compoundSubstanceId} missing, resistance ${JSON.stringify(resistance)} cannot be displayed.`,
-                });
-                console.error('Antibiotic for resistance %o missing; antibiotics are %o', resistance, antibiotics);
-                return;
-            }
-
-            if (!bacterium) {
-                this.handleError({
-                    severity: notificationSeverityLevels.warning,
-                    message: `ResistancesFetcher: Bacterium with ID ${resistance.microorganismId} missing, resistance ${JSON.stringify(resistance)} cannot be displayed.`,
-                });
-                console.error('Bacterium for resistance %o missing; bacteria are %o', resistance, bacteria);
-                return;
-            }
-
-            const resistanceValues = [{
-                type: 'import',
-                value: resistance.resistantPercent / 100,
-                sampleSize: resistance.modelCount || 0,
-                confidenceInterval: [
-                    resistance.confidenceInterval.lowerBound / 100,
-                    resistance.confidenceInterval.upperBound / 100,
-                ],
-            }];
-
-            // Creating a Resistance may fail if e.g. values are not valid; make sure we handle
-            // errors gracefully but ignore the current resistance.
-            let resistanceObject;
-            try {
-                resistanceObject = new Resistance(resistanceValues, antibiotic, bacterium);
-            } catch (err) {
-                this.handleError({
-                    severity: notificationSeverityLevels.warning,
-                    message: `Resistance for ${antibiotic.name} and ${bacterium.name} cannot be displayed: ${err.message}.`,
-                });
-                return;
-            }
-
-            // Duplicate resistance
-            if (this.store.hasWithId(resistanceObject)) {
-                console.warn(`ResistanceFetcher: Resistance ${JSON.stringify(resistance)} is a duplicate; an entry for the same bacterium and antibiotic does exist.`);
-                return;
-            }
-
-            this.store.add(resistanceObject);
-            counter += 1;
+            const resistance = this.createResistance(resistanceData);
+            // If handler fails, do not add failed data to store
+            if (!resistance) return;
+            this.store.add(resistance);
 
         });
 
+
         log(`Added ${counter} resistances.`);
+    }
+
+
+    /**
+     * Handles a qualitative resistance (with a percent based susceptibility that was calculated
+     * based on breakpoints. Quantitiative resistances do not have known breakpoints.
+     * @param {object} resistance       Resistance from server
+     */
+    createResistance(resistance) {
+
+        const bacteria = Array.from(this.stores.bacteria.get().values());
+        const antibiotics = Array.from(this.stores.antibiotics.get().values());
+
+        const bacterium = bacteria.find(item => item.id === resistance.microorganismId);
+        const antibiotic = antibiotics.find(item => item.id === resistance.compoundSubstanceId);
+
+        // Missing bacterium or antibiotic is not crucial; display error but continue
+        if (!antibiotic) {
+            this.handleError({
+                severity: notificationSeverityLevels.warning,
+                message: `ResistancesFetcher: Antibiotic with ID ${resistance.compoundSubstanceId} missing, resistance ${JSON.stringify(resistance)} cannot be displayed.`,
+            });
+            console.error('Antibiotic for resistance %o missing; antibiotics are %o', resistance, antibiotics);
+            return;
+        }
+
+        if (!bacterium) {
+            this.handleError({
+                severity: notificationSeverityLevels.warning,
+                message: `ResistancesFetcher: Bacterium with ID ${resistance.microorganismId} missing, resistance ${JSON.stringify(resistance)} cannot be displayed.`,
+            });
+            console.error('Bacterium for resistance %o missing; bacteria are %o', resistance, bacteria);
+            return;
+        }
+
+        const resistanceValues = this.createResistanceValues(resistance);
+
+        // Creating a Resistance may fail if e.g. values are not valid; make sure we handle
+        // errors gracefully but ignore the current resistance.
+        let resistanceObject;
+        try {
+            resistanceObject = new Resistance(resistanceValues, antibiotic, bacterium);
+        } catch (err) {
+            this.handleError({
+                severity: notificationSeverityLevels.warning,
+                message: `Resistance for ${antibiotic.name} and ${bacterium.name} cannot be displayed: ${err.message}.`,
+            });
+            return;
+        }
+
+        // Duplicate resistance
+        if (this.store.hasWithId(resistanceObject)) {
+            console.warn(`ResistanceFetcher: Resistance ${JSON.stringify(resistance)} is a duplicate; an entry for the same bacterium and antibiotic does exist.`);
+            return;
+        }
+
+        return resistanceObject;
+
+    }
+
+
+    createResistanceValues(resistanceData) {
+
+        const values = [];
+
+        if (resistanceData.resistanceQualitativeCount) {
+            values.push({
+                type: 'qualitative',
+                value: resistanceData.resistantPercent / 100,
+                sampleSize: resistanceData.resistanceQualitativeCount,
+                confidenceInterval: [
+                    resistanceData.confidenceInterval.lowerBound / 100,
+                    resistanceData.confidenceInterval.upperBound / 100,
+                ],
+                data: {
+                    resistant: resistanceData.resistant,
+                    susceptible: resistanceData.susceptible,
+                    intermediate: resistanceData.intermediate,
+                },
+            });
+        }
+        if (resistanceData.resistanceMICCount) {
+            values.push({
+                type: 'mic',
+                sampleSize: resistanceData.resistanceMICCount,
+            });
+        }
+        if (resistanceData.resistanceDiscDiffusionCount) {
+            values.push({
+                type: 'discDiffusion',
+                sampleSize: resistanceData.resistanceDiscDiffusionCount,
+            });
+        }
+
+        return values;
     }
 
 }

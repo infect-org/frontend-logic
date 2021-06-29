@@ -3,6 +3,11 @@ import BaseStore from '../../helpers/BaseStore.js';
 import rdaCounterTypes from './rdaCounterTypes.js';
 import notificationSeverityLevels from '../notifications/notificationSeverityLevels.js';
 
+/**
+ * Stores amount of antibiotics/bacteria for current filter set and amount of values filters
+ * would return. Is needed to e.g. not display animals on human version of INFECT and to remove
+ * empty rows/cols in matrix (in unfiltered dataset).
+ */
 export default class RDACounterStore extends BaseStore {
 
     @observable data = new Map();

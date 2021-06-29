@@ -20,6 +20,10 @@ const setupData = () => {
         .mock('/hospitalStatus', {
             status: 200,
             body: JSON.stringify([{ id: 31, name: 'In' }, { id: 32, name: 'Out' }]),
+        })
+        .mock('/sampleSource', {
+            status: 200,
+            body: JSON.stringify([{ id: 41, name: 'Blood' }, { id: 42, name: 'Urine' }]),
         });
 
     const getURL = (scope, endpoint) => {
@@ -28,6 +32,7 @@ const setupData = () => {
             animals: 'animal',
             hospitalStatus: 'hospitalStatus',
             regions: 'region',
+            sampleSource: 'sampleSource',
         };
         return `/${endpoints[endpoint]}`;
     };
@@ -71,6 +76,10 @@ test('sets up filters as expected', (t) => {
             filterValues.getValuesForProperty('hospitalStatus', 'id').map(mapValueAndName),
             ['31/In', '32/Out'],
         );
+        t.deepEqual(
+            filterValues.getValuesForProperty('sampleSource', 'id').map(mapValueAndName),
+            ['41/Blood', '42/Urine'],
+        );
         fetchMock.restore();
         t.end();
     });
@@ -86,6 +95,7 @@ test('uses available rdaCounter and removes entries without RDA data', (t) => {
             if (type === rdaCounterTypes.animal && id === 2) return false;
             if (type === rdaCounterTypes.region && id === 12) return false;
             if (type === rdaCounterTypes.patientSetting && id === 32) return false;
+            if (type === rdaCounterTypes.sampleSource && id === 42) return false;
             return true;
         },
     };
@@ -105,6 +115,10 @@ test('uses available rdaCounter and removes entries without RDA data', (t) => {
         t.deepEqual(
             filterValues.getValuesForProperty('hospitalStatus', 'id').map(mapValueAndName),
             ['31/In'],
+        );
+        t.deepEqual(
+            filterValues.getValuesForProperty('sampleSource', 'id').map(mapValueAndName),
+            ['41/Blood'],
         );
         fetchMock.restore();
         t.end();

@@ -1,3 +1,5 @@
+.watchmanconfig
+
 *.seed
 *.log
 *.csv
@@ -26,3 +28,5 @@ config.js
 coverage
 
 ./testOutput
+
+.DS_Store

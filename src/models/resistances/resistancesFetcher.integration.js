@@ -4,6 +4,7 @@ import ResistancesFetcher from './resistancesFetcher';
 import Store from '../../helpers/Store.js';
 import Bacterium from '../bacteria/bacterium';
 import storeStatus from '../../helpers/storeStatus.js';
+import resistanceTypes from './resistanceTypes.js';
 
 // Fetch-mock does not reset itself if there's no global fetch
 const originalFetch = global.fetch;
@@ -15,8 +16,8 @@ function setupStores() {
             return {
                 values() {
                     return [{
-                        name: 'amoxicillin name',
-                        identifier: 'amoxicillin',
+                        name: 'Penicillin G',
+                        identifier: 'penicillin g',
                         id: 4,
                     }];
                 },
@@ -28,7 +29,10 @@ function setupStores() {
         get() {
             return {
                 values() {
-                    return [new Bacterium(5, 'acinetobacter sp.')];
+                    return [
+                        new Bacterium(5, 'Acinetobacter sp.'),
+                        new Bacterium(6, 'Achromobacter spp.'),
+                    ];
                 },
             };
         },
@@ -46,12 +50,15 @@ function setupBodyData() {
         values: [{
             microorganismId: 5,
             compoundSubstanceId: 4,
-            modelCount: 100,
+            resistanceQualitativeCount: 100,
             resistantPercent: 100,
             confidenceInterval: {
                 lowerBound: 75,
                 upperBound: 100,
             },
+            resistant: 20,
+            intermediate: 30,
+            susceptible: 50,
         }],
     };
 }
@@ -64,19 +71,58 @@ test('handles resistance data correctly', async(t) => {
     const { antibiotics, bacteria } = setupStores();
     const store = new Store([], () => 2);
     const stores = [antibiotics, bacteria];
+    const errors = [];
     const fetcher = new ResistancesFetcher({
         url: '/test',
         store,
         dependentStores: stores,
-        handleError: () => {},
+        handleError: err => errors.push(err),
     });
     await fetcher.getData();
     t.equals(store.get().size, 1);
     const result = store.getById(2);
-    t.equals(result.antibiotic.name, 'amoxicillin name');
-    t.equals(result.bacterium.name, 'acinetobacter sp.');
+    t.equals(result.antibiotic.name, 'Penicillin G');
+    t.equals(result.bacterium.name, 'Acinetobacter sp.');
     t.equals(result.values.length, 1);
     t.equals(result.values[0].sampleSize, 100);
+    t.equals(result.values[0].resistant, 20);
+    t.equals(errors.length, 0);
+    fetchMock.restore();
+    t.end();
+});
+
+
+test('handles multiple values in resistance data', async(t) => {
+    const body = {
+        values: [{
+            microorganismId: 5,
+            compoundSubstanceId: 4,
+            resistanceMICCount: 100,
+            resistanceDiscDiffusionCount: 20,
+        }],
+    };
+    fetchMock.mock('/test', {
+        status: 200,
+        body,
+    });
+    const { antibiotics, bacteria } = setupStores();
+    const store = new Store([], () => 2);
+    const stores = [antibiotics, bacteria];
+    const errors = [];
+    const fetcher = new ResistancesFetcher({
+        url: '/test',
+        store,
+        dependentStores: stores,
+        handleError: err => errors.push(err),
+    });
+    await fetcher.getData();
+    const result = store.getById(2);
+    t.equals(result.values.length, 2);
+    t.equals(result.values[0].type, resistanceTypes.mic);
+    t.equals(result.values[0].sampleSize, 100);
+    t.equals(result.values[1].type, resistanceTypes.discDiffusion);
+    t.equals(result.values[1].sampleSize, 20);
+    t.equals(errors.length, 0);
     fetchMock.restore();
     t.end();
 });
@@ -136,6 +182,7 @@ test('handles missing antibiotics/bacteria and invalid resistances gracefully', 
                 values: [{
                     microorganismId: -1,
                     compoundSubstanceId: 4,
+                    resistantPercent: 100,
                 }],
             },
         })
@@ -145,6 +192,7 @@ test('handles missing antibiotics/bacteria and invalid resistances gracefully', 
                 values: [{
                     microorganismId: 5,
                     compoundSubstanceId: -1,
+                    resistantPercent: 100,
                 }],
             },
         })
@@ -154,7 +202,7 @@ test('handles missing antibiotics/bacteria and invalid resistances gracefully', 
                 values: [{
                     microorganismId: 5,
                     compoundSubstanceId: 4,
-                    modelCount: 100,
+                    resistanceQualitativeCount: 100,
                     resistantPercent: 100,
                     confidenceInterval: {
                         lowerBound: 75,
@@ -195,7 +243,7 @@ test('handles missing antibiotics/bacteria and invalid resistances gracefully', 
     t.is(recordedErrors.length, 3);
     t.is(recordedErrors[0].message.includes('Bacterium with ID -1 missing'), true);
     t.is(recordedErrors[1].message.includes('Antibiotic with ID -1 missing'), true);
-    t.is(recordedErrors[2].message.includes('Resistance for amoxicillin name and acinetobacter sp. cannot be displayed'), true);
+    t.is(recordedErrors[2].message.includes('Resistance for Penicillin G and Acinetobacter sp. cannot be displayed'), true);
     t.end();
 
 });

@@ -62,7 +62,9 @@ export default class PropertyMap {
 	getValuesForProperty(entityType, propertyName) {
 		const property = this._properties.getBy({ entityType: entityType, name: propertyName });
 		if (!property.length) return [];
-		return this._propertyValues.getBy({ property: property[0] });			
+		const values = this._propertyValues.getBy({ property: property[0] });
+		log('Properties for %s / %s are %o; values are %o', entityType, propertyName, property, values);
+		return values;
 	}
 
 
